@@ -1,0 +1,6 @@
+native nohold
+    _boxRGBA(),
+    _filledPolygonRGBA(),
+    _pixelRGBA(),
+    _roundedBoxRGBA(),
+    _roundedRectangleRGBA();

@@ -1,0 +1,54 @@
+import sdl.ceu;
+import sdl-gfx.ceu;
+
+input void SDL_REDRAW;
+input void SDL_QUIT;
+
+var _SDL_Window* win;
+    finalize
+        win = _SDL_CreateWindow("Global Wars",
+                            500, 1300, 800, 480, _SDL_WINDOW_SHOWN);
+    with
+        _SDL_DestroyWindow(win);
+    end
+
+var int win_w;
+var int win_h;
+    _SDL_GetWindowSize(win, &win_w, &win_h);
+
+var _SDL_Renderer* ren;
+    finalize
+        ren = _SDL_CreateRenderer(win, -1, 0);
+    with
+        _SDL_DestroyRenderer(ren);
+    end
+
+par/or do
+    await SDL_QUIT;
+/*** SIMUL
+with
+    @include(simul.ceu)
+***/
+with
+    every SDL_REDRAW do
+
+        loop i,30 do
+            _pixelRGBA(ren, 10+_rand()%50, 10+_rand()%50, 100,100,100, 0xFF);
+        end
+
+        native do
+            short s[5] = { 500, 550, 650, 525, 400 };
+            short t[5] = { 200, 210, 250, 225, 300 };
+        end
+
+        _filledPolygonRGBA(ren, _s, _t, 5, 0,0xFF,0x00, 0xFF);
+
+        _boxRGBA(ren, 500,200, 550,250, 0,0,0xFF, 0xBB);
+        _roundedBoxRGBA(ren, 520,220, 570,270, 4, 0,0xFF,0, 0xBB);
+        _roundedRectangleRGBA(ren, 540,240, 590,290, 8, 0xFF,0x0,0, 0x99);
+
+        _SDL_RenderPresent(ren);
+    end
+end
+
+return 0;
