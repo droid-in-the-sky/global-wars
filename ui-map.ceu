@@ -1,0 +1,154 @@
+import lua.ceu;
+import sdl.ceu;
+import sdl-gfx.ceu;
+
+import ui.ceu;
+
+input void SDL_REDRAW;
+
+class UIMap with
+    interface UI;
+    var _SDL_Renderer* ren = null;
+
+    event int go_zoom, go_x, go_y;
+do
+// lua
+    var _lua_State* lua;
+        finalize
+            lua = _luaL_newstate();
+        with
+            _lua_close(lua);
+        end
+    _lua_atpanic(lua, _ceu_lua_atpanic);
+    _luaL_openlibs(lua);
+    _luaL_loadfile(lua, "map.lua");
+    _lua_call(lua, 0, 0);
+
+    _lua_getglobal(lua, "MAP");         // [ TMAP ]
+    _lua_getglobal(lua, "TMAP");        // [ TMAP ]
+        _lua_getfield(lua, 2, "ns");    // [ TMAP | ns ]
+        _lua_getfield(lua, 2, "xs");    // [ TMAP | ns | xs ]
+        _lua_getfield(lua, 2, "ys");    // [ TMAP | ns | xs | ys ]
+    // 1=MAP, 2=TMAP, 3=ns, 4=xs, 5=ys
+
+    var _SDL_Rect* r = await go_redim;
+    _assert(this.ren != null);
+
+    var int zzz = 100;
+    var int xxx = 0;
+    var int yyy = 0;
+
+    par do
+        var int v;
+        every v = go_zoom do
+            zzz = zzz + v;
+        end
+    with
+        var int v;
+        every v = go_x do
+            xxx = xxx + v;
+        end
+    with
+        var int v;
+        every v = go_y do
+            yyy = yyy + v;
+        end
+    with
+        var int xc = 400;
+        var int yc = 240;
+        every SDL_REDRAW do
+            var int n = 1;      // traverses xs/ys continuously
+
+            // for each country [0, #ns)
+            loop i, _lua_objlen(lua,3) do
+                var u16[10] xs, ys;
+
+                _lua_rawgeti(lua, 3, i+1); // [ ... | ns[i+1] ]
+                var int pts = _lua_tointeger(lua, -1);
+                _lua_pop(lua, 1);          // [ ... ]
+
+                // for each point [0, ns[i])
+                loop j, pts do
+                    _lua_rawgeti(lua, 4, n); // [ ... | xs[n] ]
+                    xs[j] = (xxx + _lua_tonumber(lua, -1) - xc)
+                          * zzz / 100 + xc;
+                    _lua_rawgeti(lua, 5, n); // [ ... | xs[n] | ys[n] ]
+                    ys[j] = (yyy + _lua_tonumber(lua, -1) - yc)
+                          * zzz / 100 + yc;
+                    _lua_pop(lua, 2);        // [ ... ]
+                    n = n + 1; // traverses xs/ys continuously
+                end
+
+                _polygonRGBA(ren, xs, ys, pts, 0x00,0x00,0x00, 0xFF);
+                _filledPolygonRGBA(ren, xs, ys, pts, 0x00,0xFF,0x00, 0xFF);
+
+                // center
+                _lua_rawgeti(lua, 1, i+1);  // [ ... | MAP[i+1] ]
+                _lua_getfield(lua, -1, "center");   // [ ...... | pt ]
+                _lua_rawgeti(lua, -1, 1);   // [ ... | MAP[i+1] | pt | x ]
+                _lua_rawgeti(lua, -2, 2);   // [ ... | MAP[i+1] | pt | x | y ]
+                var u16 x = (xxx + _lua_tonumber(lua, -2) - xc)
+                          * zzz / 100 + xc;
+                var u16 y = (yyy + _lua_tonumber(lua, -1) - yc)
+                          * zzz / 100 + yc;
+                _lua_pop(lua, 4);           // [ ... ]
+                _boxRGBA(ren, x-1,y-1, x+1,y+1, 0,0,0, 0xFF);
+            end
+        end
+    end
+end
+
+input void SDL_REDRAW;
+input void SDL_QUIT;
+
+var _SDL_Window* win;
+    finalize
+        win = _SDL_CreateWindow("UI Map",
+                            500, 400, 800, 480, _SDL_WINDOW_SHOWN);
+    with
+        _SDL_DestroyWindow(win);
+    end
+
+var int win_w;
+var int win_h;
+    _SDL_GetWindowSize(win, &win_w, &win_h);
+
+var _SDL_Renderer* ren;
+    finalize
+        ren = _SDL_CreateRenderer(win, -1, 0);
+    with
+        _SDL_DestroyRenderer(ren);
+    end
+
+par/or do
+    await SDL_QUIT;
+/*** SIMUL
+with
+    @include(simul.ceu)
+***/
+with
+    every SDL_REDRAW do
+        _boxRGBA(ren, 0,0, win_w,win_h, 0,0,0, 0xFF);
+    end
+with
+    var UIMap map with
+        this.ren = ren;
+    end;
+    emit map.go_redim => null;
+    await 1s;
+    emit map.go_x => 250;
+    emit map.go_y => 110;
+    every 200ms do
+        emit map.go_zoom => 1;
+        //emit map.go_x => 10;
+        //emit map.go_y => 10;
+    end
+    await FOREVER;
+with
+    every SDL_REDRAW do
+        _SDL_RenderPresent(ren);
+    end
+end
+
+return 0;
+
