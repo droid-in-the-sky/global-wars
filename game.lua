@@ -13,9 +13,19 @@ STATES = {
         [2] = { 1, 0, 0, 3, },  -- 3 armies in country 4
     },
     {
+        [1] = { 0, 1, 2, 0, },
+        [2] = { 1, 0, 0, 1, },
+    },
+--
+    {
         [1] = { 0, 1, 0, 0, },
         [2] = { 1, 0, 2, 1, },
     },
+    {
+        [1] = { 0, 1, 0, 0, },
+        [2] = { 1, 0, 1, 1, },
+    },
+--
     {
         [1] = { 0, 0, 0, 0, },
         [2] = { 1, 1, 1, 1, },
@@ -40,14 +50,14 @@ MOVES = {
     },
 }
 
-function moves ()
+function move (i)
     -- foreach player
-    for p, ms in ipairs(MOVES) do
+    for p, ms in ipairs(MOVES[i]) do
         -- foreach move of a player
         for _, m in ipairs(ms) do
             local a, fr, to = unpack(m)
-            assert(STATE[p][fr] > a)    -- at least "a+1" to move "a"
-            STATE[p][fr] = STATE[p][fr] - a;
+            assert(STATES[i][p][fr] > a)    -- at least "a+1" to move "a"
+            STATES[i][p][fr] = STATES[i][p][fr] - a;
         end
     end
 end
