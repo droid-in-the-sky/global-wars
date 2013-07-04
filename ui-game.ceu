@@ -30,7 +30,7 @@ do
     _assert(this.ren != null);
 
     _lua_getglobal(lua, "MOVES");       // [ MM ]
-    var int n = _lua_objlen(lua, -1);
+    var int n = _lua_objlen(lua, -1) - 1;   // last is empty
     _lua_pop(lua, 1);                   // [ ]
 
     loop do
@@ -46,6 +46,7 @@ do
 
         loop m_, n do
             var int m = m_ + 1;
+_printf("> m %d\n", m);
             do
                 var UIGameMove move with
                     this.ren  = ren;
@@ -58,8 +59,10 @@ do
                 state.state = state.state + 1;
                 await SDL_KEYDOWN;
             end
+_printf("< m %d\n", m);
 
             state.state = state.state + 1;
+_printf("> s %d\n", state.state);
             await SDL_KEYDOWN;
         end
     end

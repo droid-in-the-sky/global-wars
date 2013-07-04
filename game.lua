@@ -48,16 +48,6 @@ MOVES = {
             { 1, 3, 2 },    -- 1 armies from country 3 to 2
         },
     },
+    {
+    },
 }
-
-function move (i)
-    -- foreach player
-    for p, ms in ipairs(MOVES[i]) do
-        -- foreach move of a player
-        for _, m in ipairs(ms) do
-            local a, fr, to = unpack(m)
-            assert(STATES[i][p][fr] > a)    -- at least "a+1" to move "a"
-            STATES[i][p][fr] = STATES[i][p][fr] - a;
-        end
-    end
-end

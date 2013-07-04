@@ -1,0 +1,105 @@
+import lua.ceu;
+import sdl.ceu;
+import sdl-gfx.ceu;
+
+import ui.ceu;
+import ui-map.ceu;
+import ui-game.ceu;
+
+input void SDL_REDRAW;
+input void SDL_MOUSEBUTTONDOWN;
+
+var _SDL_Window* win;
+    finalize
+        win = _SDL_CreateWindow("AI",
+                            500, 400, 800, 480, _SDL_WINDOW_SHOWN);
+    with
+        _SDL_DestroyWindow(win);
+    end
+
+var int ren_w;
+var int ren_h;
+    _SDL_GetWindowSize(win, &ren_w, &ren_h);
+
+var _SDL_Renderer* ren;
+    finalize
+        ren = _SDL_CreateRenderer(win, -1, 0);
+    with
+        _SDL_DestroyRenderer(ren);
+    end
+
+var _lua_State* lua;
+    finalize
+        lua = _luaL_newstate();
+    with
+        _lua_close(lua);
+    end
+    _lua_atpanic(lua, _ceu_lua_atpanic);
+    _luaL_openlibs(lua);
+
+par/or do
+    await SDL_QUIT;
+/*** SIMUL
+with
+    @include(simul.ceu)
+***/
+with
+    every SDL_REDRAW do
+        _boxRGBA(ren, 0,0, ren_w,ren_h, 0,0,0, 0xFF);
+    end
+with
+    var UIMap map with
+        this.ren   = ren;
+        this.ren_w = ren_w;
+        this.ren_h = ren_h;
+        this.lua   = lua;
+    end;
+    emit map.go_redim => null;
+
+    await SDL_MOUSEBUTTONDOWN;
+
+    _luaL_loadfile(lua, "server.lua");  // [ f ]
+    _lua_call(lua, 0, 0);               // [ ]
+
+    _luaL_loadfile(lua, "ai.lua");      // [ f ]
+    _lua_call(lua, 0, 0);               // [ ]
+
+    _luaL_loadfile(lua, "g1.lua");      // [ f ]
+    _lua_call(lua, 0, 0);               // [ ]
+
+    loop do
+_printf("MOVE\n");
+        // players moves
+        _lua_getglobal(lua, "AI_move");     // [ f ]
+        _lua_pushvalue(lua, -1);            // [ f | f ]
+        _lua_pushnumber(lua, 1);            // [ f | f | 1 ]
+        _lua_call(lua, 1, 0);               // [ f ]
+        _lua_pushnumber(lua, 2);            // [ f | 2 ]
+        _lua_call(lua, 1, 0);               // [ ]
+
+        // server move
+        _lua_getglobal(lua, "SRV_go");      // [ f ]
+        _lua_call(lua, 0, 0);               // [ ]
+        _lua_getglobal(lua, "SRV_save");    // [ f ]
+        _lua_pushstring(lua, "_g1.lua");    // [ f | "g" ]
+        _lua_call(lua, 1, 0);               // [ ]
+
+        var UIGame game with
+            this.ren   = ren;
+            this.lua   = lua;
+            this.map   = &map;
+            this.file  = "_g1.lua";
+        end;
+        emit game.go_redim => null;
+
+        await SDL_MOUSEBUTTONDOWN;
+    end
+
+    await FOREVER;
+with
+    every SDL_REDRAW do
+        _SDL_RenderPresent(ren);
+    end
+end
+
+return 0;

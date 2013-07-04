@@ -14,6 +14,11 @@ game:
 	gcc -Os main.c $(CFLAGS) -lSDL2 -lSDL2_image -lSDL2_gfx -llua \
 		-o global-wars.exe
 
+ai:
+	ceu --m4 ai.ceu
+	gcc -Os main.c $(CFLAGS) -lSDL2 -lSDL2_image -lSDL2_gfx -llua \
+		-o global-wars.exe
+
 move:
 	ceu --m4 ui-game-move.ceu
 	gcc -Os main.c $(CFLAGS) -lSDL2 -lSDL2_image -lSDL2_gfx -llua \
@@ -30,6 +35,6 @@ map:
 		-o global-wars.exe
 
 clean:
-	rm -f *.exe _ceu_
+	rm -f *.exe _ceu_* *.ceu_m4 _g1.lua
 
 .PHONY: all game map clean
