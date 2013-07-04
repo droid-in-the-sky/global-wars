@@ -40,3 +40,29 @@ print(v)
 end
 
 TMAP = map2t(MAP)
+
+function xs ()
+    local xmin = TMAP.xs[1]
+    local xmax = TMAP.xs[1]
+    for _, x in ipairs(TMAP.xs) do
+        if x < xmin then
+            xmin = x
+        elseif x > xmax then
+            xmax = x
+        end
+    end
+    return xmin,xmax
+end
+
+function ys ()
+    local ymin = TMAP.ys[1]
+    local ymax = TMAP.ys[1]
+    for _, y in ipairs(TMAP.ys) do
+        if y < ymin then
+            ymin = y
+        elseif y > ymax then
+            ymax = y
+        end
+    end
+    return ymin,ymax
+end

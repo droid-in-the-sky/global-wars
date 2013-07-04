@@ -8,7 +8,9 @@ input void SDL_REDRAW;
 
 class UIMap with
     interface UI;
+
     var _SDL_Renderer* ren = null;
+    var u16 ren_w, ren_h;
 
     event int go_zoom, go_x, go_y;
 do
@@ -38,10 +40,48 @@ do
     var int xxx = 0;
     var int yyy = 0;
 
+    var int xc = ren_w / 2;
+    var int yc = ren_h / 2;
+
+    do
+        var int xmin, xmax;
+            _lua_getglobal(lua, "xs");      // [ ... | f ]
+            _lua_call(lua, 0, 2);           // [ ... | xmin | xmax ]
+            xmin = _lua_tointeger(lua, -2);
+            xmax = _lua_tointeger(lua, -1);
+            _lua_pop(lua, 2);               // [ ... ]
+
+        var int ymin, ymax;
+            _lua_getglobal(lua, "ys");      // [ ... | f ]
+            _lua_call(lua, 0, 2);           // [ ... | ymin | ymax ]
+            ymin = _lua_tointeger(lua, -2);
+            ymax = _lua_tointeger(lua, -1);
+            _lua_pop(lua, 2);               // [ ... ]
+
+        var int  w = xmax - xmin;
+        var int  h = ymax - ymin;
+        var int dx = ren_w - w;
+        var int dy = ren_h - h;
+
+        // best fit
+        if dx < dy then
+            zzz = 100*ren_w / w;
+        else
+            zzz = 100*ren_h / h;
+        end
+
+        // center on x / y
+        xxx = dx/2 - xmin;
+        yyy = dy/2 - ymin;
+    end
+
     par do
         var int v;
         every v = go_zoom do
             zzz = zzz + v;
+            if zzz < 1 then
+                zzz = 1;
+            end
         end
     with
         var int v;
@@ -54,8 +94,6 @@ do
             yyy = yyy + v;
         end
     with
-        var int xc = 400;
-        var int yc = 240;
         every SDL_REDRAW do
             var int n = 1;      // traverses xs/ys continuously
 
@@ -109,9 +147,9 @@ var _SDL_Window* win;
         _SDL_DestroyWindow(win);
     end
 
-var int win_w;
-var int win_h;
-    _SDL_GetWindowSize(win, &win_w, &win_h);
+var int ren_w;
+var int ren_h;
+    _SDL_GetWindowSize(win, &ren_w, &ren_h);
 
 var _SDL_Renderer* ren;
     finalize
@@ -128,20 +166,23 @@ with
 ***/
 with
     every SDL_REDRAW do
-        _boxRGBA(ren, 0,0, win_w,win_h, 0,0,0, 0xFF);
+        _boxRGBA(ren, 0,0, ren_w,ren_h, 0,0,0, 0xFF);
     end
 with
     var UIMap map with
-        this.ren = ren;
+        this.ren   = ren;
+        this.ren_w = ren_w;
+        this.ren_h = ren_h;
     end;
     emit map.go_redim => null;
-    await 1s;
-    emit map.go_x => 250;
-    emit map.go_y => 110;
-    every 200ms do
+    await 2s;
+    loop i, 200 do
+        await 50ms;
+        emit map.go_zoom => -1;
+    end
+    loop do
+        await 100ms;
         emit map.go_zoom => 1;
-        //emit map.go_x => 10;
-        //emit map.go_y => 10;
     end
     await FOREVER;
 with
