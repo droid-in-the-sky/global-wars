@@ -1,0 +1,146 @@
+import lua.ceu;
+import sdl.ceu;
+import sdl-gfx.ceu;
+
+import ui.ceu;
+import ui-map.ceu;
+
+input void SDL_REDRAW;
+
+class UIGameMove with
+    interface UI;
+
+    var _SDL_Renderer* ren = null;
+    var _lua_State*    lua = null;
+
+    var int move = 0;
+
+    var UIMap* map = null;
+do
+    _assert(this.map  != null);
+    _assert(this.move != 0);
+
+    var _SDL_Rect* r = await go_redim;
+    _assert(this.ren != null);
+
+    every SDL_REDRAW do
+        _lua_getglobal(lua, "PLAYERS");      // [ PP ]
+        _lua_getglobal(lua, "MOVES");        // [ PP | MM ]
+        _lua_rawgeti(lua, -1, this.move);    // [ PP | MM | Mm ]
+
+        // foreach player p
+        loop p_, _lua_objlen(lua,1) do
+            var int p = p_ + 1;
+
+            // player r,g,b
+            _lua_rawgeti(lua, 1, p);         // [ PP | MM | Mm | P ]
+            _lua_getfield(lua, -1, "color"); // [ PP | MM | Mm | P | clr ]
+            _lua_rawgeti(lua, -1, 1);        // [ PP | MM | Mm | P | clr | r ]
+            _lua_rawgeti(lua, -2, 2);        // [ PP | MM | Mm | P | clr | r | g ]
+            _lua_rawgeti(lua, -3, 3);        // [ PP | MM | Mm | P | clr | r | g | b ]
+            var int r = _lua_tointeger(lua, -3);
+            var int g = _lua_tointeger(lua, -2);
+            var int b = _lua_tointeger(lua, -1);
+            _lua_pop(lua, 5);                // [ PP | MM | Mm ]
+
+            // foreach move "i" in "Mm" from player "p"
+            _lua_rawgeti(lua, -1, p);        // [ PP | MM | Mm | Mmp ]
+            loop i_, _lua_objlen(lua,-1) do
+                var int i = i_ + 1;
+                _lua_rawgeti(lua, -1, i);    // [ PP | MM | Mm | Mmp | T ]
+
+                // get a=#armies, fr=from, to=to
+                _lua_rawgeti(lua, -1, 1);    // [ PP | MM | Mm | Mmp | T | a ]
+                _lua_rawgeti(lua, -2, 2);    // [ PP | MM | Mm | Mmp | T | a | fr ]
+                _lua_rawgeti(lua, -3, 3);    // [ PP | MM | Mm | Mmp | T | a | fr | to ]
+                var int a  = _lua_tointeger(lua, -3);
+                var int fr = _lua_tointeger(lua, -2);
+                var int to = _lua_tointeger(lua, -1);
+                _lua_pop(lua, 4);            // [ PP | MM | Mm | Mmp ]
+
+                // draw move
+                var _char[10] str;
+                _sprintf(str, "%d", a);
+                var int x = (map:cx[to] - map:cx[fr]) / 2 + map:cx[fr];
+                var int y = (map:cy[to] - map:cy[fr]) / 2 + map:cy[fr];
+                _boxRGBA(ren,
+                         x-10, y-10,
+                         x+10, y+10,
+                         r,g,b, 0xFF);
+                _stringRGBA(ren, x, y, str, 0,0,0, 0xFF);
+            end
+        _lua_pop(lua, 1);                    // [ PP | MM | Mm | Mmp ]
+        end
+
+        _lua_pop(lua, 3);                    // [ ]
+    end
+end
+
+var _SDL_Window* win;
+    finalize
+        win = _SDL_CreateWindow("UI Game Move",
+                            500, 400, 800, 480, _SDL_WINDOW_SHOWN);
+    with
+        _SDL_DestroyWindow(win);
+    end
+
+var int ren_w;
+var int ren_h;
+    _SDL_GetWindowSize(win, &ren_w, &ren_h);
+
+var _SDL_Renderer* ren;
+    finalize
+        ren = _SDL_CreateRenderer(win, -1, 0);
+    with
+        _SDL_DestroyRenderer(ren);
+    end
+
+var _lua_State* lua;
+    finalize
+        lua = _luaL_newstate();
+    with
+        _lua_close(lua);
+    end
+    _lua_atpanic(lua, _ceu_lua_atpanic);
+    _luaL_openlibs(lua);
+
+par/or do
+    await SDL_QUIT;
+/*** SIMUL
+with
+    @include(simul.ceu)
+***/
+with
+    every SDL_REDRAW do
+        _boxRGBA(ren, 0,0, ren_w,ren_h, 0,0,0, 0xFF);
+    end
+with
+    var UIMap map with
+        this.ren   = ren;
+        this.ren_w = ren_w;
+        this.ren_h = ren_h;
+        this.lua   = lua;
+    end;
+    emit map.go_redim => null;
+
+    _luaL_loadfile(lua, "game.lua");
+    _lua_call(lua, 0, 0);
+    loop do
+        loop i, 2 do
+            var UIGameMove m with
+                this.ren  = ren;
+                this.lua  = lua;
+                this.map  = &map;
+                this.move = i+1;
+            end;
+            emit m.go_redim => null;
+            await 2s;
+        end
+    end
+with
+    every SDL_REDRAW do
+        _SDL_RenderPresent(ren);
+    end
+end
+
+return 0;
