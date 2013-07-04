@@ -266,19 +266,26 @@ with
     end;
     emit map.go_redim => null;
     await 2s;
-    loop i, 200 do
-        await 50ms;
-        emit map.go_x => -1;
+
+    par do
+        loop i, 200 do
+            await 50ms;
+            if i % 2 == 0 then
+                emit map.go_x => -1;
+            else
+                emit map.go_y => -1;
+            end
+        end
+    with
+        loop i, 200 do
+            await 51ms;
+            emit map.go_zoom => -1;
+        end
+        loop do
+            await 101ms;
+            emit map.go_zoom => 1;
+        end
     end
-    loop i, 200 do
-        await 50ms;
-        emit map.go_zoom => -1;
-    end
-    loop do
-        await 100ms;
-        emit map.go_zoom => 1;
-    end
-    await FOREVER;
 with
     every SDL_REDRAW do
         _SDL_RenderPresent(ren);
