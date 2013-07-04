@@ -13,9 +13,9 @@ var _SDL_Window* win;
         _SDL_DestroyWindow(win);
     end
 
-var int win_w;
-var int win_h;
-    _SDL_GetWindowSize(win, &win_w, &win_h);
+var int ren_w;
+var int ren_h;
+    _SDL_GetWindowSize(win, &ren_w, &ren_h);
 
 var _SDL_Renderer* ren;
     finalize
@@ -23,6 +23,15 @@ var _SDL_Renderer* ren;
     with
         _SDL_DestroyRenderer(ren);
     end
+
+var _lua_State* lua;
+    finalize
+        lua = _luaL_newstate();
+    with
+        _lua_close(lua);
+    end
+    _lua_atpanic(lua, _ceu_lua_atpanic);
+    _luaL_openlibs(lua);
 
 par/or do
     await SDL_QUIT;
@@ -32,7 +41,10 @@ with
 ***/
 with
     var UIMap map with
-        this.ren = ren;
+        this.ren   = ren;
+        this.ren_w = ren_w;
+        this.ren_h = ren_h;
+        this.lua   = lua;
     end;
     emit map.go_redim => null;
     await FOREVER;
