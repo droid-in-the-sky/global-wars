@@ -37,6 +37,7 @@ function SRV_go ()
 
             -- remove from fr
             S1[p][fr] = S1[p][fr] - a;
+--print(p, '('..a..') '..fr..'=>'..to)
         end
     end
 
@@ -50,38 +51,39 @@ function SRV_go ()
         -- foreach player move
         for _, M in ipairs(MS) do
             local a, fr, to = unpack(M)
-            S2[p][to] = a
+            S2[p][to] = S2[p][to] + a   -- accumulate (multiple moves to "to")
         end
     end
 
     -- now decides who owns each country
+    -- foreach country
     for c=1, #MAP do
-        while true do   -- until single owner
+        while true do   -- until single owner in the country
             local A = {}    -- { p1, p2, p3, ... } (#armies)
             local o         -- original owner
             local n = 0
-            local min = 999
             for p=1, #PLAYERS do
-                A[p] = S2[p][c]     -- # of moved armies
-                if A[p] < min then
-                    min = A[p]      -- min # of moved armies
-                end
+                A[p] = S2[p][c]     -- # of armies of "p" in "c"
                 if S1[p][c] > 0 then
-                    o = p
+                    o = p           -- S1 = "previous state"
                 end
                 if A[p] > 0 then
-                    n = n + 1       -- # of contesters
+                    n = n + 1       -- # of players in "c"
                 end
-print(c, p, A[p], A[p]>0, n)
+--print(c, p, A[p], A[p]>0, n)
             end
 
             assert(n > 0)
             if n == 1 then
-                break
+                break               -- single owner: stop!
             end
 
             -- shared country: fight!
+            local min = 999
             for p, a in ipairs(A) do
+                if a>0 and a<min then
+                    min = a         -- find the smallest army
+                end
                 local dice = {}
                 A[p] = dice
                 for i=1, a do
@@ -94,7 +96,7 @@ print(c, p, A[p], A[p]>0, n)
                     function (n1,n2)
                         return n1 > n2
                     end)
-print(c,p,a, '//', unpack(dice))
+--print(c,p,a, '//', unpack(dice))
             end
 
             -- compare up to the least # of armies
