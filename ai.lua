@@ -1,10 +1,12 @@
--- make a move for player "me"
-function AI_move (me)
-    local M = {}
-    MOVES[#MOVES][me] = M
+-- make a move for player "p"
+function AI_move (p)
+    local MSp = {
+        -- { a, fr, to, },
+        -- { a, fr, to, },
+    }
 
     -- my current state (armies on each country)
-    local S = STATES[#STATES][me]
+    local S = STATES[#STATES][p]
 
     -- for each country
     for c1, a in ipairs(S) do
@@ -20,8 +22,10 @@ function AI_move (me)
 
             -- attack w/ all armies, from c1, to random c2
             if #t > 0 then
-                M[#M+1] = { a-1, c1, t[ math.random(#t) ] }
+                MSp[#MSp+1] = { a-1, c1, t[ math.random(#t) ] }
             end
         end
     end
+
+    return MSp
 end

@@ -50,6 +50,4 @@ MOVES = {
             { 1, 3, 2 },    -- 1 armies from country 3 to 2
         },
     },
-    {
-    },
 }

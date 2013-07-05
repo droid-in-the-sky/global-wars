@@ -33,7 +33,7 @@ do
     emit map.go_redim => null;
 
     _lua_getglobal(lua, "MOVES");       // [ MM ]
-    var int n = _lua_objlen(lua, -1) - 1;   // last is empty
+    var int n = _lua_objlen(lua, -1);
     _lua_pop(lua, 1);                   // [ ]
 
     loop do
@@ -126,6 +126,15 @@ with
                 this.ren  = ren;
                 this.lua  = lua;
                 this.file = "g2.lua";
+            end;
+            emit game.go_redim => null;
+            await SDL_MOUSEBUTTONDOWN;
+        end
+        do
+            var UIGame game with
+                this.ren  = ren;
+                this.lua  = lua;
+                this.file = "g3.lua";
             end;
             emit game.go_redim => null;
             await SDL_MOUSEBUTTONDOWN;

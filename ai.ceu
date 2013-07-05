@@ -57,24 +57,33 @@ with
     _luaL_loadfile(lua, "ai.lua");      // [ f ]
     _lua_call(lua, 0, 0);               // [ ]
 
+    native nohold _AI_move();
+    native do
+        void AI_move (lua_State* lua, int s, int p) {
+            lua_getglobal(lua, "SRV_move");    // [ srv ]
+            lua_pushnumber(lua, s);            // [ srv | s ]
+            lua_pushnumber(lua, p);            // [ srv | s | p ]
+            lua_getglobal(lua, "AI_move");     // [ srv | s | p | ai ]
+            lua_pushnumber(lua, p);            // [ srv | s | p | ai | p ]
+            lua_call(lua, 1, 1);               // [ srv | s | p | MSp ]
+            lua_call(lua, 3, 0);               // [ ]
+        }
+    end
+
 // G2
     _luaL_loadfile(lua, "g2.lua");      // [ f ]
     _lua_call(lua, 0, 0);               // [ ]
 
     loop do
 _printf("MOVE\n");
-        // player 1 moves
-            _lua_getglobal(lua, "AI_move");     // [ f ]
-            _lua_pushnumber(lua, 1);            // [ f | 1 ]
-            _lua_call(lua, 1, 0);               // [ ]
-        // player 2 moves
-            _lua_getglobal(lua, "AI_move");     // [ f ]
-            _lua_pushnumber(lua, 2);            // [ f | 2 ]
-            _lua_call(lua, 1, 0);               // [ ]
+        _lua_getglobal(lua, "STATES");      // [ SS ]
+        var int s = _lua_objlen(lua, -1);
+        _lua_pop(lua, 1);                   // [ ]
 
-        // server move
-        _lua_getglobal(lua, "SRV_go");      // [ f ]
-        _lua_call(lua, 0, 0);               // [ ]
+        _AI_move(lua, s, 1);
+        _AI_move(lua, s, 2);
+
+        // server save (assumes all moved)
         _lua_getglobal(lua, "SRV_save");    // [ f ]
         _lua_pushstring(lua, "_g2.lua");    // [ f | "g" ]
         _lua_call(lua, 1, 0);               // [ ]
@@ -101,22 +110,15 @@ _printf("MOVE\n");
 
     loop do
 _printf("MOVE\n");
-        // player 1 moves
-            _lua_getglobal(lua, "AI_move");     // [ f ]
-            _lua_pushnumber(lua, 1);            // [ f | 1 ]
-            _lua_call(lua, 1, 0);               // [ ]
-        // player 2 moves
-            _lua_getglobal(lua, "AI_move");     // [ f ]
-            _lua_pushnumber(lua, 2);            // [ f | 2 ]
-            _lua_call(lua, 1, 0);               // [ ]
-        // player 3 moves
-            _lua_getglobal(lua, "AI_move");     // [ f ]
-            _lua_pushnumber(lua, 3);            // [ f | 3 ]
-            _lua_call(lua, 1, 0);               // [ ]
+        _lua_getglobal(lua, "STATES");      // [ SS ]
+        var int s = _lua_objlen(lua, -1);
+        _lua_pop(lua, 1);                   // [ ]
 
-        // server move
-        _lua_getglobal(lua, "SRV_go");      // [ f ]
-        _lua_call(lua, 0, 0);               // [ ]
+        _AI_move(lua, s, 1);
+        _AI_move(lua, s, 2);
+        _AI_move(lua, s, 3);
+
+        // server save (assumes all moved)
         _lua_getglobal(lua, "SRV_save");    // [ f ]
         _lua_pushstring(lua, "_g3.lua");    // [ f | "g" ]
         _lua_call(lua, 1, 0);               // [ ]

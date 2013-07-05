@@ -21,37 +21,109 @@ local function country2player (S, c1)
     error'empty country'
 end
 
-function SRV_go ()
-    -- before attack (remove from "fr")
-    local S1 = copy(STATES[#STATES])
-    STATES[#STATES+1] = S1
+local function table2string (t, tab, cache)
+    tab = tab or 0
+    cache = cache or {}     -- refuse cycles
 
-    -- foreach player
-    assert(#MOVES[#MOVES] == #PLAYERS, 'missing player move')
-    for p, MS in ipairs(MOVES[#MOVES]) do
-        -- foreach player move
-        for _, M in ipairs(MS) do
-            local a, fr, to = unpack(M)
-            assert(S1[p][fr] > a, 'invalid move')
-                -- at least "a+1" to move "a"
+    local ret = {}
 
-            -- remove from fr
-            S1[p][fr] = S1[p][fr] - a;
---print(p, '('..a..') '..fr..'=>'..to)
+    for k, v in pairs(t) do
+        assert(type(k) == 'number'  or
+               type(k) == 'string'  or
+               type(k) == 'boolean')
+        assert(type(v) == 'number'  or
+               type(v) == 'string'  or
+               type(v) == 'boolean' or
+               type(v) == 'table')
+        if type(v) == 'table' then
+            assert(not cache[v])
+            cache[v] = true
         end
+
+        if type(k) == 'string' then
+            k = '"'..k..'"'
+        end
+
+        if type(v) == 'string' then
+            v = '"'..v..'"'
+        elseif type(v) == 'table' then
+            v = table2string(v, tab+4, cache)
+        end
+
+        ret[#ret+1] = string.rep(' ',tab+4)..'['..k..'] = '..v..','
     end
 
-    -- after attack (inserts into "to")
-    local S2 = copy(S1)
-    STATES[#STATES+1] = S2
+    return '{\n'..table.concat(ret,'\n')..'\n'..string.rep(' ',tab)..'}'
+end
+
+function SRV_save (file)
+    local f = assert(io.open(file, 'w'))
+    f:write('PLAYERS = '..table2string(PLAYERS)..'\n')
+    f:write('STATES  = '..table2string(STATES)..'\n')
+    f:write('MOVES   = '..table2string(MOVES)..'\n')
+    f:close()
+end
+
+local function table2string (t, tab, cache)
+    tab = tab or 0
+    cache = cache or {}     -- refuse cycles
+
+    local ret = {}
+
+    for k, v in pairs(t) do
+        assert(type(k) == 'number'  or
+               type(k) == 'string'  or
+               type(k) == 'boolean')
+        assert(type(v) == 'number'  or
+               type(v) == 'string'  or
+               type(v) == 'boolean' or
+               type(v) == 'table')
+        if type(v) == 'table' then
+            assert(not cache[v])
+            cache[v] = true
+        end
+
+        if type(k) == 'string' then
+            k = '"'..k..'"'
+        end
+
+        if type(v) == 'string' then
+            v = '"'..v..'"'
+        elseif type(v) == 'table' then
+            v = table2string(v, tab+4, cache)
+        end
+
+        ret[#ret+1] = string.rep(' ',tab+4)..'['..k..'] = '..v..','
+    end
+
+    return '{\n'..table.concat(ret,'\n')..'\n'..string.rep(' ',tab)..'}'
+end
+
+function SRV_save (file)
+    local f = assert(io.open(file, 'w'))
+    f:write('PLAYERS = '..table2string(PLAYERS)..'\n')
+    f:write('STATES  = '..table2string(STATES)..'\n')
+    f:write('MOVES   = '..table2string(MOVES)..'\n')
+    f:close()
+end
+
+local function SRV_go ()
+    if #MOVES[#MOVES] ~= #PLAYERS then
+        return  false   -- not yet
+    end
+
+    local S2 = STATES[#STATES]  -- already w/o moved armies
+    local S3 = copy(S2)         -- after attacks
+    STATES[#STATES+1] = S3
 
     -- first move fr=>to (yielding shared countries)
     -- foreach player
-    for p, MS in ipairs(MOVES[#MOVES]) do
+    for p, MSp in ipairs(MOVES[#MOVES]) do
         -- foreach player move
-        for _, M in ipairs(MS) do
+        for _, M in ipairs(MSp) do
             local a, fr, to = unpack(M)
-            S2[p][to] = S2[p][to] + a   -- accumulate (multiple moves to "to")
+            S3[p][to] = S3[p][to] + a
+                -- accumulate (multiple moves from "p" to "to")
         end
     end
 
@@ -63,9 +135,9 @@ function SRV_go ()
             local o         -- original owner
             local n = 0
             for p=1, #PLAYERS do
-                A[p] = S2[p][c]     -- # of armies of "p" in "c"
-                if S1[p][c] > 0 then
-                    o = p           -- S1 = "previous state"
+                A[p] = S3[p][c]     -- # of armies of "p" in "c"
+                if S2[p][c] > 0 then
+                    o = p           -- owner in previous state
                 end
                 if A[p] > 0 then
                     n = n + 1       -- # of players in "c"
@@ -112,57 +184,53 @@ function SRV_go ()
                 end
 
                 for p=1, #PLAYERS do
-                    if S2[p][c]>0 and p~=wp then
-                        S2[p][c] = S2[p][c] - 1
+                    if S3[p][c]>0 and p~=wp then
+                        S3[p][c] = S3[p][c] - 1
                     end
                 end
             end
         end
     end
 
-    -- prepares next moves
-    MOVES[#MOVES+1] = {}
+    return true
 end
 
-local function table2string (t, tab, cache)
-    tab = tab or 0
-    cache = cache or {}     -- refuse cycles
+function SRV_move (s, p, MSp)
+    --   s: state
+    --   p: player
+    -- MSp: moves of "p"
 
-    local ret = {}
+    -- S1: current server state on "s"
+    local S1 = STATES[s]
 
-    for k, v in pairs(t) do
-        assert(type(k) == 'number'  or
-               type(k) == 'string'  or
-               type(k) == 'boolean')
-        assert(type(v) == 'number'  or
-               type(v) == 'string'  or
-               type(v) == 'boolean' or
-               type(v) == 'table')
-        if type(v) == 'table' then
-            assert(not cache[v])
-            cache[v] = true
-        end
+    -- S2: next state after move, before attack
+    local S2
 
-        if type(k) == 'string' then
-            k = '"'..k..'"'
-        end
-
-        if type(v) == 'string' then
-            v = '"'..v..'"'
-        elseif type(v) == 'table' then
-            v = table2string(v, tab+4, cache)
-        end
-
-        ret[#ret+1] = string.rep(' ',tab+4)..'['..k..'] = '..v..','
+    if s == #STATES then     -- first to move
+        S2 = copy(S1)           -- copy from current
+        STATES[#STATES+1] = S2  -- new state
+        MOVES[#MOVES+1]   = {}  -- new moves
+    else                     -- other "p" already moved
+        assert(s == #STATES-1)  -- at most 1 behind
+        S2 = STATES[#STATES]    -- take ongoing state
     end
 
-    return '{\n'..table.concat(ret,'\n')..'\n'..string.rep(' ',tab)..'}'
-end
+    -- MS: moves from all countries on "s"
+    assert(not MOVES[#MOVES][p], 'player '..p..' already moved')
+    MOVES[#MOVES][p] = MSp
 
-function SRV_save (file)
-    local f = assert(io.open(file, 'w'))
-    f:write('PLAYERS = '..table2string(PLAYERS)..'\n')
-    f:write('STATES  = '..table2string(STATES)..'\n')
-    f:write('MOVES   = '..table2string(MOVES)..'\n')
-    f:close()
+    -- apply MSp => S2
+    -- foreach move in moves
+    for _, M in ipairs(MSp) do
+        local a, fr, to = unpack(M)
+        assert(S1[p][fr] > a, 'player '..p..' can\'t move from '..fr)
+            -- at least "a+1" to move "a"
+
+        -- remove from fr
+        S2[p][fr] = S2[p][fr] - a;
+--print(p, '('..a..') '..fr..'=>'..to)
+    end
+
+    -- try to GO
+    return SRV_go(s+1)
 end
