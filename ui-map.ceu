@@ -126,7 +126,7 @@ do
         every but = SDL_MOUSEBUTTONDOWN do
             var int x = _I(but:x, xc, xxx, zzz);
             var int y = _I(but:y, yc, yyy, zzz);
-            _lua_getglobal(lua, "mapVSpoint");  // [ f ]
+            _lua_getglobal(lua, "MAP_vspoint"); // [ f ]
             _lua_pushnumber(lua, x);            // [ f | x ]
             _lua_pushnumber(lua, y);            // [ f | x | y ]
             _lua_call(lua, 2, 1);               // [ c ]

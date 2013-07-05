@@ -104,7 +104,7 @@ end
 
 local _R = 10
 
-function mapVSpoint (x, y)
+function MAP_vspoint (x, y)
     for c, C in ipairs(MAP) do
         local _x, _y = unpack(C.center)
         if x>(_x-_R) and x<(_x+_R) and
@@ -115,17 +115,12 @@ function mapVSpoint (x, y)
     return 0
 end
 
-function map2borders ()
-    local t = {}
+BORDERS = {}
+    -- { {p1,p2}, {p3,p4}, ... }
     for i=1, #MAP.borders do
         for j=i+1, #MAP.borders do
             if MAP.borders[i][j] == 1 then
-                t[#t+1] = { MAP[i].center, MAP[j].center }
+                BORDERS[#BORDERS+1] = { MAP[i].center, MAP[j].center }
             end
         end
     end
-    return t
-end
-
-BORDERS = map2borders()
-    -- { {p1,p2}, {p3,p4}, ... }

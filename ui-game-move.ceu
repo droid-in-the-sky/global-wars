@@ -58,11 +58,30 @@ do
                 var int to = _lua_tointeger(lua, -1);
                 _lua_pop(lua, 4);            // [ PP | MM | Mm | Mmp ]
 
-                // draw move
+                // draw move (number of armies)
                 var _char[10] str;
                 _sprintf(str, "%d", a);
-                var int x = (map:cx[to] - map:cx[fr]) / 2 + map:cx[fr];
-                var int y = (map:cy[to] - map:cy[fr]) / 2 + map:cy[fr];
+
+                var int dx = map:cx[to] - map:cx[fr];
+                var int dy = map:cy[to] - map:cy[fr];
+                var int x = dx/2 + map:cx[fr];
+                var int y = dy/2 + map:cy[fr];
+
+                // offsets avoid superposition
+                var int s;
+                var int* p;
+                if _abs(dx) > _abs(dy) then
+                    p = &y;
+                else
+                    p = &x;
+                end
+                if fr > to then
+                    s = 1;
+                else
+                    s = -1;
+                end
+                *p = *p + s*10;     // TODO: harcoded 10
+
                 _boxRGBA(ren,
                          x-10, y-10,
                          x+10, y+10,
