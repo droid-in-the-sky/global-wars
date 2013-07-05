@@ -9,25 +9,28 @@ import ui-game-move.ceu;
 
 input void SDL_REDRAW;
 input void SDL_KEYDOWN;
+input void SDL_MOUSEBUTTONDOWN;
 
 class UIGame with
     interface UI;
 
-    var _SDL_Renderer* ren = null;
-    var _lua_State*    lua = null;
-
-    var UIMap* map  = null;
-    var _char* file = null;
+    var _SDL_Renderer* ren  = null;
+    var _lua_State*    lua  = null;
+    var _char*         file = null;
 do
-    _assert(this.map  != null);
+    _assert(this.ren  != null);
     _assert(this.file != null);
-
-    _assert(this.lua != null);
+    _assert(this.lua  != null);
         _luaL_loadfile(lua, this.file);
         _lua_call(lua, 0, 0);
 
+    var UIMap map with
+        this.ren = ren;
+        this.lua = lua;
+    end;
+
     var _SDL_Rect* r = await go_redim;
-    _assert(this.ren != null);
+    emit map.go_redim => null;
 
     _lua_getglobal(lua, "MOVES");       // [ MM ]
     var int n = _lua_objlen(lua, -1) - 1;   // last is empty
@@ -37,7 +40,7 @@ do
         var UIGameState state with
             this.ren   = ren;
             this.lua   = lua;
-            this.map   = map;
+            this.map   = &map;
             this.state = 1;
         end;
         emit state.go_redim => null;
@@ -51,7 +54,7 @@ _printf("> m %d\n", m);
                 var UIGameMove move with
                     this.ren  = ren;
                     this.lua  = lua;
-                    this.map  = map;
+                    this.map  = &map;
                     this.move = m;
                 end;
                 emit move.go_redim => null;
@@ -76,9 +79,10 @@ var _SDL_Window* win;
         _SDL_DestroyWindow(win);
     end
 
-var int ren_w;
-var int ren_h;
-    _SDL_GetWindowSize(win, &ren_w, &ren_h);
+native do
+    int REN_W, REN_H;
+end
+_SDL_GetWindowSize(win, &_REN_W, &_REN_H);
 
 var _SDL_Renderer* ren;
     finalize
@@ -104,26 +108,29 @@ with
 ***/
 with
     every SDL_REDRAW do
-        _boxRGBA(ren, 0,0, ren_w,ren_h, 0,0,0, 0xFF);
+        _boxRGBA(ren, 0,0, _REN_W,_REN_H, 0,0,0, 0xFF);
     end
 with
-    var UIMap map with
-        this.ren   = ren;
-        this.ren_w = ren_w;
-        this.ren_h = ren_h;
-        this.lua   = lua;
-    end;
-    emit map.go_redim => null;
-
-    var UIGame game with
-        this.ren  = ren;
-        this.lua  = lua;
-        this.map  = &map;
-        this.file = "game.lua";
-    end;
-    emit game.go_redim => null;
-
-    await FOREVER;
+    loop do
+        do
+            var UIGame game with
+                this.ren  = ren;
+                this.lua  = lua;
+                this.file = "g1.lua";
+            end;
+            emit game.go_redim => null;
+            await SDL_MOUSEBUTTONDOWN;
+        end
+        do
+            var UIGame game with
+                this.ren  = ren;
+                this.lua  = lua;
+                this.file = "g2.lua";
+            end;
+            emit game.go_redim => null;
+            await SDL_MOUSEBUTTONDOWN;
+        end
+    end
 with
     every SDL_REDRAW do
         _SDL_RenderPresent(ren);

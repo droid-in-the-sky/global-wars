@@ -17,9 +17,10 @@ var _SDL_Window* win;
         _SDL_DestroyWindow(win);
     end
 
-var int ren_w;
-var int ren_h;
-    _SDL_GetWindowSize(win, &ren_w, &ren_h);
+native do
+    int REN_W, REN_H;
+end
+_SDL_GetWindowSize(win, &_REN_W, &_REN_H);
 
 var _SDL_Renderer* ren;
     finalize
@@ -45,17 +46,9 @@ with
 ***/
 with
     every SDL_REDRAW do
-        _boxRGBA(ren, 0,0, ren_w,ren_h, 0,0,0, 0xFF);
+        _boxRGBA(ren, 0,0, _REN_W,_REN_H, 0,0,0, 0xFF);
     end
 with
-    var UIMap map with
-        this.ren   = ren;
-        this.ren_w = ren_w;
-        this.ren_h = ren_h;
-        this.lua   = lua;
-    end;
-    emit map.go_redim => null;
-
     await SDL_MOUSEBUTTONDOWN;
 
     _luaL_loadfile(lua, "server.lua");  // [ f ]
@@ -64,38 +57,85 @@ with
     _luaL_loadfile(lua, "ai.lua");      // [ f ]
     _lua_call(lua, 0, 0);               // [ ]
 
-    _luaL_loadfile(lua, "g1.lua");      // [ f ]
+// G2
+    _luaL_loadfile(lua, "g2.lua");      // [ f ]
     _lua_call(lua, 0, 0);               // [ ]
 
     loop do
 _printf("MOVE\n");
-        // players moves
-        _lua_getglobal(lua, "AI_move");     // [ f ]
-        _lua_pushvalue(lua, -1);            // [ f | f ]
-        _lua_pushnumber(lua, 1);            // [ f | f | 1 ]
-        _lua_call(lua, 1, 0);               // [ f ]
-        _lua_pushnumber(lua, 2);            // [ f | 2 ]
-        _lua_call(lua, 1, 0);               // [ ]
+        // player 1 moves
+            _lua_getglobal(lua, "AI_move");     // [ f ]
+            _lua_pushnumber(lua, 1);            // [ f | 1 ]
+            _lua_call(lua, 1, 0);               // [ ]
+        // player 2 moves
+            _lua_getglobal(lua, "AI_move");     // [ f ]
+            _lua_pushnumber(lua, 2);            // [ f | 2 ]
+            _lua_call(lua, 1, 0);               // [ ]
 
         // server move
         _lua_getglobal(lua, "SRV_go");      // [ f ]
         _lua_call(lua, 0, 0);               // [ ]
         _lua_getglobal(lua, "SRV_save");    // [ f ]
-        _lua_pushstring(lua, "_g1.lua");    // [ f | "g" ]
+        _lua_pushstring(lua, "_g2.lua");    // [ f | "g" ]
         _lua_call(lua, 1, 0);               // [ ]
 
         var UIGame game with
             this.ren   = ren;
             this.lua   = lua;
-            this.map   = &map;
-            this.file  = "_g1.lua";
+            this.file  = "_g2.lua";
         end;
         emit game.go_redim => null;
 
         await SDL_MOUSEBUTTONDOWN;
+        par/or do
+            await SDL_MOUSEBUTTONDOWN;
+            break;
+        with
+            await 1s;
+        end
     end
 
-    await FOREVER;
+// G3
+    _luaL_loadfile(lua, "g3.lua");      // [ f ]
+    _lua_call(lua, 0, 0);               // [ ]
+
+    loop do
+_printf("MOVE\n");
+        // player 1 moves
+            _lua_getglobal(lua, "AI_move");     // [ f ]
+            _lua_pushnumber(lua, 1);            // [ f | 1 ]
+            _lua_call(lua, 1, 0);               // [ ]
+        // player 2 moves
+            _lua_getglobal(lua, "AI_move");     // [ f ]
+            _lua_pushnumber(lua, 2);            // [ f | 2 ]
+            _lua_call(lua, 1, 0);               // [ ]
+        // player 3 moves
+            _lua_getglobal(lua, "AI_move");     // [ f ]
+            _lua_pushnumber(lua, 3);            // [ f | 3 ]
+            _lua_call(lua, 1, 0);               // [ ]
+
+        // server move
+        _lua_getglobal(lua, "SRV_go");      // [ f ]
+        _lua_call(lua, 0, 0);               // [ ]
+        _lua_getglobal(lua, "SRV_save");    // [ f ]
+        _lua_pushstring(lua, "_g3.lua");    // [ f | "g" ]
+        _lua_call(lua, 1, 0);               // [ ]
+
+        var UIGame game with
+            this.ren   = ren;
+            this.lua   = lua;
+            this.file  = "_g3.lua";
+        end;
+        emit game.go_redim => null;
+
+        await SDL_MOUSEBUTTONDOWN;
+        par/or do
+            await SDL_MOUSEBUTTONDOWN;
+            break;
+        with
+            await 1s;
+        end
+    end
 with
     every SDL_REDRAW do
         _SDL_RenderPresent(ren);

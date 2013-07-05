@@ -22,9 +22,7 @@ class UIMap with
     interface UI;
 
     var _SDL_Renderer* ren = null;
-    var int ren_w, ren_h;
-
-    var _lua_State* lua = null;
+    var _lua_State*   lua  = null;
 
     var int  n;   // number of countries
     var u16* cx;  // all country centers
@@ -33,8 +31,6 @@ class UIMap with
     event int go_zoom, go_x, go_y;
 do
     _assert(this.lua != null);
-        _luaL_loadfile(lua, "map.lua");
-        _lua_call(lua, 0, 0);
 
     _lua_getglobal(lua, "MAP");     // [ M ]
     this.n = _lua_objlen(lua,1);
@@ -59,8 +55,8 @@ do
     var int xxx = 0;
     var int yyy = 0;
 
-    var int xc = ren_w / 2;
-    var int yc = ren_h / 2;
+    var int xc = _REN_W / 2;
+    var int yc = _REN_H / 2;
 
     do
         var int xmin, xmax;
@@ -79,14 +75,14 @@ do
 
         var int  w = xmax - xmin;
         var int  h = ymax - ymin;
-        var int dx = ren_w - w;
-        var int dy = ren_h - h;
+        var int dx = _REN_W - w;
+        var int dy = _REN_H - h;
 
         // best fit
         if dx < dy then
-            zzz = 100*ren_w / w;
+            zzz = 100*_REN_W / w;
         else
-            zzz = 100*ren_h / h;
+            zzz = 100*_REN_H / h;
         end
 
         // center on x / y
@@ -227,9 +223,10 @@ var _SDL_Window* win;
         _SDL_DestroyWindow(win);
     end
 
-var int ren_w;
-var int ren_h;
-    _SDL_GetWindowSize(win, &ren_w, &ren_h);
+native do
+    int REN_W, REN_H;
+end
+_SDL_GetWindowSize(win, &_REN_W, &_REN_H);
 
 var _SDL_Renderer* ren;
     finalize
@@ -255,14 +252,25 @@ with
 ***/
 with
     every SDL_REDRAW do
-        _boxRGBA(ren, 0,0, ren_w,ren_h, 0,0,0, 0xFF);
+        _boxRGBA(ren, 0,0, _REN_W,_REN_H, 0,0,0, 0xFF);
     end
 with
+    do
+        _luaL_loadfile(lua, "map1.lua");  // [ f ]
+        _lua_call(lua, 0, 0);             // [ ]
+        var UIMap map with
+            this.ren  = ren;
+            this.lua  = lua;
+        end;
+        emit map.go_redim => null;
+        await 2s;
+    end
+
+    _luaL_loadfile(lua, "map2.lua");  // [ f ]
+    _lua_call(lua, 0, 0);             // [ ]
     var UIMap map with
-        this.ren   = ren;
-        this.ren_w = ren_w;
-        this.ren_h = ren_h;
-        this.lua   = lua;
+        this.ren  = ren;
+        this.lua  = lua;
     end;
     emit map.go_redim => null;
     await 2s;

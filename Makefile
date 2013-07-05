@@ -9,13 +9,13 @@ all:
 	gcc -Os main.c $(CFLAGS) -lSDL2 -lSDL2_image -lSDL2_gfx -llua \
 		-o global-wars.exe
 
-game:
-	ceu --m4 ui-game.ceu
+ai:
+	ceu --m4 ai.ceu
 	gcc -Os main.c $(CFLAGS) -lSDL2 -lSDL2_image -lSDL2_gfx -llua \
 		-o global-wars.exe
 
-ai:
-	ceu --m4 ai.ceu
+game:
+	ceu --m4 ui-game.ceu
 	gcc -Os main.c $(CFLAGS) -lSDL2 -lSDL2_image -lSDL2_gfx -llua \
 		-o global-wars.exe
 
