@@ -6,6 +6,7 @@ import ui.ceu;
 import ui-map.ceu;
 
 input void SDL_REDRAW;
+input void SDL_KEYDOWN;
 
 class UIGameState with
     interface UI;
@@ -112,6 +113,9 @@ with
 with
     _luaL_loadfile(lua, "g1.lua");
     _lua_call(lua, 0, 0);
+    _lua_getglobal(lua, "STATES");  // [ SS ]
+    var int len = _lua_objlen(lua, -1);
+    _lua_pop(lua, 1);               // [ ]
 
     var UIMap map with
         this.ren = ren;
@@ -120,7 +124,7 @@ with
     emit map.go_redim => null;
 
     loop do
-        loop i, 3 do
+        loop i, len do
             var UIGameState s with
                 this.ren   = ren;
                 this.lua   = lua;
@@ -128,7 +132,7 @@ with
                 this.state = i+1;
             end;
             emit s.go_redim => null;
-            await 2s;
+            await SDL_KEYDOWN;
         end
     end
 with

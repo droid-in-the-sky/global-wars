@@ -32,9 +32,23 @@ do
     var _SDL_Rect* r = await go_redim;
     emit map.go_redim => null;
 
-    _lua_getglobal(lua, "MOVES");       // [ MM ]
-    var int n = _lua_objlen(lua, -1);
+    _lua_getglobal(lua, "STATES");      // [ SS ]
+    var int ns = _lua_objlen(lua, -1);
     _lua_pop(lua, 1);                   // [ ]
+
+    _lua_getglobal(lua, "MOVES");       // [ MM ]
+    var int nm = _lua_objlen(lua, -1);
+    _lua_pop(lua, 1);                   // [ ]
+
+    var UIGameState state with
+        this.ren   = ren;
+        this.lua   = lua;
+        this.map   = &map;
+        this.state = ns;
+    end;
+    emit state.go_redim => null;
+
+    await SDL_KEYDOWN;
 
     loop do
         var UIGameState state with
@@ -47,7 +61,7 @@ do
 
         await SDL_KEYDOWN;
 
-        loop m_, n do
+        loop m_, nm do
             var int m = m_ + 1;
 //_printf("> m %d\n", m);
             do

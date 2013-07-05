@@ -64,8 +64,9 @@ with
             lua_pushnumber(lua, s);            // [ srv | s ]
             lua_pushnumber(lua, p);            // [ srv | s | p ]
             lua_getglobal(lua, "AI_move");     // [ srv | s | p | ai ]
-            lua_pushnumber(lua, p);            // [ srv | s | p | ai | p ]
-            lua_call(lua, 1, 1);               // [ srv | s | p | MSp ]
+            lua_pushnumber(lua, s);            // [ srv | s | p | ai | s ]
+            lua_pushnumber(lua, p);            // [ srv | s | p | ai | s | p ]
+            lua_call(lua, 2, 1);               // [ srv | s | p | MSp ]
             lua_call(lua, 3, 0);               // [ ]
         }
     end
@@ -81,7 +82,9 @@ _printf("MOVE\n");
         _lua_pop(lua, 1);                   // [ ]
 
         _AI_move(lua, s, 1);
+_printf("2\n");
         _AI_move(lua, s, 2);
+_printf("3\n");
 
         // server save (assumes all moved)
         _lua_getglobal(lua, "SRV_save");    // [ f ]
@@ -100,7 +103,7 @@ _printf("MOVE\n");
             await SDL_MOUSEBUTTONDOWN;
             break;
         with
-            await 1s;
+            await 200ms;
         end
     end
 
@@ -135,7 +138,7 @@ _printf("MOVE\n");
             await SDL_MOUSEBUTTONDOWN;
             break;
         with
-            await 1s;
+            await 200ms;
         end
     end
 with

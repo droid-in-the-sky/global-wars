@@ -113,8 +113,14 @@ local function SRV_go ()
     end
 
     local S2 = STATES[#STATES]  -- already w/o moved armies
-    local S3 = copy(S2)         -- after attacks
+    local S3 = copy(S2)         -- after fortifying/attacking
     STATES[#STATES+1] = S3
+
+    if S2.type == 'fortifying' then
+        S3.type = 'attack'
+    else
+        S3.type = 'fortify'
+    end
 
     -- first move fr=>to (yielding shared countries)
     -- foreach player
@@ -122,6 +128,7 @@ local function SRV_go ()
         -- foreach player move
         for _, M in ipairs(MSp) do
             local a, fr, to = unpack(M)
+--print('srv', p, a, fr, to)
             S3[p][to] = S3[p][to] + a
                 -- accumulate (multiple moves from "p" to "to")
         end
@@ -195,6 +202,25 @@ local function SRV_go ()
     return true
 end
 
+-- number of "p" armies to fortify on "S"
+function SRV_fs (S, p)
+    assert(S.type == 'fortify')
+
+    -- # of countries owned by "p"
+    local fs = 0
+    for _,a in ipairs(S[p]) do
+        if a > 0 then
+            fs = fs + 1
+        end
+    end
+
+    fs = math.floor(fs/2)   -- armies = #c/2
+    if fs>0 and fs<3 then
+        fs = 3              -- minimum of 3
+    end
+    return fs   -- 0 (dead), 3 (minimum), X (#c/2)
+end
+
 function SRV_move (s, p, MSp)
     --   s: state
     --   p: player
@@ -202,14 +228,20 @@ function SRV_move (s, p, MSp)
 
     -- S1: current server state on "s"
     local S1 = STATES[s]
+    assert(S1.type=='fortify' or S1.type=='attack')
 
-    -- S2: next state after move, before attack
+    -- S2: next state after move, before fortify/attack
     local S2
 
     if s == #STATES then     -- first to move
         S2 = copy(S1)           -- copy from current
         STATES[#STATES+1] = S2  -- new state
         MOVES[#MOVES+1]   = {}  -- new moves
+        if S1.type == 'fortify' then
+            S2.type = 'fortifying'
+        else
+            S2.type = 'attacking'
+        end
     else                     -- other "p" already moved
         assert(s == #STATES-1)  -- at most 1 behind
         S2 = STATES[#STATES]    -- take ongoing state
@@ -219,17 +251,32 @@ function SRV_move (s, p, MSp)
     assert(not MOVES[#MOVES][p], 'player '..p..' already moved')
     MOVES[#MOVES][p] = MSp
 
+    -- number of armies to fortify
+    local fs = 0
+    if S1.type == 'fortify' then
+        fs = SRV_fs(S1, p)
+    end
+
     -- apply MSp => S2
     -- foreach move in moves
     for _, M in ipairs(MSp) do
         local a, fr, to = unpack(M)
-        assert(S1[p][fr] > a, 'player '..p..' can\'t move from '..fr)
-            -- at least "a+1" to move "a"
 
-        -- remove from fr
-        S2[p][fr] = S2[p][fr] - a;
+        if fr == 0 then
+            assert(S1.type == 'fortify', S1.type)
+            fs = fs - a
+        else
+            assert(S1.type == 'attack')
+            assert(S1[p][fr] > a, 'player '..p..' can\'t move from '..fr)
+                -- at least "a+1" to move "a"
+
+            -- remove from fr
+            S2[p][fr] = S2[p][fr] - a;
 --print(p, '('..a..') '..fr..'=>'..to)
+        end
     end
+
+    assert(fs == 0, fs)
 
     -- try to GO
     return SRV_go(s+1)
