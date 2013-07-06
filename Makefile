@@ -14,19 +14,24 @@ ai:
 	gcc -Os main.c $(CFLAGS) -lSDL2 -lSDL2_image -lSDL2_gfx -llua \
 		-o global-wars.exe
 
+game:
+	ceu --m4 game.ceu
+	gcc -Os main.c $(CFLAGS) -lSDL2 -lSDL2_ttf -lSDL2_gfx -llua \
+		-o global-wars.exe
+
 nav:
 	ceu --m4 game-nav.ceu
-	gcc -Os main.c $(CFLAGS) -lSDL2 -lSDL2_image -lSDL2_gfx -llua \
+	gcc -Os main.c $(CFLAGS) -lSDL2 -lSDL2_gfx -llua \
 		-o global-wars.exe
 
 move:
 	ceu --m4 game-move.ceu
-	gcc -Os main.c $(CFLAGS) -lSDL2 -lSDL2_image -lSDL2_gfx -llua \
+	gcc -Os main.c $(CFLAGS) -lSDL2 -lSDL2_gfx -llua \
 		-o global-wars.exe
 
 state:
 	ceu --m4 game-state.ceu
-	gcc -Os main.c $(CFLAGS) -lSDL2 -lSDL2_image -lSDL2_gfx -llua \
+	gcc -Os main.c $(CFLAGS) -lSDL2 -lSDL2_gfx -llua \
 		-o global-wars.exe
 
 map:

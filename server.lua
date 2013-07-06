@@ -207,15 +207,15 @@ function SRV_fs (S, p)
     assert(S.type == 'fortify')
 
     -- # of countries owned by "p"
-    local fs = 0
+    local A = 0
     for _,a in ipairs(S[p]) do
         if a > 0 then
-            fs = fs + 1
+            A = A + 1
         end
     end
 
-    fs = math.floor(fs/2)   -- armies = #c/2
-    if fs>0 and fs<3 then
+    local fs = math.floor(A/2)   -- armies = #c/2
+    if A>0 and fs<3 then
         fs = 3              -- minimum of 3
     end
     return fs   -- 0 (dead), 3 (minimum), X (#c/2)
