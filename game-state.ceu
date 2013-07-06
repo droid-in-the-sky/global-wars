@@ -27,7 +27,7 @@ do
         _lua_getfield(_L, -1, "type");      // [ PP | SS | Ss | tp ]
         _sprintf(title, "[%d] %s", this.idx, _lua_tostring(_L,-1));
         _lua_pop(_L, 1);                    // [ PP | SS | Ss ]
-        _stringRGBA(_REN, 10, 10, title, 0xFF,0xFF,0xFF, 0xFF);
+        _stringColor(_REN, 10, 10, title, _colors.white);
 
         // foreach player p
         loop p_, _lua_objlen(_L,1) do
@@ -60,7 +60,8 @@ do
                              map:cx[c]-10, map:cy[c]-10,
                              map:cx[c]+10, map:cy[c]+10,
                              r,g,b, 0xFF);
-                    _stringRGBA(_REN, map:cx[c], map:cy[c], str, 0,0,0, 0xFF);
+                    _stringColor(_REN, map:cx[c], map:cy[c], str,
+                                _colors.black);
                 end
             end
 
@@ -108,7 +109,7 @@ with
 ***/
 with
     every SDL_REDRAW do
-        _boxRGBA(_REN, 0,0, _REN_W,_REN_H, 0,0,0, 0xFF);
+        _boxColor(_REN, 0,0, _REN_W,_REN_H, _colors.black);
     end
 with
     _luaL_loadfile(_L, "g1.lua");

@@ -106,7 +106,7 @@ with
 ***/
 with
     every SDL_REDRAW do
-        _boxRGBA(_REN, 0,0, _REN_W,_REN_H, 0,0,0, 0xFF);
+        _boxColor(_REN, 0,0, _REN_W,_REN_H, _colors.black);
     end
 with
     loop do

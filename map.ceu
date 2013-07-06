@@ -3,6 +3,7 @@ import sdl.ceu;
 import sdl-gfx.ceu;
 
 import ui.ceu;
+import colors.ceu;
 
 input void SDL_QUIT;
 input void SDL_REDRAW;
@@ -173,14 +174,14 @@ do
                     0xFF);
 
                 // draw country border
-                _polygonRGBA(_REN, xs, ys, pts, 0x00,0x00,0x00, 0xFF);
+                _polygonColor(_REN, xs, ys, pts, _colors.black);
 
                 // pop color
                 _lua_pop(_L, 5);                   // [ . ]
 
                 // draw center
-                //_boxRGBA(_REN, cx[i]-1,cy[i]-1, cx[i]+1,cy[i]+1, 0,0,0, 
-                //0xFF);
+                //_boxColor(_REN, cx[i]-1,cy[i]-1, cx[i]+1,cy[i]+1, 
+                //_colors.black);
             end
 
             _lua_pop(_L, 5);               // [ ]
@@ -244,7 +245,7 @@ with
 ***/
 with
     every SDL_REDRAW do
-        _boxRGBA(_REN, 0,0, _REN_W,_REN_H, 0,0,0, 0xFF);
+        _boxColor(_REN, 0,0, _REN_W,_REN_H, _colors.black);
     end
 with
     do
