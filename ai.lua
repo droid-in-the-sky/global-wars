@@ -26,25 +26,39 @@ function AI_move (s, p)
         end
 
     else      -- 'attack'
+
         -- for each country
         for c1, a in ipairs(Sp) do
             if a > 1 then       -- I have at least 2 in "c", attack
-                local t = {}    -- hold "to" possibilites from "c"
+                local att = {}  -- hold "attacking" possibilites from "c"
+                local mov = {}  -- hold "moving"    possibilites from "c"
 
                 -- for each "c2" in "c1" border
                 for c2, isN in ipairs(MAP.borders[c1]) do
-                    if isN==1 and Sp[c2]==0 then
-                        t[#t+1] = c2    -- (is neighbour) and (not mine)
+                    if isN == 1 then        -- is neighbour
+                        if Sp[c2] == 0 then -- not mine: attack
+                            att[#att+1] = c2
+                        else                --  is mine: move
+                            mov[#mov+1] = c2
+                        end
                     end
                 end
 
-                -- attack w/ all armies, from c1, to random c2
-                if #t > 0 then
-                    MSp[#MSp+1] = { a-1, c1, t[ math.random(#t) ] }
+                local c2, aa
+                if #att > 0 then
+                    -- attack w/ all from c1, to random c2
+                    c2 = att[ math.random(#att) ]
+                    aa = a - 1
+--print('att', aa, c1, c2)
+                elseif #mov > 0 then
+                    -- move random a from c1, to random c2
+                    c2 = mov[ math.random(#mov) ]
+                    aa = math.random(a-1)
+--print('mov', aa, c1, c2)
                 end
+                MSp[#MSp+1] = { aa, c1, c2 }
             end
         end
     end
-
     return MSp
 end

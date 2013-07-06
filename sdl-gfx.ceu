@@ -6,4 +6,5 @@ native nohold
     _polygonRGBA(),
     _roundedBoxRGBA(),
     _roundedRectangleRGBA(),
-    _stringRGBA();
+    _stringRGBA(),
+    _thickLineRGBA();

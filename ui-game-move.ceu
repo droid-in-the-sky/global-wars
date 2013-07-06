@@ -63,12 +63,22 @@ do
                 var _char[10] str;
                 _sprintf(str, "%d", a);
 
-                var int x, y;
+                var int x, y;           // army
+                var int x1,y1, x2,y2;   // arrow
 
-                if fr == 0 then     // fortify
+                // fortify
+                if fr == 0 then
                     x = map:cx[to] - 40;    // TODO: hardcoded
                     y = map:cy[to] - 40;    // TODO: hardcoded
-                else                // move
+
+                    // arrow
+                    x1 = x;
+                    x2 = x;
+                    y1 = y + 12;
+                    y2 = y + 25;
+
+                // move
+                else
                     var int dx = map:cx[to] - map:cx[fr];
                     var int dy = map:cy[to] - map:cy[fr];
                     x = dx/2 + map:cx[fr];
@@ -88,13 +98,20 @@ do
                         s = -1;
                     end
                     *p = *p + s*15;     // TODO: harcoded
+
+                    // arrow
+                    x2 = x + (map:cx[to] - x)/2;
+                    x1 = x + (x2 - x)/2;
+                    y2 = y + (map:cy[to] - y)/2;
+                    y1 = y + (y2 - y)/2;
                 end
 
+                _thickLineRGBA(ren, x1,y1, x2,y2, 1, 0,0,0, 0xAA);
                 _boxRGBA(ren,
                          x-10, y-10,    // TODO: hardcoded
                          x+10, y+10,    // TODO: hardcoded
                          r,g,b, 0xAA);
-                _stringRGBA(ren, x, y, str, 0,0,0, 0xFF);
+                _stringRGBA(ren, x, y, str, 0,0,0, 0xAA);
             end
         _lua_pop(lua, 1);                    // [ PP | MM | Mm | Mmp ]
         end
