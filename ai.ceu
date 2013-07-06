@@ -9,6 +9,14 @@ import ui-game.ceu;
 input void SDL_REDRAW;
 input void SDL_MOUSEBUTTONDOWN;
 
+/*
+native do
+    lua_State*    L   = NULL;
+    SDL_Renderer* REN = NULL;
+    int REN_W, REN_H;
+end
+*/
+
 var _SDL_Window* win;
     finalize
         win = _SDL_CreateWindow("AI",
@@ -16,27 +24,19 @@ var _SDL_Window* win;
     with
         _SDL_DestroyWindow(win);
     end
-
-native do
-    int REN_W, REN_H;
-end
 _SDL_GetWindowSize(win, &_REN_W, &_REN_H);
 
-var _SDL_Renderer* ren;
-    finalize
-        ren = _SDL_CreateRenderer(win, -1, 0);
-    with
-        _SDL_DestroyRenderer(ren);
-    end
+_REN = _SDL_CreateRenderer(win, -1, 0);
+finalize with
+    _SDL_DestroyRenderer(_REN);
+end
 
-var _lua_State* lua;
-    finalize
-        lua = _luaL_newstate();
-    with
-        _lua_close(lua);
-    end
-    _lua_atpanic(lua, _ceu_lua_atpanic);
-    _luaL_openlibs(lua);
+_L = _luaL_newstate();
+finalize with
+    _lua_close(_L);
+end
+_lua_atpanic(_L, _ceu_lua_atpanic);
+_luaL_openlibs(_L);
 
 par/or do
     await SDL_QUIT;
@@ -46,57 +46,54 @@ with
 ***/
 with
     every SDL_REDRAW do
-        _boxRGBA(ren, 0,0, _REN_W,_REN_H, 0,0,0, 0xFF);
+        _boxRGBA(_REN, 0,0, _REN_W,_REN_H, 0,0,0, 0xFF);
     end
 with
     await SDL_MOUSEBUTTONDOWN;
 
-    _luaL_loadfile(lua, "server.lua");  // [ f ]
-    _lua_call(lua, 0, 0);               // [ ]
+    _luaL_loadfile(_L, "server.lua");  // [ f ]
+    _lua_call(_L, 0, 0);               // [ ]
 
-    _luaL_loadfile(lua, "ai.lua");      // [ f ]
-    _lua_call(lua, 0, 0);               // [ ]
+    _luaL_loadfile(_L, "ai.lua");      // [ f ]
+    _lua_call(_L, 0, 0);               // [ ]
 
     native nohold _AI_move();
     native do
-        void AI_move (lua_State* lua, int s, int p) {
-            lua_getglobal(lua, "SRV_move");    // [ srv ]
-            lua_pushnumber(lua, s);            // [ srv | s ]
-            lua_pushnumber(lua, p);            // [ srv | s | p ]
-            lua_getglobal(lua, "AI_move");     // [ srv | s | p | ai ]
-            lua_pushnumber(lua, s);            // [ srv | s | p | ai | s ]
-            lua_pushnumber(lua, p);            // [ srv | s | p | ai | s | p ]
-            lua_call(lua, 2, 1);               // [ srv | s | p | MSp ]
-            lua_call(lua, 3, 0);               // [ ]
+        void AI_move (int s, int p) {
+            lua_getglobal(L, "SRV_move");    // [ srv ]
+            lua_pushnumber(L, s);            // [ srv | s ]
+            lua_pushnumber(L, p);            // [ srv | s | p ]
+            lua_getglobal(L, "AI_move");     // [ srv | s | p | ai ]
+            lua_pushnumber(L, s);            // [ srv | s | p | ai | s ]
+            lua_pushnumber(L, p);            // [ srv | s | p | ai | s | p ]
+            lua_call(L, 2, 1);               // [ srv | s | p | MSp ]
+            lua_call(L, 3, 0);               // [ ]
         }
     end
 
 // G2
-    _luaL_loadfile(lua, "g2.lua");      // [ f ]
-    _lua_call(lua, 0, 0);               // [ ]
+    _luaL_loadfile(_L, "g2.lua");      // [ f ]
+    _lua_call(_L, 0, 0);               // [ ]
 
     loop do
 _printf("MOVE\n");
-        _lua_getglobal(lua, "STATES");      // [ SS ]
-        var int s = _lua_objlen(lua, -1);
-        _lua_pop(lua, 1);                   // [ ]
+        _lua_getglobal(_L, "STATES");      // [ SS ]
+        var int s = _lua_objlen(_L, -1);
+        _lua_pop(_L, 1);                   // [ ]
 
-        _AI_move(lua, s, 1);
+        _AI_move(s, 1);
 _printf("2\n");
-        _AI_move(lua, s, 2);
+        _AI_move(s, 2);
 _printf("3\n");
 
         // server save (assumes all moved)
-        _lua_getglobal(lua, "SRV_save");    // [ f ]
-        _lua_pushstring(lua, "_g2.lua");    // [ f | "g" ]
-        _lua_call(lua, 1, 0);               // [ ]
+        _lua_getglobal(_L, "SRV_save");    // [ f ]
+        _lua_pushstring(_L, "_g2.lua");    // [ f | "g" ]
+        _lua_call(_L, 1, 0);               // [ ]
 
         var UIGame game with
-            this.ren   = ren;
-            this.lua   = lua;
             this.file  = "_g2.lua";
         end;
-        emit game.go_redim => null;
 
         await SDL_MOUSEBUTTONDOWN;
         par/or do
@@ -108,30 +105,27 @@ _printf("3\n");
     end
 
 // G3
-    _luaL_loadfile(lua, "g3.lua");      // [ f ]
-    _lua_call(lua, 0, 0);               // [ ]
+    _luaL_loadfile(_L, "g3.lua");      // [ f ]
+    _lua_call(_L, 0, 0);               // [ ]
 
     loop do
 _printf("MOVE\n");
-        _lua_getglobal(lua, "STATES");      // [ SS ]
-        var int s = _lua_objlen(lua, -1);
-        _lua_pop(lua, 1);                   // [ ]
+        _lua_getglobal(_L, "STATES");      // [ SS ]
+        var int s = _lua_objlen(_L, -1);
+        _lua_pop(_L, 1);                   // [ ]
 
-        _AI_move(lua, s, 1);
-        _AI_move(lua, s, 2);
-        _AI_move(lua, s, 3);
+        _AI_move(s, 1);
+        _AI_move(s, 2);
+        _AI_move(s, 3);
 
         // server save (assumes all moved)
-        _lua_getglobal(lua, "SRV_save");    // [ f ]
-        _lua_pushstring(lua, "_g3.lua");    // [ f | "g" ]
-        _lua_call(lua, 1, 0);               // [ ]
+        _lua_getglobal(_L, "SRV_save");    // [ f ]
+        _lua_pushstring(_L, "_g3.lua");    // [ f | "g" ]
+        _lua_call(_L, 1, 0);               // [ ]
 
         var UIGame game with
-            this.ren   = ren;
-            this.lua   = lua;
             this.file  = "_g3.lua";
         end;
-        emit game.go_redim => null;
 
         await SDL_MOUSEBUTTONDOWN;
         par/or do
@@ -143,7 +137,7 @@ _printf("MOVE\n");
     end
 with
     every SDL_REDRAW do
-        _SDL_RenderPresent(ren);
+        _SDL_RenderPresent(_REN);
     end
 end
 

@@ -12,52 +12,37 @@ input void SDL_KEYDOWN;
 input void SDL_MOUSEBUTTONDOWN;
 
 class UIGame with
-    interface UI;
-
-    var _SDL_Renderer* ren  = null;
-    var _lua_State*    lua  = null;
-    var _char*         file = null;
+    var _char* file = null;
 do
-    _assert(this.ren  != null);
+    _assert(_REN != null);
+    _assert(_L   != null);
+
     _assert(this.file != null);
-    _assert(this.lua  != null);
-        _luaL_loadfile(lua, this.file);
-        _lua_call(lua, 0, 0);
+        _luaL_loadfile(_L, this.file);
+        _lua_call(_L, 0, 0);
 
-    var UIMap map with
-        this.ren = ren;
-        this.lua = lua;
-    end;
+    var UIMap map;
 
-    var _SDL_Rect* r = await go_redim;
-    emit map.go_redim => null;
+    _lua_getglobal(_L, "STATES");      // [ SS ]
+    var int ns = _lua_objlen(_L, -1);
+    _lua_pop(_L, 1);                   // [ ]
 
-    _lua_getglobal(lua, "STATES");      // [ SS ]
-    var int ns = _lua_objlen(lua, -1);
-    _lua_pop(lua, 1);                   // [ ]
-
-    _lua_getglobal(lua, "MOVES");       // [ MM ]
-    var int nm = _lua_objlen(lua, -1);
-    _lua_pop(lua, 1);                   // [ ]
+    _lua_getglobal(_L, "MOVES");       // [ MM ]
+    var int nm = _lua_objlen(_L, -1);
+    _lua_pop(_L, 1);                   // [ ]
 
     var UIGameState state with
-        this.ren   = ren;
-        this.lua   = lua;
         this.map   = &map;
-        this.state = ns;
+        this.state = ns;    // start from last
     end;
-    emit state.go_redim => null;
 
     await SDL_KEYDOWN;
 
     loop do
         var UIGameState state with
-            this.ren   = ren;
-            this.lua   = lua;
             this.map   = &map;
             this.state = 1;
         end;
-        emit state.go_redim => null;
 
         await SDL_KEYDOWN;
 
@@ -66,12 +51,9 @@ do
 //_printf("> m %d\n", m);
             do
                 var UIGameMove move with
-                    this.ren  = ren;
-                    this.lua  = lua;
                     this.map  = &map;
                     this.move = m;
                 end;
-                emit move.go_redim => null;
 
                 state.state = state.state + 1;
                 await SDL_KEYDOWN;
@@ -85,6 +67,14 @@ do
     end
 end
 
+/*
+native do
+    lua_State*    L   = NULL;
+    SDL_Renderer* REN = NULL;
+    int REN_W, REN_H;
+end
+*/
+
 var _SDL_Window* win;
     finalize
         win = _SDL_CreateWindow("UI Game",
@@ -92,27 +82,19 @@ var _SDL_Window* win;
     with
         _SDL_DestroyWindow(win);
     end
-
-native do
-    int REN_W, REN_H;
-end
 _SDL_GetWindowSize(win, &_REN_W, &_REN_H);
 
-var _SDL_Renderer* ren;
-    finalize
-        ren = _SDL_CreateRenderer(win, -1, 0);
-    with
-        _SDL_DestroyRenderer(ren);
-    end
+_REN = _SDL_CreateRenderer(win, -1, 0);
+finalize with
+    _SDL_DestroyRenderer(_REN);
+end
 
-var _lua_State* lua;
-    finalize
-        lua = _luaL_newstate();
-    with
-        _lua_close(lua);
-    end
-    _lua_atpanic(lua, _ceu_lua_atpanic);
-    _luaL_openlibs(lua);
+_L = _luaL_newstate();
+finalize with
+    _lua_close(_L);
+end
+_lua_atpanic(_L, _ceu_lua_atpanic);
+_luaL_openlibs(_L);
 
 par/or do
     await SDL_QUIT;
@@ -122,42 +104,34 @@ with
 ***/
 with
     every SDL_REDRAW do
-        _boxRGBA(ren, 0,0, _REN_W,_REN_H, 0,0,0, 0xFF);
+        _boxRGBA(_REN, 0,0, _REN_W,_REN_H, 0,0,0, 0xFF);
     end
 with
     loop do
         do
             var UIGame game with
-                this.ren  = ren;
-                this.lua  = lua;
                 this.file = "g1.lua";
             end;
-            emit game.go_redim => null;
             await SDL_MOUSEBUTTONDOWN;
         end
         do
             var UIGame game with
-                this.ren  = ren;
-                this.lua  = lua;
                 this.file = "g2.lua";
             end;
-            emit game.go_redim => null;
             await SDL_MOUSEBUTTONDOWN;
         end
         do
             var UIGame game with
-                this.ren  = ren;
-                this.lua  = lua;
                 this.file = "g3.lua";
             end;
-            emit game.go_redim => null;
             await SDL_MOUSEBUTTONDOWN;
         end
     end
 with
     every SDL_REDRAW do
-        _SDL_RenderPresent(ren);
+        _SDL_RenderPresent(_REN);
     end
 end
+_printf("ff\n");
 
 return 0;

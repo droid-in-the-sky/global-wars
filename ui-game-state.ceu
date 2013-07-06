@@ -9,67 +9,69 @@ input void SDL_REDRAW;
 input void SDL_KEYDOWN;
 
 class UIGameState with
-    interface UI;
-
-    var _SDL_Renderer* ren = null;
-    var _lua_State*    lua = null;
-
     var int state = 0;
-
     var UIMap* map = null;
 do
+    _assert(_REN != null);
+    _assert(_L   != null);
+
     _assert(this.map   != null);
     _assert(this.state != 0);
 
-    var _SDL_Rect* r = await go_redim;
-    _assert(this.ren != null);
-
     every SDL_REDRAW do
-        _lua_getglobal(lua, "PLAYERS");      // [ PP ]
-        _lua_getglobal(lua, "STATES");       // [ PP | SS ]
-        _lua_rawgeti(lua, -1, this.state);   // [ PP | SS | Ss ]
+        _lua_getglobal(_L, "PLAYERS");      // [ PP ]
+        _lua_getglobal(_L, "STATES");       // [ PP | SS ]
+        _lua_rawgeti(_L, -1, this.state);   // [ PP | SS | Ss ]
 
         // foreach player p
-        loop p_, _lua_objlen(lua,1) do
+        loop p_, _lua_objlen(_L,1) do
             var int p = p_ + 1;
 
             // player r,g,b
-            _lua_rawgeti(lua, 1, p);         // [ PP | SS | Ss | P ]
-            _lua_getfield(lua, -1, "color"); // [ PP | SS | Ss | P | clr ]
-            _lua_rawgeti(lua, -1, 1);        // [ PP | SS | Ss | P | clr | r ]
-            _lua_rawgeti(lua, -2, 2);        // [ PP | SS | Ss | P | clr | r | g ]
-            _lua_rawgeti(lua, -3, 3);        // [ PP | SS | Ss | P | clr | r | g | b ]
-            var int r = _lua_tointeger(lua, -3);
-            var int g = _lua_tointeger(lua, -2);
-            var int b = _lua_tointeger(lua, -1);
-            _lua_pop(lua, 5);                // [ PP | SS | Ss ]
+            _lua_rawgeti(_L, 1, p);         // [ PP | SS | Ss | P ]
+            _lua_getfield(_L, -1, "color"); // [ PP | SS | Ss | P | clr ]
+            _lua_rawgeti(_L, -1, 1);        // [ PP | SS | Ss | P | clr | r ]
+            _lua_rawgeti(_L, -2, 2);        // [ PP | SS | Ss | P | clr | r | g ]
+            _lua_rawgeti(_L, -3, 3);        // [ PP | SS | Ss | P | clr | r | g | b ]
+            var int r = _lua_tointeger(_L, -3);
+            var int g = _lua_tointeger(_L, -2);
+            var int b = _lua_tointeger(_L, -1);
+            _lua_pop(_L, 5);                // [ PP | SS | Ss ]
 
-            _lua_rawgeti(lua, -1, p);        // [ PP | SS | Ss | Ssp ]
+            _lua_rawgeti(_L, -1, p);        // [ PP | SS | Ss | Ssp ]
 
             // foreach country c
-            loop c_, _lua_objlen(lua,-1) do
+            loop c_, _lua_objlen(_L,-1) do
                 var int c = c_ + 1;
-                _lua_rawgeti(lua, -1, c);    // [ PP | SS | Ss | Ssp | n ]
-                var int n = _lua_tointeger(lua, -1);    // # armies
-                _lua_pop(lua, 1);            // [ PP | SS | Ss | Ssp ]
+                _lua_rawgeti(_L, -1, c);    // [ PP | SS | Ss | Ssp | n ]
+                var int n = _lua_tointeger(_L, -1);    // # armies
+                _lua_pop(_L, 1);            // [ PP | SS | Ss | Ssp ]
 
                 if n > 0 then
                     var _char[10] str;
                     _sprintf(str, "%d", n);
-                    _boxRGBA(ren,
+                    _boxRGBA(_REN,
                              map:cx[c]-10, map:cy[c]-10,
                              map:cx[c]+10, map:cy[c]+10,
                              r,g,b, 0xFF);
-                    _stringRGBA(ren, map:cx[c], map:cy[c], str, 0,0,0, 0xFF);
+                    _stringRGBA(_REN, map:cx[c], map:cy[c], str, 0,0,0, 0xFF);
                 end
             end
 
-            _lua_pop(lua, 1);                // [ PP | SS | Ss ]
+            _lua_pop(_L, 1);                // [ PP | SS | Ss ]
         end
 
-        _lua_pop(lua, 3);                    // [ ]
+        _lua_pop(_L, 3);                    // [ ]
     end
 end
+
+/*
+native do
+    lua_State*    L   = NULL;
+    SDL_Renderer* REN = NULL;
+    int REN_W, REN_H;
+end
+*/
 
 var _SDL_Window* win;
     finalize
@@ -78,27 +80,19 @@ var _SDL_Window* win;
     with
         _SDL_DestroyWindow(win);
     end
-
-native do
-    int REN_W, REN_H;
-end
 _SDL_GetWindowSize(win, &_REN_W, &_REN_H);
 
-var _SDL_Renderer* ren;
-    finalize
-        ren = _SDL_CreateRenderer(win, -1, 0);
-    with
-        _SDL_DestroyRenderer(ren);
-    end
+_REN = _SDL_CreateRenderer(win, -1, 0);
+finalize with
+    _SDL_DestroyRenderer(_REN);
+end
 
-var _lua_State* lua;
-    finalize
-        lua = _luaL_newstate();
-    with
-        _lua_close(lua);
-    end
-    _lua_atpanic(lua, _ceu_lua_atpanic);
-    _luaL_openlibs(lua);
+_L = _luaL_newstate();
+finalize with
+    _lua_close(_L);
+end
+_lua_atpanic(_L, _ceu_lua_atpanic);
+_luaL_openlibs(_L);
 
 par/or do
     await SDL_QUIT;
@@ -108,36 +102,29 @@ with
 ***/
 with
     every SDL_REDRAW do
-        _boxRGBA(ren, 0,0, _REN_W,_REN_H, 0,0,0, 0xFF);
+        _boxRGBA(_REN, 0,0, _REN_W,_REN_H, 0,0,0, 0xFF);
     end
 with
-    _luaL_loadfile(lua, "g1.lua");
-    _lua_call(lua, 0, 0);
-    _lua_getglobal(lua, "STATES");  // [ SS ]
-    var int len = _lua_objlen(lua, -1);
-    _lua_pop(lua, 1);               // [ ]
+    _luaL_loadfile(_L, "g1.lua");
+    _lua_call(_L, 0, 0);
+    _lua_getglobal(_L, "STATES");  // [ SS ]
+    var int len = _lua_objlen(_L, -1);
+    _lua_pop(_L, 1);               // [ ]
 
-    var UIMap map with
-        this.ren = ren;
-        this.lua = lua;
-    end;
-    emit map.go_redim => null;
+    var UIMap map;
 
     loop do
         loop i, len do
             var UIGameState s with
-                this.ren   = ren;
-                this.lua   = lua;
                 this.map   = &map;
                 this.state = i+1;
             end;
-            emit s.go_redim => null;
             await SDL_KEYDOWN;
         end
     end
 with
     every SDL_REDRAW do
-        _SDL_RenderPresent(ren);
+        _SDL_RenderPresent(_REN);
     end
 end
 

@@ -19,22 +19,18 @@ native do
 end
 
 class UIMap with
-    interface UI;
-
-    var _SDL_Renderer* ren = null;
-    var _lua_State*   lua  = null;
-
     var int  n;   // number of countries
     var u16* cx;  // all country centers
     var u16* cy;  // all country centers
 
     event int go_zoom, go_x, go_y;
 do
-    _assert(this.lua != null);
+    _assert(_REN != null);
+    _assert(_L   != null);
 
-    _lua_getglobal(lua, "MAP");     // [ M ]
-    this.n = _lua_objlen(lua,1);
-    _lua_pop(lua, 1);               // [ ]
+    _lua_getglobal(_L, "MAP");     // [ M ]
+    this.n = _lua_objlen(_L,1);
+    _lua_pop(_L, 1);               // [ ]
 
     // cx / cy (pos n=0 unused, malloc 1 extra)
     finalize
@@ -48,9 +44,6 @@ do
         _free(this.cy);
     end
 
-    var _SDL_Rect* r = await go_redim;
-    _assert(this.ren != null);
-
     var int zzz = 100;
     var int xxx = 0;
     var int yyy = 0;
@@ -60,18 +53,18 @@ do
 
     do
         var int xmin, xmax;
-            _lua_getglobal(lua, "xs_min_max");  // [ f ]
-            _lua_call(lua, 0, 2);               // [ xmin | xmax ]
-            xmin = _lua_tointeger(lua, -2);
-            xmax = _lua_tointeger(lua, -1);
-            _lua_pop(lua, 2);                   // [ ]
+            _lua_getglobal(_L, "xs_min_max");  // [ f ]
+            _lua_call(_L, 0, 2);               // [ xmin | xmax ]
+            xmin = _lua_tointeger(_L, -2);
+            xmax = _lua_tointeger(_L, -1);
+            _lua_pop(_L, 2);                   // [ ]
 
         var int ymin, ymax;
-            _lua_getglobal(lua, "ys_min_max");  // [ f ]
-            _lua_call(lua, 0, 2);               // [ ymin | ymax ]
-            ymin = _lua_tointeger(lua, -2);
-            ymax = _lua_tointeger(lua, -1);
-            _lua_pop(lua, 2);                   // [ ]
+            _lua_getglobal(_L, "ys_min_max");  // [ f ]
+            _lua_call(_L, 0, 2);               // [ ymin | ymax ]
+            ymin = _lua_tointeger(_L, -2);
+            ymax = _lua_tointeger(_L, -1);
+            _lua_pop(_L, 2);                   // [ ]
 
         var int  w = xmax - xmin;
         var int  h = ymax - ymin;
@@ -93,18 +86,18 @@ do
     par do
         loop do
             // center
-            _lua_getglobal(lua, "MAP");         // [ M ]
+            _lua_getglobal(_L, "MAP");         // [ M ]
             loop i_, this.n do
                 var int i = i_ + 1;     // C => Lua indexing
-                _lua_rawgeti(lua, 1, i);            // [ M | C ]
-                _lua_getfield(lua, -1, "center");   // [ M | C | pt ]
-                _lua_rawgeti(lua, -1, 1);           // [ M | C | pt | x ]
-                _lua_rawgeti(lua, -2, 2);           // [ M | C | pt | x | y ]
-                this.cx[i] = _P(_lua_tointeger(lua,-2), xc, xxx, zzz);
-                this.cy[i] = _P(_lua_tointeger(lua,-1), yc, yyy, zzz);
-                _lua_pop(lua, 4);                   // [ ]
+                _lua_rawgeti(_L, 1, i);            // [ M | C ]
+                _lua_getfield(_L, -1, "center");   // [ M | C | pt ]
+                _lua_rawgeti(_L, -1, 1);           // [ M | C | pt | x ]
+                _lua_rawgeti(_L, -2, 2);           // [ M | C | pt | x | y ]
+                this.cx[i] = _P(_lua_tointeger(_L,-2), xc, xxx, zzz);
+                this.cy[i] = _P(_lua_tointeger(_L,-1), yc, yyy, zzz);
+                _lua_pop(_L, 4);                   // [ ]
             end
-            _lua_pop(lua, 1);                   // [ ]
+            _lua_pop(_L, 1);                   // [ ]
 
             par/or do
                 var int v = await go_zoom;      // ZOOM
@@ -126,12 +119,12 @@ do
         every but = SDL_MOUSEBUTTONDOWN do
             var int x = _I(but:x, xc, xxx, zzz);
             var int y = _I(but:y, yc, yyy, zzz);
-            _lua_getglobal(lua, "MAP_vspoint"); // [ f ]
-            _lua_pushnumber(lua, x);            // [ f | x ]
-            _lua_pushnumber(lua, y);            // [ f | x | y ]
-            _lua_call(lua, 2, 1);               // [ c ]
-            var int c = _lua_tointeger(lua, -1);
-            _lua_pop(lua, 1);                   // [ ]
+            _lua_getglobal(_L, "MAP_vspoint"); // [ f ]
+            _lua_pushnumber(_L, x);            // [ f | x ]
+            _lua_pushnumber(_L, y);            // [ f | x | y ]
+            _lua_call(_L, 2, 1);               // [ c ]
+            var int c = _lua_tointeger(_L, -1);
+            _lua_pop(_L, 1);                   // [ ]
             if c > 0 then
                 _printf("CLICK = %d\n", c);
             end
@@ -140,79 +133,86 @@ do
         every SDL_REDRAW do
             var int n = 1;      // traverses xs/ys continuously
 
-            _lua_getglobal(lua, "MAP");        // [ M | T ]
-            _lua_getglobal(lua, "TMAP");       // [ M | T ]
-                _lua_getfield(lua, -1, "ns");  // [ M | T | ns ]
-                _lua_getfield(lua, -2, "xs");  // [ M | T | ns | xs ]
-                _lua_getfield(lua, -3, "ys");  // [ M | T | ns | xs | ys ]
+            _lua_getglobal(_L, "MAP");        // [ M | T ]
+            _lua_getglobal(_L, "TMAP");       // [ M | T ]
+                _lua_getfield(_L, -1, "ns");  // [ M | T | ns ]
+                _lua_getfield(_L, -2, "xs");  // [ M | T | ns | xs ]
+                _lua_getfield(_L, -3, "ys");  // [ M | T | ns | xs | ys ]
 
             // for each country [0, #MAP)
             loop i_, this.n do
                 var int i = i_ + 1;     // C => Lua indexing
                 var u16[10] xs, ys;     // TODO: negative values?
 
-                _lua_rawgeti(lua, 3, i);       // [ . | ns[i] ]
-                var int pts = _lua_tointeger(lua, -1);
-                _lua_pop(lua, 1);              // [ . ]
+                _lua_rawgeti(_L, 3, i);       // [ . | ns[i] ]
+                var int pts = _lua_tointeger(_L, -1);
+                _lua_pop(_L, 1);              // [ . ]
 
                 // for each point [0, ns[i])
                 loop j, pts do
-                    _lua_rawgeti(lua, 4, n);   // [ . | xs[n] ]
-                    _lua_rawgeti(lua, 5, n);   // [ . | xs[n] | ys[n] ]
-                    xs[j] = _P(_lua_tointeger(lua,-2), xc, xxx, zzz);
-                    ys[j] = _P(_lua_tointeger(lua,-1), yc, yyy, zzz);
-                    _lua_pop(lua, 2);          // [ . ]
+                    _lua_rawgeti(_L, 4, n);   // [ . | xs[n] ]
+                    _lua_rawgeti(_L, 5, n);   // [ . | xs[n] | ys[n] ]
+                    xs[j] = _P(_lua_tointeger(_L,-2), xc, xxx, zzz);
+                    ys[j] = _P(_lua_tointeger(_L,-1), yc, yyy, zzz);
+                    _lua_pop(_L, 2);          // [ . ]
                     n = n + 1; // traverses xs/ys continuously
                 end
 
                 // push color
-                _lua_rawgeti(lua, 1, i);         // [ . | C ]
-                _lua_getfield(lua, -1, "color"); // [ . | C | clr ]
-                _lua_rawgeti(lua, -1, 1);        // [ . | C | clr | r ]
-                _lua_rawgeti(lua, -2, 2);        // [ . | C | clr | r | g ]
-                _lua_rawgeti(lua, -3, 3);        // [ . | C | clr | r | g | b ]
+                _lua_rawgeti(_L, 1, i);         // [ . | C ]
+                _lua_getfield(_L, -1, "color"); // [ . | C | clr ]
+                _lua_rawgeti(_L, -1, 1);        // [ . | C | clr | r ]
+                _lua_rawgeti(_L, -2, 2);        // [ . | C | clr | r | g ]
+                _lua_rawgeti(_L, -3, 3);        // [ . | C | clr | r | g | b ]
 
                 // draw country with color
-                _filledPolygonRGBA(ren, xs, ys, pts,
-                    _lua_tointeger(lua, -3),
-                    _lua_tointeger(lua, -2),
-                    _lua_tointeger(lua, -1),
+                _filledPolygonRGBA(_REN, xs, ys, pts,
+                    _lua_tointeger(_L, -3),
+                    _lua_tointeger(_L, -2),
+                    _lua_tointeger(_L, -1),
                     0xFF);
 
                 // draw country border
-                _polygonRGBA(ren, xs, ys, pts, 0x00,0x00,0x00, 0xFF);
+                _polygonRGBA(_REN, xs, ys, pts, 0x00,0x00,0x00, 0xFF);
 
                 // pop color
-                _lua_pop(lua, 5);                   // [ . ]
+                _lua_pop(_L, 5);                   // [ . ]
 
                 // draw center
-                //_boxRGBA(ren, cx[i]-1,cy[i]-1, cx[i]+1,cy[i]+1, 0,0,0, 0xFF);
+                //_boxRGBA(_REN, cx[i]-1,cy[i]-1, cx[i]+1,cy[i]+1, 0,0,0, 
+                //0xFF);
             end
 
-            _lua_pop(lua, 5);               // [ ]
+            _lua_pop(_L, 5);               // [ ]
 
             // for each border { {p1,p2}, {p3,p4}, ... }
-            _lua_getglobal(lua, "BORDERS"); // [ B ]
-            loop i_, _lua_objlen(lua,1) do
+            _lua_getglobal(_L, "BORDERS"); // [ B ]
+            loop i_, _lua_objlen(_L,1) do
                 var int i = i_ + 1;     // C => Lua indexing
-                _lua_rawgeti(lua, 1, i);    // [ B | t ]
-                _lua_rawgeti(lua, -1, 1);   // [ B | t | p1 ]
-                _lua_rawgeti(lua, -2, 2);   // [ B | t | p1 | p2 ]
-                _lua_rawgeti(lua, -2, 1);   // [ B | t | p1 | p2 | x1 ]
-                _lua_rawgeti(lua, -3, 2);   // [ B | t | p1 | p2 | x1 | y1 ]
-                _lua_rawgeti(lua, -3, 1);   // [ B | t | p1 | p2 | x1 | y1 | x2 ]
-                _lua_rawgeti(lua, -4, 2);   // [ B | t | p1 | p2 | x1 | y1 | x2 | y2 ]
-                _lineRGBA(ren,
-                    _P(_lua_tointeger(lua,-4), xc, xxx, zzz),
-                    _P(_lua_tointeger(lua,-3), yc, yyy, zzz),
-                    _P(_lua_tointeger(lua,-2), xc, xxx, zzz),
-                    _P(_lua_tointeger(lua,-1), yc, yyy, zzz),
+                _lua_rawgeti(_L, 1, i);    // [ B | t ]
+                _lua_rawgeti(_L, -1, 1);   // [ B | t | p1 ]
+                _lua_rawgeti(_L, -2, 2);   // [ B | t | p1 | p2 ]
+                _lua_rawgeti(_L, -2, 1);   // [ B | t | p1 | p2 | x1 ]
+                _lua_rawgeti(_L, -3, 2);   // [ B | t | p1 | p2 | x1 | y1 ]
+                _lua_rawgeti(_L, -3, 1);   // [ B | t | p1 | p2 | x1 | y1 | x2 ]
+                _lua_rawgeti(_L, -4, 2);   // [ B | t | p1 | p2 | x1 | y1 | x2 | y2 ]
+                _lineRGBA(_REN,
+                    _P(_lua_tointeger(_L,-4), xc, xxx, zzz),
+                    _P(_lua_tointeger(_L,-3), yc, yyy, zzz),
+                    _P(_lua_tointeger(_L,-2), xc, xxx, zzz),
+                    _P(_lua_tointeger(_L,-1), yc, yyy, zzz),
                     0,0,0, 0xFF);
-                _lua_pop(lua, 7);           // [ B ]
+                _lua_pop(_L, 7);           // [ B ]
             end
-            _lua_pop(lua, 1);               // [ ]
+            _lua_pop(_L, 1);               // [ ]
         end
     end
+end
+
+native do
+    lua_State*    L   = NULL;
+    SDL_Renderer* REN = NULL;
+    int REN_W, REN_H;
 end
 
 var _SDL_Window* win;
@@ -222,27 +222,19 @@ var _SDL_Window* win;
     with
         _SDL_DestroyWindow(win);
     end
-
-native do
-    int REN_W, REN_H;
-end
 _SDL_GetWindowSize(win, &_REN_W, &_REN_H);
 
-var _SDL_Renderer* ren;
-    finalize
-        ren = _SDL_CreateRenderer(win, -1, 0);
-    with
-        _SDL_DestroyRenderer(ren);
-    end
+_REN = _SDL_CreateRenderer(win, -1, 0);
+finalize with
+    _SDL_DestroyRenderer(_REN);
+end
 
-var _lua_State* lua;
-    finalize
-        lua = _luaL_newstate();
-    with
-        _lua_close(lua);
-    end
-    _lua_atpanic(lua, _ceu_lua_atpanic);
-    _luaL_openlibs(lua);
+_L = _luaL_newstate();
+finalize with
+    _lua_close(_L);
+end
+_lua_atpanic(_L, _ceu_lua_atpanic);
+_luaL_openlibs(_L);
 
 par/or do
     await SDL_QUIT;
@@ -252,27 +244,19 @@ with
 ***/
 with
     every SDL_REDRAW do
-        _boxRGBA(ren, 0,0, _REN_W,_REN_H, 0,0,0, 0xFF);
+        _boxRGBA(_REN, 0,0, _REN_W,_REN_H, 0,0,0, 0xFF);
     end
 with
     do
-        _luaL_loadfile(lua, "map1.lua");  // [ f ]
-        _lua_call(lua, 0, 0);             // [ ]
-        var UIMap map with
-            this.ren  = ren;
-            this.lua  = lua;
-        end;
-        emit map.go_redim => null;
+        _luaL_loadfile(_L, "map1.lua");  // [ f ]
+        _lua_call(_L, 0, 0);             // [ ]
+        var UIMap map;
         await 2s;
     end
 
-    _luaL_loadfile(lua, "map2.lua");  // [ f ]
-    _lua_call(lua, 0, 0);             // [ ]
-    var UIMap map with
-        this.ren  = ren;
-        this.lua  = lua;
-    end;
-    emit map.go_redim => null;
+    _luaL_loadfile(_L, "map2.lua");  // [ f ]
+    _lua_call(_L, 0, 0);             // [ ]
+    var UIMap map;
     await 2s;
 
     par do
@@ -296,7 +280,7 @@ with
     end
 with
     every SDL_REDRAW do
-        _SDL_RenderPresent(ren);
+        _SDL_RenderPresent(_REN);
     end
 end
 

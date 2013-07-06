@@ -9,55 +9,49 @@ input void SDL_REDRAW;
 input void SDL_KEYDOWN;
 
 class UIGameMove with
-    interface UI;
-
-    var _SDL_Renderer* ren = null;
-    var _lua_State*    lua = null;
-
     var int move = 0;
-
     var UIMap* map = null;
 do
+    _assert(_REN != null);
+    _assert(_L   != null);
+
     _assert(this.map  != null);
     _assert(this.move != 0);
 
-    var _SDL_Rect* r = await go_redim;
-    _assert(this.ren != null);
-
     every SDL_REDRAW do
-        _lua_getglobal(lua, "PLAYERS");      // [ PP ]
-        _lua_getglobal(lua, "MOVES");        // [ PP | MM ]
-        _lua_rawgeti(lua, -1, this.move);    // [ PP | MM | Mm ]
+        _lua_getglobal(_L, "PLAYERS");      // [ PP ]
+        _lua_getglobal(_L, "MOVES");        // [ PP | MM ]
+        _lua_rawgeti(_L, -1, this.move);    // [ PP | MM | Mm ]
 
         // foreach player p
-        loop p_, _lua_objlen(lua,1) do
+        loop p_, _lua_objlen(_L,1) do
             var int p = p_ + 1;
 
             // player r,g,b
-            _lua_rawgeti(lua, 1, p);         // [ PP | MM | Mm | P ]
-            _lua_getfield(lua, -1, "color"); // [ PP | MM | Mm | P | clr ]
-            _lua_rawgeti(lua, -1, 1);        // [ PP | MM | Mm | P | clr | r ]
-            _lua_rawgeti(lua, -2, 2);        // [ PP | MM | Mm | P | clr | r | g ]
-            _lua_rawgeti(lua, -3, 3);        // [ PP | MM | Mm | P | clr | r | g | b ]
-            var int r = _lua_tointeger(lua, -3);
-            var int g = _lua_tointeger(lua, -2);
-            var int b = _lua_tointeger(lua, -1);
-            _lua_pop(lua, 5);                // [ PP | MM | Mm ]
+            _lua_rawgeti(_L, 1, p);         // [ PP | MM | Mm | P ]
+            _lua_getfield(_L, -1, "color"); // [ PP | MM | Mm | P | clr ]
+            _lua_rawgeti(_L, -1, 1);        // [ PP | MM | Mm | P | clr | r ]
+            _lua_rawgeti(_L, -2, 2);        // [ PP | MM | Mm | P | clr | r | g ]
+            _lua_rawgeti(_L, -3, 3);        // [ PP | MM | Mm | P | clr | r | g | b ]
+            var int r = _lua_tointeger(_L, -3);
+            var int g = _lua_tointeger(_L, -2);
+            var int b = _lua_tointeger(_L, -1);
+            _lua_pop(_L, 5);                // [ PP | MM | Mm ]
 
             // foreach move "i" in "Mm" from player "p"
-            _lua_rawgeti(lua, -1, p);        // [ PP | MM | Mm | Mmp ]
-            loop i_, _lua_objlen(lua,-1) do
+            _lua_rawgeti(_L, -1, p);        // [ PP | MM | Mm | Mmp ]
+            loop i_, _lua_objlen(_L,-1) do
                 var int i = i_ + 1;
-                _lua_rawgeti(lua, -1, i);    // [ PP | MM | Mm | Mmp | T ]
+                _lua_rawgeti(_L, -1, i);    // [ PP | MM | Mm | Mmp | T ]
 
                 // get a=#armies, fr=from, to=to
-                _lua_rawgeti(lua, -1, 1);    // [ PP | MM | Mm | Mmp | T | a ]
-                _lua_rawgeti(lua, -2, 2);    // [ PP | MM | Mm | Mmp | T | a | fr ]
-                _lua_rawgeti(lua, -3, 3);    // [ PP | MM | Mm | Mmp | T | a | fr | to ]
-                var int a  = _lua_tointeger(lua, -3);
-                var int fr = _lua_tointeger(lua, -2);
-                var int to = _lua_tointeger(lua, -1);
-                _lua_pop(lua, 4);            // [ PP | MM | Mm | Mmp ]
+                _lua_rawgeti(_L, -1, 1);    // [ PP | MM | Mm | Mmp | T | a ]
+                _lua_rawgeti(_L, -2, 2);    // [ PP | MM | Mm | Mmp | T | a | fr ]
+                _lua_rawgeti(_L, -3, 3);    // [ PP | MM | Mm | Mmp | T | a | fr | to ]
+                var int a  = _lua_tointeger(_L, -3);
+                var int fr = _lua_tointeger(_L, -2);
+                var int to = _lua_tointeger(_L, -1);
+                _lua_pop(_L, 4);            // [ PP | MM | Mm | Mmp ]
 
                 // draw move (number of armies)
                 var _char[10] str;
@@ -106,19 +100,27 @@ do
                     y1 = y + (y2 - y)/2;
                 end
 
-                _thickLineRGBA(ren, x1,y1, x2,y2, 1, 0,0,0, 0xAA);
-                _boxRGBA(ren,
+                _thickLineRGBA(_REN, x1,y1, x2,y2, 1, 0,0,0, 0xAA);
+                _boxRGBA(_REN,
                          x-10, y-10,    // TODO: hardcoded
                          x+10, y+10,    // TODO: hardcoded
                          r,g,b, 0xAA);
-                _stringRGBA(ren, x, y, str, 0,0,0, 0xAA);
+                _stringRGBA(_REN, x, y, str, 0,0,0, 0xAA);
             end
-        _lua_pop(lua, 1);                    // [ PP | MM | Mm | Mmp ]
+        _lua_pop(_L, 1);                    // [ PP | MM | Mm | Mmp ]
         end
 
-        _lua_pop(lua, 3);                    // [ ]
+        _lua_pop(_L, 3);                    // [ ]
     end
 end
+
+/*
+native do
+    lua_State*    L   = NULL;
+    SDL_Renderer* REN = NULL;
+    int REN_W, REN_H;
+end
+*/
 
 var _SDL_Window* win;
     finalize
@@ -127,27 +129,19 @@ var _SDL_Window* win;
     with
         _SDL_DestroyWindow(win);
     end
-
-native do
-    int REN_W, REN_H;
-end
 _SDL_GetWindowSize(win, &_REN_W, &_REN_H);
 
-var _SDL_Renderer* ren;
-    finalize
-        ren = _SDL_CreateRenderer(win, -1, 0);
-    with
-        _SDL_DestroyRenderer(ren);
-    end
+_REN = _SDL_CreateRenderer(win, -1, 0);
+finalize with
+    _SDL_DestroyRenderer(_REN);
+end
 
-var _lua_State* lua;
-    finalize
-        lua = _luaL_newstate();
-    with
-        _lua_close(lua);
-    end
-    _lua_atpanic(lua, _ceu_lua_atpanic);
-    _luaL_openlibs(lua);
+_L = _luaL_newstate();
+finalize with
+    _lua_close(_L);
+end
+_lua_atpanic(_L, _ceu_lua_atpanic);
+_luaL_openlibs(_L);
 
 par/or do
     await SDL_QUIT;
@@ -157,36 +151,29 @@ with
 ***/
 with
     every SDL_REDRAW do
-        _boxRGBA(ren, 0,0, _REN_W,_REN_H, 0,0,0, 0xFF);
+        _boxRGBA(_REN, 0,0, _REN_W,_REN_H, 0,0,0, 0xFF);
     end
 with
-    _luaL_loadfile(lua, "g1.lua");
-    _lua_call(lua, 0, 0);
-    _lua_getglobal(lua, "MOVES");   // [ MM ]
-    var int len = _lua_objlen(lua, -1);
-    _lua_pop(lua, 1);               // [ ]
+    _luaL_loadfile(_L, "g1.lua");
+    _lua_call(_L, 0, 0);
+    _lua_getglobal(_L, "MOVES");   // [ MM ]
+    var int len = _lua_objlen(_L, -1);
+    _lua_pop(_L, 1);               // [ ]
 
-    var UIMap map with
-        this.ren = ren;
-        this.lua = lua;
-    end;
-    emit map.go_redim => null;
+    var UIMap map;
 
     loop do
         loop i, len do
             var UIGameMove m with
-                this.ren  = ren;
-                this.lua  = lua;
                 this.map  = &map;
                 this.move = i+1;
             end;
-            emit m.go_redim => null;
             await SDL_KEYDOWN;
         end
     end
 with
     every SDL_REDRAW do
-        _SDL_RenderPresent(ren);
+        _SDL_RenderPresent(_REN);
     end
 end
 
