@@ -6,7 +6,7 @@ import ui.ceu;
 import map.ceu;
 
 input void SDL_REDRAW;
-input void SDL_KEYDOWN;
+input _SDL_KeyboardEvent* SDL_KEYDOWN;
 
 class GameState with
     var Map* map = null;

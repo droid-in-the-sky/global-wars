@@ -1,5 +1,8 @@
 #include <stdio.h>
 
+// definitely lost: 3,285 bytes in 25 blocks
+
+
 #ifdef __ANDROID__
 #include "SDL.h"
 //#include "SDL_image.h"
