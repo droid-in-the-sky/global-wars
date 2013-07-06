@@ -3,14 +3,14 @@ import sdl.ceu;
 import sdl-gfx.ceu;
 
 import ui.ceu;
-import ui-map.ceu;
+import map.ceu;
 
 input void SDL_REDRAW;
 input void SDL_KEYDOWN;
 
-class UIGameState with
+class GameState with
     var int state = 0;
-    var UIMap* map = null;
+    var Map* map = null;
 do
     _assert(_REN != null);
     _assert(_L   != null);
@@ -75,7 +75,7 @@ end
 
 var _SDL_Window* win;
     finalize
-        win = _SDL_CreateWindow("UI Game State",
+        win = _SDL_CreateWindow("Game State",
                             500, 400, 800, 480, _SDL_WINDOW_SHOWN);
     with
         _SDL_DestroyWindow(win);
@@ -111,11 +111,11 @@ with
     var int len = _lua_objlen(_L, -1);
     _lua_pop(_L, 1);               // [ ]
 
-    var UIMap map;
+    var Map map;
 
     loop do
         loop i, len do
-            var UIGameState s with
+            var GameState s with
                 this.map   = &map;
                 this.state = i+1;
             end;

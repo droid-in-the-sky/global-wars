@@ -18,7 +18,7 @@ native do
     }
 end
 
-class UIMap with
+class Map with
     var int  n;   // number of countries
     var u16* cx;  // all country centers
     var u16* cy;  // all country centers
@@ -217,7 +217,7 @@ end
 
 var _SDL_Window* win;
     finalize
-        win = _SDL_CreateWindow("UI Map",
+        win = _SDL_CreateWindow("Map",
                             500, 400, 800, 480, _SDL_WINDOW_SHOWN);
     with
         _SDL_DestroyWindow(win);
@@ -250,13 +250,13 @@ with
     do
         _luaL_loadfile(_L, "map1.lua");  // [ f ]
         _lua_call(_L, 0, 0);             // [ ]
-        var UIMap map;
+        var Map map;
         await 2s;
     end
 
     _luaL_loadfile(_L, "map2.lua");  // [ f ]
     _lua_call(_L, 0, 0);             // [ ]
-    var UIMap map;
+    var Map map;
     await 2s;
 
     par do

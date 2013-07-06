@@ -3,8 +3,8 @@ import sdl.ceu;
 import sdl-gfx.ceu;
 
 import ui.ceu;
-import ui-map.ceu;
-import ui-game.ceu;
+import map.ceu;
+import game.ceu;
 
 input void SDL_REDRAW;
 input void SDL_MOUSEBUTTONDOWN;
@@ -91,7 +91,7 @@ _printf("3\n");
         _lua_pushstring(_L, "_g2.lua");    // [ f | "g" ]
         _lua_call(_L, 1, 0);               // [ ]
 
-        var UIGame game with
+        var Game game with
             this.file  = "_g2.lua";
         end;
 
@@ -123,7 +123,7 @@ _printf("MOVE\n");
         _lua_pushstring(_L, "_g3.lua");    // [ f | "g" ]
         _lua_call(_L, 1, 0);               // [ ]
 
-        var UIGame game with
+        var Game game with
             this.file  = "_g3.lua";
         end;
 

@@ -15,26 +15,26 @@ ai:
 		-o global-wars.exe
 
 game:
-	ceu --m4 ui-game.ceu
+	ceu --m4 game.ceu
 	gcc -Os main.c $(CFLAGS) -lSDL2 -lSDL2_image -lSDL2_gfx -llua \
 		-o global-wars.exe
 
 move:
-	ceu --m4 ui-game-move.ceu
+	ceu --m4 game-move.ceu
 	gcc -Os main.c $(CFLAGS) -lSDL2 -lSDL2_image -lSDL2_gfx -llua \
 		-o global-wars.exe
 
 state:
-	ceu --m4 ui-game-state.ceu
+	ceu --m4 game-state.ceu
 	gcc -Os main.c $(CFLAGS) -lSDL2 -lSDL2_image -lSDL2_gfx -llua \
 		-o global-wars.exe
 
 map:
-	ceu --m4 ui-map.ceu
+	ceu --m4 map.ceu
 	gcc -Os main.c $(CFLAGS) -lSDL2 -lSDL2_image -lSDL2_gfx -llua \
 		-o global-wars.exe
 
 clean:
-	rm -f *.exe _ceu_* *.ceu_m4 _g1.lua
+	rm -f *.exe _ceu_* *.ceu_m4 _g*.lua
 
 .PHONY: all game map clean

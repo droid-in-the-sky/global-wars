@@ -3,15 +3,15 @@ import sdl.ceu;
 import sdl-gfx.ceu;
 
 import ui.ceu;
-import ui-map.ceu;
-import ui-game-state.ceu;
-import ui-game-move.ceu;
+import map.ceu;
+import game-state.ceu;
+import game-move.ceu;
 
 input void SDL_REDRAW;
 input void SDL_KEYDOWN;
 input void SDL_MOUSEBUTTONDOWN;
 
-class UIGame with
+class Game with
     var _char* file = null;
 do
     _assert(_REN != null);
@@ -21,7 +21,7 @@ do
         _luaL_loadfile(_L, this.file);
         _lua_call(_L, 0, 0);
 
-    var UIMap map;
+    var Map map;
 
     _lua_getglobal(_L, "STATES");      // [ SS ]
     var int ns = _lua_objlen(_L, -1);
@@ -31,7 +31,7 @@ do
     var int nm = _lua_objlen(_L, -1);
     _lua_pop(_L, 1);                   // [ ]
 
-    var UIGameState state with
+    var GameState state with
         this.map   = &map;
         this.state = ns;    // start from last
     end;
@@ -39,7 +39,7 @@ do
     await SDL_KEYDOWN;
 
     loop do
-        var UIGameState state with
+        var GameState state with
             this.map   = &map;
             this.state = 1;
         end;
@@ -50,7 +50,7 @@ do
             var int m = m_ + 1;
 //_printf("> m %d\n", m);
             do
-                var UIGameMove move with
+                var GameMove move with
                     this.map  = &map;
                     this.move = m;
                 end;
@@ -77,7 +77,7 @@ end
 
 var _SDL_Window* win;
     finalize
-        win = _SDL_CreateWindow("UI Game",
+        win = _SDL_CreateWindow("Game",
                             500, 400, 800, 480, _SDL_WINDOW_SHOWN);
     with
         _SDL_DestroyWindow(win);
@@ -109,19 +109,19 @@ with
 with
     loop do
         do
-            var UIGame game with
+            var Game game with
                 this.file = "g1.lua";
             end;
             await SDL_MOUSEBUTTONDOWN;
         end
         do
-            var UIGame game with
+            var Game game with
                 this.file = "g2.lua";
             end;
             await SDL_MOUSEBUTTONDOWN;
         end
         do
-            var UIGame game with
+            var Game game with
                 this.file = "g3.lua";
             end;
             await SDL_MOUSEBUTTONDOWN;
