@@ -11,7 +11,7 @@ input void SDL_REDRAW;
 input void SDL_KEYDOWN;
 input void SDL_MOUSEBUTTONDOWN;
 
-class Game with
+class GameNav with
     var _char* file = null;
 do
     _assert(_REN != null);
@@ -25,7 +25,7 @@ do
 
     _lua_getglobal(_L, "STATES");      // [ SS ]
     var int ns = _lua_objlen(_L, -1);
-    _lua_pop(_L, 1);                   // [ ]
+    _lua_remove(_L, 1);                // [ ]
 
     _lua_getglobal(_L, "MOVES");       // [ MM ]
     var int nm = _lua_objlen(_L, -1);
@@ -77,7 +77,7 @@ end
 
 var _SDL_Window* win;
     finalize
-        win = _SDL_CreateWindow("Game",
+        win = _SDL_CreateWindow("Game Navigation",
                             500, 400, 800, 480, _SDL_WINDOW_SHOWN);
     with
         _SDL_DestroyWindow(win);
@@ -109,19 +109,19 @@ with
 with
     loop do
         do
-            var Game game with
+            var GameNav nav with
                 this.file = "g1.lua";
             end;
             await SDL_MOUSEBUTTONDOWN;
         end
         do
-            var Game game with
+            var GameNav nav with
                 this.file = "g2.lua";
             end;
             await SDL_MOUSEBUTTONDOWN;
         end
         do
-            var Game game with
+            var GameNav nav with
                 this.file = "g3.lua";
             end;
             await SDL_MOUSEBUTTONDOWN;
@@ -132,6 +132,5 @@ with
         _SDL_RenderPresent(_REN);
     end
 end
-_printf("ff\n");
 
 return 0;
