@@ -43,6 +43,7 @@ native nohold
         _lua_remove(),
         _lua_setglobal(),
         _lua_settop(),
+        _lua_toboolean(),
         _lua_tointeger(),
         _lua_tonumber(),
         _lua_topointer(),

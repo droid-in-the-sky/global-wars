@@ -19,6 +19,11 @@ game:
 	gcc -Os main.c $(CFLAGS) -lSDL2 -lSDL2_ttf -lSDL2_gfx -llua \
 		-o global-wars.exe
 
+fortify:
+	ceu --m4 game-fortify.ceu
+	gcc -Os main.c $(CFLAGS) -lSDL2 -lSDL2_ttf -lSDL2_gfx -lSDL2_image -llua \
+		-o global-wars.exe
+
 nav:
 	ceu --m4 game-nav.ceu
 	gcc -Os main.c $(CFLAGS) -lSDL2 -lSDL2_gfx -llua \

@@ -25,6 +25,7 @@ class Map with
     var u16* cy;  // all country centers
 
     event int go_zoom, go_x, go_y;
+    event int ok_clicked;
 do
     _assert(_REN != null);
     _assert(_L   != null);
@@ -127,7 +128,7 @@ do
             var int c = _lua_tointeger(_L, -1);
             _lua_pop(_L, 1);                   // [ ]
             if c > 0 then
-                _printf("CLICK = %d\n", c);
+                emit this.ok_clicked => c;
             end
         end
     with

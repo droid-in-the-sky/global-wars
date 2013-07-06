@@ -5,6 +5,7 @@ input void SDL_REDRAW;
 input _SDL_MouseButtonEvent* SDL_MOUSEBUTTONDOWN;
 
 // TODO:
+// * go_pause
 // * remaining space from division
 
 class UIGrid with
@@ -48,6 +49,9 @@ do
             this.uis = _malloc(uis_n * sizeof(UI**));
         with
             _free(this.uis);
+        end
+        loop i, this.uis_n do
+            this.uis[i] = null;
         end
     end
 

@@ -1,0 +1,347 @@
+import lua.ceu;
+import sdl.ceu;
+import sdl-gfx.ceu;
+
+import ui-texture.ceu;
+import ui-grid.ceu;
+import map.ceu;
+import game-state.ceu;
+import game-move.ceu;
+
+input void SDL_REDRAW;
+input _SDL_KeyboardEvent* SDL_KEYDOWN;
+input void SDL_MOUSEBUTTONDOWN;
+
+class GameFortify with
+    var Map* map   = null;
+    var int  me    = 0;
+    var int  state = 0;
+do
+    _assert(_REN  != null);
+    _assert(_L    != null);
+    _assert(_FONT != null);
+
+    _assert(this.map   != null);
+    _assert(this.me    != 0);
+    _assert(this.state != 0);
+
+    // show current state
+    var GameState st with
+        this.map = map;
+        this.idx = state;    // start from last
+    end;
+
+    // # of armies to fortify
+    var int fs;
+        _lua_getglobal(_L, "STATES");   // [ SS ]
+        _lua_rawgeti(_L, -1, state);    // [ SS | S ]
+        _lua_getglobal(_L, "SRV_fs");   // [ SS | S | f ]
+        _lua_pushvalue(_L, -2);         // [ SS | S | f | S ]
+        _lua_pushnumber(_L, me);        // [ SS | S | f | S | p ]
+        _lua_call(_L, 2, 1);            // [ SS | S | n ]
+        fs = _lua_tointeger(_L, -1);
+        _lua_pop(_L, 3);                // [ ]
+
+    // bg = "me" color
+    var _SDL_Color bg;
+        _lua_getglobal(_L, "PLAYERS");  // [ PP ]
+        _lua_rawgeti(_L, -1, me);       // [ PP | P ]
+        _lua_getfield(_L, -1, "color"); // [ PP | P | C ]
+        _lua_rawgeti(_L, -1, 1);        // [ PP | P | C | r ]
+        _lua_rawgeti(_L, -2, 2);        // [ PP | P | C | r | g ]
+        _lua_rawgeti(_L, -3, 3);        // [ PP | P | C | r | g | b ]
+        bg.r = _lua_tointeger(_L, -3);
+        bg.g = _lua_tointeger(_L, -2);
+        bg.b = _lua_tointeger(_L, -1);
+        bg.a = 0xFF;
+        _lua_pop(_L, 6);                // [ ]
+
+    // GRID "all"
+    var _SDL_Rect r;        // whole screen
+        r.x = 0;
+        r.y = 0;
+        r.w = _REN_W;
+        r.h = _REN_H;
+    var UIGrid g1 with
+        this.ren = _REN;
+        this.lay_lins = 4;
+        this.lay_cols = 4;
+        this.lay = _GF_g1;
+        this.uis_n = 2;
+        native do
+            int GF_g1[16] = {
+                -1, -1, -1, -1,
+                -1,  0,  0, -1,     // fs
+                -1,  0,  0, -1,
+                -1, -1, -1,  1      // menu
+            };
+        end
+    end;
+
+    // AWAIT center click
+    do
+        // text texture
+        var _char[5] str;
+        _sprintf(str, "%d", fs);
+        var _SDL_Texture* tex;
+            finalize
+                tex = _SDL_text2texture(_REN, _FONT, str, &_colors.black, &bg);
+            with
+                _SDL_DestroyTexture(tex);
+            end
+        var UITexture ui_fs with
+            this.ren = _REN;
+            this.tex = tex;
+            this.clr_bg = &bg;
+        end;
+
+        finalize
+            g1.uis[0] = &ui_fs; // fs
+        with
+            g1.uis[0] = null;
+        end
+        g1.uis[1] = null;       // menu
+        emit g1.go_redim => &r;
+
+        await ui_fs.ok_clicked;
+    end
+
+    // GRID "menu"
+    var UIGrid g2 with
+        this.ren = _REN;
+        this.lay_lins = 2;
+        this.lay_cols = 2;
+        this.lay = _GF_g2;
+        this.uis_n = 3;
+        native do
+            int GF_g2[4] = {
+                0,  0,  // fs
+                1,  2,  // no, ok
+            };
+        end
+    end;
+    // tex_no
+        var _SDL_Texture* tex_no;
+        finalize
+            tex_no = _IMG_LoadTexture(_REN, "imgs/no.png");
+        with
+            _SDL_DestroyTexture(tex_no);
+        end
+    // tex_ok
+        var _SDL_Texture* tex_ok;
+        finalize
+            tex_ok = _IMG_LoadTexture(_REN, "imgs/ok.png");
+        with
+            _SDL_DestroyTexture(tex_ok);
+        end
+
+    g1.uis[0] = null;   // remove "fs"
+    g1.uis[1] = &g2;    // include "menu"
+
+    g2.uis[0] = null; // fs, changes every click
+    g2.uis[1] = null; // no, after 1 click
+    g2.uis[2] = null; // ok, when fs==0
+
+    // # armies for each "me" country
+    _lua_getglobal(_L, "MAP");      // [ MAP ]
+    var int tot = _lua_objlen(_L, -1);
+    _lua_pop(_L, 1);                // [ ]
+    var int* as;
+    finalize
+        as = _malloc((tot+1) * sizeof(int));
+                        // +1: lua=>C
+    with
+        _free(as);
+    end
+
+    // loop until all "fs" are chosen
+    //  - restart on "no"   (only when fs<tot)
+    //  - quit    on "ok"   (only when fs==0)
+
+    loop do
+
+        // emitted whenever "fs" changes
+        event int e;
+
+        // no armies so far
+        loop i, tot do
+            as[i+1] = 0;
+        end
+
+        par/or do
+            var int fs_tmp = fs;
+            loop do
+                // text texture
+                var _char[5] str;
+                _sprintf(str, "%d", fs_tmp);
+                var _SDL_Texture* tex;
+                    finalize
+                        tex = _SDL_text2texture(_REN, _FONT, str,
+                                                &_colors.black, &bg);
+                    with
+                        _SDL_DestroyTexture(tex);
+                    end
+
+                var UITexture ui_fs with
+                    this.ren = _REN;
+                    this.tex = tex;
+                    this.clr_bg = &bg;
+                end;
+
+                finalize
+                    g2.uis[0] = &ui_fs;
+                with
+                    g2.uis[0] = null;
+                end
+
+                // re-arrange all:
+                // - loop entering
+                // - after every "e"
+                emit g1.go_redim => null;
+
+                if fs_tmp == 0 then
+                    await FOREVER;
+                end
+
+                // await until a "me" country
+                loop do
+                    var int c = await map:ok_clicked;
+                    _lua_getglobal(_L, "STATES");   // [ SS ]
+                    _lua_rawgeti(_L, -1, state);    // [ SS | S ]
+                    _lua_rawgeti(_L, -1, me);       // [ SS | S | Sp ]
+                    _lua_rawgeti(_L, -1, c);        // [ SS | S | Sp | Spc ]
+                    var int v = _lua_tointeger(_L, -1);
+                    _lua_pop(_L, 4);
+                    if v then
+                        break;  // a "me" country: ok!
+                    end
+                end
+
+                fs_tmp = fs_tmp - 1;
+                emit e => fs_tmp;
+            end
+
+        with
+            // button "NO"
+            await e;
+
+            var UITexture ui with
+                this.ren = _REN;
+                this.tex = tex_no;
+            end;
+
+            finalize
+                g2.uis[1] = &ui;
+            with
+                g2.uis[1] = null;
+            end
+
+            // RESTART
+            await ui.ok_clicked;
+
+        with
+            // button "OK"
+            var int v = await e
+                        until v == 0;
+
+            var UITexture ui with
+                this.ren = _REN;
+                this.tex = tex_ok;
+            end;
+
+            finalize
+                g2.uis[2] = &ui;
+            with
+                g2.uis[2] = null;
+            end
+
+            // QUIT
+            await ui.ok_clicked;
+            break;
+        end
+    end
+    // TODO: emit ok!
+end
+
+/*
+native do
+    lua_State*    L   = NULL;
+    SDL_Renderer* REN = NULL;
+    int REN_W, REN_H;
+end
+*/
+
+// SCREEN
+    var _SDL_Window* win;
+        finalize
+            win = _SDL_CreateWindow("Game",
+                                500, 400, 800, 480, _SDL_WINDOW_SHOWN);
+        with
+            _SDL_DestroyWindow(win);
+        end
+    _SDL_GetWindowSize(win, &_REN_W, &_REN_H);
+
+    _REN = _SDL_CreateRenderer(win, -1, 0);
+    finalize with
+        _SDL_DestroyRenderer(_REN);
+    end
+
+// LUA
+    _L = _luaL_newstate();
+    finalize with
+        _lua_close(_L);
+    end
+    _lua_atpanic(_L, _ceu_lua_atpanic);
+    _luaL_openlibs(_L);
+
+// FONT
+    native do
+        TTF_Font* FONT;
+    end
+    _TTF_Init();
+        finalize with
+            _TTF_Quit();
+        end
+    _FONT = _TTF_OpenFont("fnts/Deutsch.ttf", 20);
+        finalize with
+            _TTF_CloseFont(_FONT);
+        end
+    _assert(_FONT != null);
+
+par/or do
+    await SDL_QUIT;
+/*** SIMUL
+with
+    @include(simul.ceu)
+***/
+with
+    every SDL_REDRAW do
+        _boxRGBA(_REN, 0,0, _REN_W,_REN_H, 0,0,0, 0xFF);
+    end
+with
+    _luaL_loadfile(_L, "server.lua");  // [ f ]
+    _lua_call(_L, 0, 0);               // [ ]
+
+    loop do
+        do
+            _luaL_loadfile(_L, "g1.lua");
+            _lua_call(_L, 0, 0);
+            var Map map;
+
+            var GameFortify fort with
+                this.map   = &map;
+                this.me    = 1;
+                this.state = 1;
+            end;
+            var _SDL_KeyboardEvent* key;
+            key = await SDL_KEYDOWN
+                  until key:keysym.sym == _SDLK_ESCAPE;
+        end
+    end
+with
+    every SDL_REDRAW do
+        _SDL_RenderPresent(_REN);
+    end
+end
+
+return 0;
