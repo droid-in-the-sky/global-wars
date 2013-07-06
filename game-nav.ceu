@@ -12,57 +12,55 @@ input void SDL_KEYDOWN;
 input void SDL_MOUSEBUTTONDOWN;
 
 class GameNav with
-    var _char* file = null;
+    var Map* map = null;
+    var int state = 0;
 do
     _assert(_REN != null);
     _assert(_L   != null);
 
-    _assert(this.file != null);
-        _luaL_loadfile(_L, this.file);
-        _lua_call(_L, 0, 0);
-
-    var Map map;
+    _assert(this.map != null);
 
     _lua_getglobal(_L, "STATES");      // [ SS ]
     var int ns = _lua_objlen(_L, -1);
     _lua_remove(_L, 1);                // [ ]
 
-    _lua_getglobal(_L, "MOVES");       // [ MM ]
-    var int nm = _lua_objlen(_L, -1);
-    _lua_pop(_L, 1);                   // [ ]
+    // defaults to #SS
+    if this.state == 0 then
+        if ns % 2 == 0 then
+            this.state = ns - 1;    // before "ing"
+        else
+            this.state = ns;
+        end
+    end
 
-    var GameState state with
-        this.map   = &map;
-        this.state = ns;    // start from last
-    end;
-
-    await SDL_KEYDOWN;
+    _assert(this.state % 2 == 1);   // attack or fortify
 
     loop do
-        var GameState state with
-            this.map   = &map;
-            this.state = 1;
+        var GameState st with
+            this.map = map;
+            this.idx = state;
         end;
 
         await SDL_KEYDOWN;
 
-        loop m_, nm do
-            var int m = m_ + 1;
-//_printf("> m %d\n", m);
-            do
-                var GameMove move with
-                    this.map  = &map;
-                    this.move = m;
-                end;
+        this.state = this.state + 1;
+        if this.state > ns then
+            this.state = 1;
+            continue;
+        end
 
-                state.state = state.state + 1;
-                await SDL_KEYDOWN;
-            end
-//_printf("< m %d\n", m);
+        st.idx = st.idx + 1;        // attack/fortify => "ing"
+        var GameMove mv with
+            this.map = map;
+            this.idx = state/2;     // 2 states for 1 move
+        end;
 
-            state.state = state.state + 1;
-//_printf("> s %d\n", state.state);
-            await SDL_KEYDOWN;
+        await SDL_KEYDOWN;
+
+        this.state = this.state + 1;
+        if this.state > ns then
+            this.state = 1;
+            continue;
         end
     end
 end
@@ -109,20 +107,32 @@ with
 with
     loop do
         do
+            _luaL_loadfile(_L, "g1.lua");
+            _lua_call(_L, 0, 0);
+            var Map map;
             var GameNav nav with
-                this.file = "g1.lua";
+                this.map = &map;
+                this.state = 1;
             end;
             await SDL_MOUSEBUTTONDOWN;
         end
         do
+            _luaL_loadfile(_L, "g2.lua");
+            _lua_call(_L, 0, 0);
+            var Map map;
             var GameNav nav with
-                this.file = "g2.lua";
+                this.map = &map;
+                this.state = 1;
             end;
             await SDL_MOUSEBUTTONDOWN;
         end
         do
+            _luaL_loadfile(_L, "g3.lua");
+            _lua_call(_L, 0, 0);
+            var Map map;
             var GameNav nav with
-                this.file = "g3.lua";
+                this.map = &map;
+                this.state = 1;
             end;
             await SDL_MOUSEBUTTONDOWN;
         end

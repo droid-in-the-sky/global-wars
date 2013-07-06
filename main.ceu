@@ -1,6 +1,6 @@
 import sdl.ceu;
 import sdl-gfx.ceu;
-import ui-map.ceu;
+import map.ceu;
 
 input void SDL_REDRAW;
 input void SDL_QUIT;
@@ -12,26 +12,19 @@ var _SDL_Window* win;
     with
         _SDL_DestroyWindow(win);
     end
+_SDL_GetWindowSize(win, &_REN_W, &_REN_H);
 
-var int ren_w;
-var int ren_h;
-    _SDL_GetWindowSize(win, &ren_w, &ren_h);
+_REN = _SDL_CreateRenderer(win, -1, 0);
+finalize with
+    _SDL_DestroyRenderer(_REN);
+end
 
-var _SDL_Renderer* ren;
-    finalize
-        ren = _SDL_CreateRenderer(win, -1, 0);
-    with
-        _SDL_DestroyRenderer(ren);
-    end
-
-var _lua_State* lua;
-    finalize
-        lua = _luaL_newstate();
-    with
-        _lua_close(lua);
-    end
-    _lua_atpanic(lua, _ceu_lua_atpanic);
-    _luaL_openlibs(lua);
+_L = _luaL_newstate();
+finalize with
+    _lua_close(_L);
+end
+_lua_atpanic(_L, _ceu_lua_atpanic);
+_luaL_openlibs(_L);
 
 par/or do
     await SDL_QUIT;
@@ -40,17 +33,11 @@ with
     @include(simul.ceu)
 ***/
 with
-    var UIMap map with
-        this.ren   = ren;
-        this.ren_w = ren_w;
-        this.ren_h = ren_h;
-        this.lua   = lua;
-    end;
-    emit map.go_redim => null;
+    var Map map;
     await FOREVER;
 with
     every SDL_REDRAW do
-        _SDL_RenderPresent(ren);
+        _SDL_RenderPresent(_REN);
     end
 end
 

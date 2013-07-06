@@ -9,19 +9,19 @@ input void SDL_REDRAW;
 input void SDL_KEYDOWN;
 
 class GameState with
-    var int state = 0;
     var Map* map = null;
+    var int  idx = 0;
 do
     _assert(_REN != null);
     _assert(_L   != null);
 
-    _assert(this.map   != null);
-    _assert(this.state != 0);
+    _assert(this.map != null);
+    _assert(this.idx != 0);
 
     every SDL_REDRAW do
         _lua_getglobal(_L, "PLAYERS");      // [ PP ]
         _lua_getglobal(_L, "STATES");       // [ PP | SS ]
-        _lua_rawgeti(_L, -1, this.state);   // [ PP | SS | Ss ]
+        _lua_rawgeti(_L, -1, this.idx);     // [ PP | SS | Ss ]
 
         // foreach player p
         loop p_, _lua_objlen(_L,1) do
@@ -116,8 +116,8 @@ with
     loop do
         loop i, len do
             var GameState s with
-                this.map   = &map;
-                this.state = i+1;
+                this.map = &map;
+                this.idx = i+1;
             end;
             await SDL_KEYDOWN;
         end

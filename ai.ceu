@@ -76,23 +76,21 @@ with
     _lua_call(_L, 0, 0);               // [ ]
 
     loop do
-_printf("MOVE\n");
         _lua_getglobal(_L, "STATES");      // [ SS ]
         var int s = _lua_objlen(_L, -1);
         _lua_pop(_L, 1);                   // [ ]
 
         _AI_move(s, 1);
-_printf("2\n");
         _AI_move(s, 2);
-_printf("3\n");
 
         // server save (assumes all moved)
         _lua_getglobal(_L, "SRV_save");    // [ f ]
         _lua_pushstring(_L, "_g2.lua");    // [ f | "g" ]
         _lua_call(_L, 1, 0);               // [ ]
 
+        var Map map;
         var GameNav nav with
-            this.file  = "_g2.lua";
+            this.map = &map;
         end;
 
         await SDL_MOUSEBUTTONDOWN;
@@ -109,7 +107,6 @@ _printf("3\n");
     _lua_call(_L, 0, 0);               // [ ]
 
     loop do
-_printf("MOVE\n");
         _lua_getglobal(_L, "STATES");      // [ SS ]
         var int s = _lua_objlen(_L, -1);
         _lua_pop(_L, 1);                   // [ ]
@@ -123,8 +120,9 @@ _printf("MOVE\n");
         _lua_pushstring(_L, "_g3.lua");    // [ f | "g" ]
         _lua_call(_L, 1, 0);               // [ ]
 
+        var Map map;
         var GameNav nav with
-            this.file  = "_g3.lua";
+            this.map = &map;
         end;
 
         await SDL_MOUSEBUTTONDOWN;
