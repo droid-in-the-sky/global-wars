@@ -13,27 +13,22 @@ input _SDL_KeyboardEvent* SDL_KEYDOWN;
 input void SDL_MOUSEBUTTONDOWN;
 
 class GameFortify with
-    var Map* map   = null;
-    var int  me    = 0;
-    var int  state = 0;
+    var Map* map = null;
+    var int  me  = 0;
 do
     _assert(_REN  != null);
     _assert(_L    != null);
     _assert(_FONT != null);
 
-    _assert(this.map   != null);
-    _assert(this.me    != 0);
-    _assert(this.state != 0);
+    _assert(this.map != null);
+    _assert(this.me  != 0);
 
-    // show current state
-    var GameState st with
-        this.map = map;
-        this.idx = state;    // start from last
-    end;
+    var int state;  // last state
+        _lua_getglobal(_L, "STATES");   // [ SS ]
+        state = _lua_objlen(_L, -1);
 
     // # of armies to fortify
     var int fs;
-        _lua_getglobal(_L, "STATES");   // [ SS ]
         _lua_rawgeti(_L, -1, state);    // [ SS | S ]
         _lua_getglobal(_L, "SRV_fs");   // [ SS | S | f ]
         _lua_pushvalue(_L, -2);         // [ SS | S | f | S ]
@@ -80,6 +75,12 @@ do
 
     // AWAIT center click
     do
+        // show current state
+        var GameState st with
+            this.map = map;
+            this.idx = state;    // start from last
+        end;
+
         // text texture
         var _char[5] str;
         _sprintf(str, "%d", fs);
@@ -142,18 +143,6 @@ do
     g2.uis[1] = null; // no, after 1 click
     g2.uis[2] = null; // ok, when fs==0
 
-    // # armies for each "me" country
-    _lua_getglobal(_L, "MAP");      // [ MAP ]
-    var int tot = _lua_objlen(_L, -1);
-    _lua_pop(_L, 1);                // [ ]
-    var int* as;
-    finalize
-        as = _malloc((tot+1) * sizeof(int));
-                        // +1: lua=>C
-    with
-        _free(as);
-    end
-
     // loop until all "fs" are chosen
     //  - restart on "no"   (only when fs<tot)
     //  - quit    on "ok"   (only when fs==0)
@@ -163,14 +152,40 @@ do
         // emitted whenever "fs" changes
         event int e;
 
-        // no armies so far
-        loop i, tot do
-            as[i+1] = 0;
-        end
-
         par/or do
             var int fs_tmp = fs;
+
+            _lua_newtable(_L);      // [ armies ]
+            var int ref = _luaL_ref(_L, _LUA_REGISTRYINDEX);
+                                    // [ ]
+                finalize with
+                    _luaL_unref(_L, _LUA_REGISTRYINDEX, ref);
+                end
+
             loop do
+                // new state "fortifying"
+                _lua_getglobal(_L, "SRV_tmp_ins");      // [ f ]
+                _lua_pushnumber(_L, this.me);           // [ f | p ]
+                _lua_rawgeti(_L, _LUA_REGISTRYINDEX, ref);
+                                                        // [ f | p | t ]
+                _lua_call(_L, 2, 0);                    // [ ]
+                finalize with
+                    _lua_getglobal(_L, "SRV_tmp_rem");  // [ f ]
+                    _lua_call(_L, 0, 0);                // [ ]
+                end
+
+                // show next state
+                var GameState st with
+                    this.map = map;
+                    this.idx = state+1;     // tmp state
+                end;
+
+                // show next move
+                var GameMove mv with
+                    this.map = map;
+                    this.idx = (state+1)/2; // tmp move
+                end;
+
                 // text texture
                 var _char[5] str;
                 _sprintf(str, "%d", fs_tmp);
@@ -203,9 +218,10 @@ do
                     await FOREVER;
                 end
 
-                // await until a "me" country
+                // await until a "me" country => "c"
+                var int c;
                 loop do
-                    var int c = await map:ok_clicked;
+                    c = await map:ok_clicked;
                     _lua_getglobal(_L, "STATES");   // [ SS ]
                     _lua_rawgeti(_L, -1, state);    // [ SS | S ]
                     _lua_rawgeti(_L, -1, me);       // [ SS | S | Sp ]
@@ -216,6 +232,13 @@ do
                         break;  // a "me" country: ok!
                     end
                 end
+
+                // t <- c++
+                _lua_getglobal(_L, "SRV_tmp_inc");  // [ f ]
+                _lua_rawgeti(_L, _LUA_REGISTRYINDEX, ref);
+                                                    // [ f | t ]
+                _lua_pushnumber(_L, c);             // [ f | t | c ];
+                _lua_call(_L, 2, 0);                // [ ]
 
                 fs_tmp = fs_tmp - 1;
                 emit e => fs_tmp;
@@ -329,9 +352,8 @@ with
             var Map map;
 
             var GameFortify fort with
-                this.map   = &map;
-                this.me    = 1;
-                this.state = 1;
+                this.map = &map;
+                this.me  = 1;
             end;
             var _SDL_KeyboardEvent* key;
             key = await SDL_KEYDOWN

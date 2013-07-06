@@ -61,13 +61,12 @@ with
     native do
         void AI_move (int s, int p) {
             lua_getglobal(L, "SRV_move");    // [ srv ]
-            lua_pushnumber(L, s);            // [ srv | s ]
-            lua_pushnumber(L, p);            // [ srv | s | p ]
-            lua_getglobal(L, "AI_move");     // [ srv | s | p | ai ]
-            lua_pushnumber(L, s);            // [ srv | s | p | ai | s ]
-            lua_pushnumber(L, p);            // [ srv | s | p | ai | s | p ]
-            lua_call(L, 2, 1);               // [ srv | s | p | MSp ]
-            lua_call(L, 3, 0);               // [ ]
+            lua_pushnumber(L, p);            // [ srv | p ]
+            lua_getglobal(L, "AI_move");     // [ srv | p | ai ]
+            lua_pushnumber(L, s);            // [ srv | p | ai | s ]
+            lua_pushnumber(L, p);            // [ srv | p | ai | s | p ]
+            lua_call(L, 2, 1);               // [ srv | p | MSp ]
+            lua_call(L, 2, 0);               // [ ]
         }
     end
 

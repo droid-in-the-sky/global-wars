@@ -221,10 +221,36 @@ function SRV_fs (S, p)
     return fs   -- 0 (dead), 3 (minimum), X (#c/2)
 end
 
-function SRV_move (s, p, MSp)
-    --   s: state
+function SRV_move (p, MSp)
+    SRV_tmp_ins(p, MSp)
+    assert(fs == 0, fs)
+    return SRV_go()      -- try to GO
+end
+
+function SRV_tmp_rem ()
+    STATES[#STATES] = nil
+    MOVES [#MOVES]  = nil
+end
+
+function SRV_tmp_inc (T, c)
+    for _, t in ipairs(T) do
+        local a, fr, to = unpack(t)
+        if to == c then
+            t[1] = a + 1
+            return
+        end
+    end
+    T[#T+1] = { 1, 0, c }
+end
+
+function SRV_tmp_ins (p, MSp)
     --   p: player
     -- MSp: moves of "p"
+
+    local s = #STATES
+    if s % 2 == 0 then
+        s = s - 1           -- last fortify/attack
+    end
 
     -- S1: current server state on "s"
     local S1 = STATES[s]
@@ -275,9 +301,4 @@ function SRV_move (s, p, MSp)
 --print(p, '('..a..') '..fr..'=>'..to)
         end
     end
-
-    assert(fs == 0, fs)
-
-    -- try to GO
-    return SRV_go(s+1)
 end
