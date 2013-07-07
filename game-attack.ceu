@@ -17,35 +17,101 @@ class GameAttackOne with
     var int  fr  = 0;
     var int  to  = 0;
     var int  ref = _LUA_NOREF;
+    var int  max = 0;
+
+    event void ok;
 do
+    _assert(_TEX_INC != null);
+    _assert(_TEX_DEC != null);
+
     _assert(this.map != null);
     _assert(this.fr  != 0);
     _assert(this.to  != 0);
     _assert(this.ref != _LUA_NOREF);
+    _assert(this.max != 0);
 
-    // t <- c++
-    _lua_getglobal(_L, "SRV_move_inc"); // [ f ]
-    _lua_rawgeti(_L, _LUA_REGISTRYINDEX, ref);
-                                        // [ f | t ]
-    _lua_pushnumber(_L, 1);             // [ f | t | 1 | c ];
-    _lua_pushnumber(_L, fr);            // [ f | t | 1 | fr | to ];
-    _lua_pushnumber(_L, to);            // [ f | t | 1 | fr | to ];
-    _lua_call(_L, 4, 0);                // [ ]
+    var UITexture ui_inc with
+        this.ren = _REN;
+        this.tex = _TEX_INC;
+        this.align_x = _UI_ALIGN_LEFT;
+    end;
 
-/*
-    every SDL_REDRAW do
-        var int dx = map:cx[to] - map:cx[fr];
-        var int dy = map:cy[to] - map:cy[fr];
-        var int x = map:cx[fr] + dx/2 - dy/4 + 20;
-        var int y = map:cy[fr] + dy/2 - dx/4;
+    var UITexture ui_dec with
+        this.ren = _REN;
+        this.tex = _TEX_DEC;
+        this.align_x = _UI_ALIGN_LEFT;
+    end;
 
-        _boxColor(_REN,
-                 x, y,
-                 x+20, y+20,
-                 _colors.white);
+    var UITexture ui_ok with
+        this.ren = _REN;
+        this.tex = _TEX_OK;
+        this.align_x = _UI_ALIGN_LEFT;
+    end;
+
+    par/or do
+        await ui_ok.ok_clicked;
+    with
+        loop do
+            var int dx = map:cx[to] - map:cx[fr];
+            var int dy = map:cy[to] - map:cy[fr];
+            var int  x = map:cx[fr] + dx/2 - dy/4;
+            var int  y = map:cy[fr] + dy/2 - dx/4;
+
+            var _SDL_Rect r1;
+                r1.w = 0;
+                r1.h = 0;
+                r1.x = x + 20;
+                r1.y = y;
+            emit ui_inc.go_redim => &r1;
+
+            var _SDL_Rect r2;
+                r2.w = 0;
+                r2.h = 0;
+                r2.x = ui_inc.rect.x + ui_inc.rect.w;
+                r2.y = y;
+            emit ui_dec.go_redim => &r2;
+
+            var _SDL_Rect r3;
+                r3.w = 0;
+                r3.h = 0;
+                r3.x = ui_dec.rect.x + ui_dec.rect.w;
+                r3.y = y;
+            emit ui_ok.go_redim => &r3;
+
+            await map:ok_changed;
+        end
+    with
+        var int tot = 0;  // total balance
+        var int v   = 1;  // initial inc
+
+        loop do
+            tot = tot + v;
+
+            // t <- c++
+            _lua_getglobal(_L, "SRV_move_inc"); // [ f ]
+            _lua_rawgeti(_L, _LUA_REGISTRYINDEX, ref);
+                                                // [ f | t ]
+            _lua_pushnumber(_L, v);             // [ f | t | 1 | c ];
+            _lua_pushnumber(_L, fr);            // [ f | t | 1 | fr | to ];
+            _lua_pushnumber(_L, to);            // [ f | t | 1 | fr | to ];
+            _lua_call(_L, 4, 0);                // [ ]
+
+            par/or do
+                await ui_inc.ok_clicked;
+                v = 1;
+            with
+                await ui_dec.ok_clicked;
+                v = -1;
+            end
+
+            if v== 1 and tot==max
+            or v==-1 and tot==0 then
+                v = 0;      // no more armies to add/remove
+            end
+        end
     end
-*/
-    await FOREVER;
+
+    emit this.ok;
 end
 
 class GameAttack with
@@ -210,93 +276,80 @@ do
                 await ui.ok_clicked;
             with
 
-                // hold all GameAttackOne
-                do
+                // restart armies table
+                _lua_newtable(_L);      // [ armies ]
+                _lua_rawseti(_L, _LUA_REGISTRYINDEX, ref);
 
-                    // restart armies table
-                    _lua_newtable(_L);      // [ armies ]
-                    _lua_rawseti(_L, _LUA_REGISTRYINDEX, ref);
+                // one loop foreach "attack"
+                loop do
 
-                    // one loop foreach "attack"
+                    // new state "attacking"
+                    _lua_getglobal(_L, "SRV_move_ins");     // [ f ]
+                    _lua_pushnumber(_L, this.me);           // [ f | p ]
+                    _lua_rawgeti(_L, _LUA_REGISTRYINDEX, ref);
+                                                            // [ f | p | t ]
+                    _lua_call(_L, 2, 0);                    // [ ]
+                    finalize with
+                        _lua_getglobal(_L, "SRV_move_rem"); // [ f ]
+                        _lua_call(_L, 0, 0);                // [ ]
+                    end
+
+                    // show next state
+                    var GameState st with
+                        this.map = map;
+                        this.idx = state+1;     // tmp state
+                    end;
+
+                    // show next move
+                    var GameMove mv with
+                        this.map = map;
+                        this.idx = (state+1)/2; // tmp move
+                    end;
+
+                    // fr = clicked "me" country
+                    var int fr;
+                    var int max;
                     loop do
-
-                        // new state "attacking"
-                        _lua_getglobal(_L, "SRV_move_ins");     // [ f ]
-                        _lua_pushnumber(_L, this.me);           // [ f | p ]
-                        _lua_rawgeti(_L, _LUA_REGISTRYINDEX, ref);
-                                                                // [ f | p | t ]
-                        _lua_call(_L, 2, 0);                    // [ ]
-                        finalize with
-                            _lua_getglobal(_L, "SRV_move_rem"); // [ f ]
-                            _lua_call(_L, 0, 0);                // [ ]
+                        fr = await map:ok_clicked;
+                        _lua_getglobal(_L, "STATES");   // [ SS ]
+                        _lua_rawgeti(_L, -1, state+1);  // [ SS | S ]
+                        _lua_rawgeti(_L, -1, me);       // [ SS | S | Sp ]
+                        _lua_rawgeti(_L, -1, fr);       // [ SS | S | Sp | Spc ]
+                        max = _lua_tointeger(_L, -1) - 1;
+                        _lua_pop(_L, 4);
+                        if max > 0 then
+                            break;  // my country, a>1: ok!
                         end
+                    end
 
-                        // show next state
-                        var GameState st with
-                            this.map = map;
-                            this.idx = state+1;     // tmp state
-                        end;
-
-                        // show next move
-                        var GameMove mv with
-                            this.map = map;
-                            this.idx = (state+1)/2; // tmp move
-                        end;
-
-                        // fr = clicked "me" country
-                        var int fr;
+                    par/or do
+                        every SDL_REDRAW do
+                            _boxColor(_REN,
+                                     map:cx[fr]-20, map:cy[fr]-20,
+                                     map:cx[fr]+20, map:cy[fr]+20,
+                                     _colors.white);
+                        end
+                    with
                         loop do
-                            fr = await map:ok_clicked;
-                            _lua_getglobal(_L, "STATES");   // [ SS ]
-                            _lua_rawgeti(_L, -1, state+1);  // [ SS | S ]
-                            _lua_rawgeti(_L, -1, me);       // [ SS | S | Sp ]
-                            _lua_rawgeti(_L, -1, fr);       // [ SS | S | Sp | Spc ]
-                            var int a = _lua_tointeger(_L, -1);
-                            _lua_pop(_L, 4);
-                            if a > 1 then
-                                break;  // my country, a>1: ok!
-                            end
-                        end
+                            // to = clicked another country
+                            var int to = await map:ok_clicked;
 
-                        par/or do
-                            every SDL_REDRAW do
-                                _boxColor(_REN,
-                                         map:cx[fr]-20, map:cy[fr]-20,
-                                         map:cx[fr]+20, map:cy[fr]+20,
-                                         _colors.white);
-                            end
-                        with
-                            loop do
-                                // to = clicked another country
-                                var int to = await map:ok_clicked;
+                            // same: deselect
+                            if fr == to then
+                                break;          // next
 
-                                // same: deselect
-                                if fr == to then
-                                    break;          // next
-
-                                // other: attack/move and deselect
-                                else
-                                    var GameAttackOne* g;
-                                    var int has? = 0;
-                                    loop g, GameAttackOne* do
-                                        if g:fr==fr and g:to==to then
-                                            has? = 1;  // fr=>to exists
-                                            break;
-                                        end
-                                    end
-                                    if has? then
-                                        nothing;    // ignore
-                                    else
-                                        spawn GameAttackOne with
-                                            this.map = map;
-                                            this.fr  = fr;
-                                            this.to  = to;
-                                            this.ref = ref;
-                                        end;
-                                        emit e;
-                                        break;      // next
-                                    end
-                                end
+                            // other: attack/move
+                            else
+                                var GameAttackOne one with
+                                    this.map = map;
+                                    this.fr  = fr;
+                                    this.to  = to;
+                                    this.ref = ref;
+                                    this.max = max;
+                                end;
+                                await one.ok;
+                                emit e;
+                                break;      // next
                             end
                         end
                     end
@@ -359,6 +412,27 @@ end
             _TTF_CloseFont(_FONT);
         end
     _assert(_FONT != null);
+
+// TEXS
+    native do
+        SDL_Texture* TEX_INC;
+        SDL_Texture* TEX_DEC;
+        SDL_Texture* TEX_OK;
+    end
+    _TEX_OK = _IMG_LoadTexture(_REN, "imgs/ok.png");
+    finalize with
+        _SDL_DestroyTexture(_TEX_OK);
+    end
+    _TEX_INC = _IMG_LoadTexture(_REN, "imgs/inc.png");
+    finalize with
+        _SDL_DestroyTexture(_TEX_INC);
+    end
+    _TEX_DEC = _IMG_LoadTexture(_REN, "imgs/dec.png");
+    finalize with
+        _SDL_DestroyTexture(_TEX_INC);
+    end
+    _assert(_TEX_INC != null);
+    _assert(_TEX_DEC != null);
 
 par/or do
     await SDL_QUIT;
