@@ -5,6 +5,7 @@ import sdl-gfx.ceu;
 import map.ceu;
 import game-nav.ceu;
 import game-fortify.ceu;
+import game-attack.ceu;
 
 input void SDL_REDRAW;
 input _SDL_KeyboardEvent* SDL_KEYDOWN;

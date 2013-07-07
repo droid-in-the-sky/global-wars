@@ -30,28 +30,32 @@ do
     var int ns = _lua_objlen(_L, -1);
     _lua_remove(_L, 1);                // [ ]
 
-    // defaults to last "ing"
+    // defaults to last
     if this.state == 0 then
-        if ns % 2 == 0 then
-            this.state = ns;
-        else
-            this.state = ns - 1;    // previous "ing"
-        end
+        this.state = ns;
     end
 
-    // bg = "me" color
-    var _SDL_Color bg;
-        _lua_getglobal(_L, "PLAYERS");  // [ PP ]
-        _lua_rawgeti(_L, -1, me);       // [ PP | P ]
-        _lua_getfield(_L, -1, "color"); // [ PP | P | C ]
-        _lua_rawgeti(_L, -1, 1);        // [ PP | P | C | r ]
-        _lua_rawgeti(_L, -2, 2);        // [ PP | P | C | r | g ]
-        _lua_rawgeti(_L, -3, 3);        // [ PP | P | C | r | g | b ]
-        bg.r = _lua_tointeger(_L, -3);
-        bg.g = _lua_tointeger(_L, -2);
-        bg.b = _lua_tointeger(_L, -1);
-        bg.a = 0xFF;
-        _lua_pop(_L, 6);                // [ ]
+    // if in attack/fortify, animate "ing":
+    //      prev =-2s-=> cur
+    if this.state>1 and (this.state%2 == 1) then
+        do
+            var GameState st with
+                this.map = map;
+                this.idx = state-1;
+            end;
+            var GameMove mv with
+                this.map = map;
+                this.idx = (state-1)/2;
+            end;
+            await 2s;
+        end
+        do
+            var GameState st with
+                this.map = map;
+                this.idx = state;
+            end;
+        end
+    end
 
     // GRID "all"
     var _SDL_Rect r;        // whole screen
@@ -64,50 +68,16 @@ do
         this.lay_lins = 4;
         this.lay_cols = 4;
         this.lay = _GN_g1;
-        this.uis_n = 2;
+        this.uis_n = 1;
         native do
             int GN_g1[16] = {
                 -1, -1, -1, -1,
-                -1,  0,  0, -1,     // fs
-                -1,  0,  0, -1,
-                -1, -1, -1,  1      // menu
+                -1, -1, -1, -1,
+                -1, -1, -1, -1,
+                -1, -1, -1,  0      // menu
             };
         end
     end;
-
-    // AWAIT center click
-    do
-        // show current state
-        var GameState st with
-            this.map = map;
-            this.idx = state;    // start from last
-        end;
-
-        // text texture
-        var _char[25] str;
-        _sprintf(str, "%s", "Navigate");
-        var _SDL_Texture* tex;
-            finalize
-                tex = _SDL_text2texture(_REN, _FONT, str, &_colors.black, &bg);
-            with
-                _SDL_DestroyTexture(tex);
-            end
-        var UITexture ui_fs with
-            this.ren = _REN;
-            this.tex = tex;
-            this.clr_bg = &bg;
-        end;
-
-        finalize
-            g1.uis[0] = &ui_fs; // fs
-        with
-            g1.uis[0] = null;
-        end
-        g1.uis[1] = null;       // menu
-        emit g1.go_redim => &r;
-
-        await ui_fs.ok_clicked;
-    end
 
     // GRID "menu"
     var UIGrid g2 with
@@ -157,14 +127,12 @@ do
             this.tex = tex_ok;
         end;
 
-    g1.uis[0] = null;   // remove "fs"
-    g1.uis[1] = &g2;    // include "menu"
+    g1.uis[0] = &g2;    // include "menu"
+        g2.uis[0] = &ui_l;  // <
+        g2.uis[1] = &ui_r;  // >
+        g2.uis[2] = &ui_ok; // ok
 
-    g2.uis[0] = &ui_l;  // <
-    g2.uis[1] = &ui_r;  // >
-    g2.uis[2] = &ui_ok; // ok
-
-    emit g1.go_redim => null;
+    emit g1.go_redim => &r;
 
     loop do
         var GameState st with
@@ -284,6 +252,16 @@ with
                 this.map   = &map;
                 this.me    = 1;
                 this.state = 1;
+            end;
+            await nav.ok;
+        end
+        do
+            _luaL_loadfile(_L, "g1.lua");
+            _lua_call(_L, 0, 0);
+            var Map map;
+            var GameNav nav with
+                this.map   = &map;
+                this.me    = 1;
             end;
             await nav.ok;
         end

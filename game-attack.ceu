@@ -89,10 +89,10 @@ do
         this.ren = _REN;
         this.lay_lins = 4;
         this.lay_cols = 4;
-        this.lay = _GF_g1;
+        this.lay = _GA_g1;
         this.uis_n = 2;
         native do
-            int GF_g1[16] = {
+            int GA_g1[16] = {
                 -1, -1, -1, -1,
                 -1,  0,  0, -1,     // fs
                 -1,  0,  0, -1,
@@ -110,8 +110,8 @@ do
         end;
 
         // text texture
-        var _char[10] str;
-        _sprintf(str, "%s", "Attack");
+        var _char[20] str;
+        _sprintf(str, "%s", "Move & Attack");
         var _SDL_Texture* tex;
             finalize
                 tex = _SDL_text2texture(_REN, _FONT, str, &_colors.black, &bg);
@@ -132,7 +132,7 @@ do
         g1.uis[1] = null;       // menu
         emit g1.go_redim => &r;
 
-        await ui_fs.ok_clicked;
+        await 2s;
     end
 
     // GRID "menu"
@@ -140,10 +140,10 @@ do
         this.ren = _REN;
         this.lay_lins = 2;
         this.lay_cols = 3;
-        this.lay = _GF_g2;
+        this.lay = _GA_g2;
         this.uis_n = 2;
         native do
-            int GF_g2[] = {
+            int GA_g2[] = {
                 -1, -1, -1,
                 -1,  0,  1  // ok
             };
@@ -270,23 +270,11 @@ do
                                 // to = clicked another country
                                 var int to = await map:ok_clicked;
 
-                                // mine?
-                                _lua_getglobal(_L, "STATES");   // [ SS ]
-                                _lua_rawgeti(_L, -1, state);    // [ SS | S ]
-                                _lua_rawgeti(_L, -1, me);       // [ SS | S | Sp ]
-                                _lua_rawgeti(_L, -1, to);       // [ SS | S | Sp | Spc ]
-                                var int mine? = _lua_tointeger(_L, -1);
-                                _lua_pop(_L, 4);
-
                                 // same: deselect
                                 if fr == to then
                                     break;          // next
 
-                                // mine: ignore
-                                else/if mine? then
-                                    nothing;        // ignore
-
-                                // not mine: attack and deselect
+                                // other: attack/move and deselect
                                 else
                                     var GameAttackOne* g;
                                     var int has? = 0;

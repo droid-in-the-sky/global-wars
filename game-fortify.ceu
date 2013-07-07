@@ -63,13 +63,13 @@ do
         this.lay_lins = 4;
         this.lay_cols = 4;
         this.lay = _GF_g1;
-        this.uis_n = 2;
+        this.uis_n = 3;
         native do
             int GF_g1[16] = {
                 -1, -1, -1, -1,
                 -1,  0,  0, -1,     // fs
-                -1,  0,  0, -1,
-                -1, -1, -1,  1      // menu
+                -1,  1,  1, -1,
+                -1, -1, -1,  2      // menu
             };
         end
     end;
@@ -82,7 +82,29 @@ do
             this.idx = state;    // start from last
         end;
 
-        // text texture
+        // "Fortify"
+        var _char[15] str;
+        _sprintf(str, "%s", "Fortify");
+        var _SDL_Texture* tex;
+            finalize
+                tex = _SDL_text2texture(_REN, _FONT, str, &_colors.black, &bg);
+            with
+                _SDL_DestroyTexture(tex);
+            end
+        var UITexture ui1 with
+            this.ren = _REN;
+            this.tex = tex;
+            this.clr_bg = &bg;
+        end;
+
+        finalize
+            g1.uis[0] = &ui1; // fs
+        with
+            g1.uis[0] = null;
+        end
+        g1.uis[1] = null;       // menu
+
+        // N
         var _char[5] str;
         _sprintf(str, "%d", fs);
         var _SDL_Texture* tex;
@@ -91,21 +113,21 @@ do
             with
                 _SDL_DestroyTexture(tex);
             end
-        var UITexture ui_fs with
+        var UITexture ui2 with
             this.ren = _REN;
             this.tex = tex;
             this.clr_bg = &bg;
         end;
 
         finalize
-            g1.uis[0] = &ui_fs; // fs
+            g1.uis[1] = &ui2; // fs
         with
-            g1.uis[0] = null;
+            g1.uis[1] = null;
         end
-        g1.uis[1] = null;       // menu
-        emit g1.go_redim => &r;
 
-        await ui_fs.ok_clicked;
+        g1.uis[2] = null;       // menu
+        emit g1.go_redim => &r;
+        await 2s;
     end
 
     // GRID "menu"
@@ -136,13 +158,11 @@ do
         with
             _SDL_DestroyTexture(tex_ok);
         end
-
-    g1.uis[0] = null;   // remove "fs"
-    g1.uis[1] = &g2;    // include "menu"
-
-    g2.uis[0] = null; // fs, changes every click
-    g2.uis[1] = null; // no, after 1 click
-    g2.uis[2] = null; // ok, when fs==0
+    // menu
+    g1.uis[2] = &g2;
+        g2.uis[0] = null; // fs, changes every click
+        g2.uis[1] = null; // no, after 1 click
+        g2.uis[2] = null; // ok, when fs==0
 
 
     // "ref" holds the table w/ armies
