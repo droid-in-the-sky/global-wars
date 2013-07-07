@@ -38,6 +38,7 @@ do
         if ns > 1 then
             var GameNav nav with
                 this.map = &map;
+                this.me  = me;
             end;
             await nav.ok;
         end
@@ -56,12 +57,21 @@ do
                 this.me  = me;
             end;
             await fort.ok;
+
+        // state = ATTACK
+        else/if _strcmp("attack", _lua_tostring(_L,-1)) == 0 then
+            _lua_pop(_L, 3);                // [ ]
+            var GameAttack att with
+                this.map = &map;
+                this.me  = me;
+            end;
+            await att.ok;
+
+        // ERROR
         else
+            _lua_pop(_L, 3);                // [ ]
             _assert(0);
         end
-
-        // [ ]
-        _assert(_lua_gettop(_L) == 0);
 
         // AI
         _lua_getglobal(_L, "PLAYERS");      // [ PP ]

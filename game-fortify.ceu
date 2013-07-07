@@ -146,10 +146,9 @@ do
 
 
     // "ref" holds the table w/ armies
-
-    _lua_pushnil(_L);       // [ nil ]
+    _lua_pushboolean(_L, 1);    // [ true ]
     var int ref = _luaL_ref(_L, _LUA_REGISTRYINDEX);
-                            // [ ]
+                                // [ ]
         finalize with
             _luaL_unref(_L, _LUA_REGISTRYINDEX, ref);
         end

@@ -24,8 +24,9 @@ class Map with
     var u16* cx;  // all country centers
     var u16* cy;  // all country centers
 
-    event int go_zoom, go_x, go_y;
-    event int ok_clicked;
+    event int  go_zoom, go_x, go_y;
+    event int  ok_clicked;
+    event void ok_changed;
 do
     _assert(_REN != null);
     _assert(_L   != null);
@@ -100,6 +101,8 @@ do
                 _lua_pop(_L, 4);                   // [ ]
             end
             _lua_pop(_L, 1);                   // [ ]
+
+            emit this.ok_changed;
 
             par/or do
                 var int v = await go_zoom;      // ZOOM
