@@ -1,4 +1,4 @@
-CFLAGS += -D CEU_DEBUG -D DEBUG
+CFLAGS += -D CEU_DEBUG -D DEBUG #-O0
 #CFLAGS += -g -O0 -v -da -Q #-pg
 # valgrind --error-limit=no --leak-check=full ./mtg_trader
 # valgrind --tool=massif ./mtg_trader

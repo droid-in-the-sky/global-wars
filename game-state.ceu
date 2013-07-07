@@ -23,7 +23,7 @@ do
         _lua_getglobal(_L, "STATES");       // [ PP | SS ]
         _lua_rawgeti(_L, -1, this.idx);     // [ PP | SS | Ss ]
 
-        var _char[15] title;
+        var _char[20] title;
         _lua_getfield(_L, -1, "type");      // [ PP | SS | Ss | tp ]
         _sprintf(title, "[%d] %s", this.idx, _lua_tostring(_L,-1));
         _lua_pop(_L, 1);                    // [ PP | SS | Ss ]

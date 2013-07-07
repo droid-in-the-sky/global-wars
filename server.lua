@@ -222,7 +222,7 @@ function SRV_fs (S, p)
 end
 
 function SRV_move (p, MSp)
-    SRV_tmp_ins(p, MSp)
+    local fs = SRV_tmp_ins(p, MSp)
     assert(fs == 0, fs)
     return SRV_go()      -- try to GO
 end
@@ -301,4 +301,6 @@ function SRV_tmp_ins (p, MSp)
 --print(p, '('..a..') '..fr..'=>'..to)
         end
     end
+
+    return fs
 end
