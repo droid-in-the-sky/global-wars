@@ -6,27 +6,32 @@ CFLAGS += -D CEU_DEBUG -D DEBUG #-O0
 
 all:
 	ceu --m4 main.ceu
-	gcc -Os main.c $(CFLAGS) -lSDL2 -lSDL2_image -lSDL2_gfx -llua \
+	gcc -Os main.c $(CFLAGS) -lSDL2 -lSDL2_gfx -lSDL2_image -lSDL2_ttf -llua \
 		-o global-wars.exe
 
 ai:
 	ceu --m4 ai.ceu
-	gcc -Os main.c $(CFLAGS) -lSDL2 -lSDL2_image -lSDL2_gfx -llua \
+	gcc -Os main.c $(CFLAGS) -lSDL2 -lSDL2_gfx -lSDL2_ttf -lSDL2_image -llua \
 		-o global-wars.exe
 
 game:
 	ceu --m4 game.ceu
-	gcc -Os main.c $(CFLAGS) -lSDL2 -lSDL2_ttf -lSDL2_gfx -lSDL2_image -llua \
+	gcc -Os main.c $(CFLAGS) -lSDL2 -lSDL2_gfx -lSDL2_ttf -lSDL2_image -llua \
+		-o global-wars.exe
+
+attack:
+	ceu --m4 game-attack.ceu
+	gcc -Os main.c $(CFLAGS) -lSDL2 -lSDL2_gfx -lSDL2_image -lSDL2_ttf -llua \
 		-o global-wars.exe
 
 fortify:
 	ceu --m4 game-fortify.ceu
-	gcc -Os main.c $(CFLAGS) -lSDL2 -lSDL2_ttf -lSDL2_gfx -lSDL2_image -llua \
+	gcc -Os main.c $(CFLAGS) -lSDL2 -lSDL2_gfx -lSDL2_image -lSDL2_ttf -llua \
 		-o global-wars.exe
 
 nav:
 	ceu --m4 game-nav.ceu
-	gcc -Os main.c $(CFLAGS) -lSDL2 -lSDL2_gfx -lSDL2_ttf -lSDL2_image -llua \
+	gcc -Os main.c $(CFLAGS) -lSDL2 -lSDL2_gfx -lSDL2_image -lSDL2_ttf -llua \
 		-o global-wars.exe
 
 move:
@@ -41,7 +46,7 @@ state:
 
 map:
 	ceu --m4 map.ceu
-	gcc -Os main.c $(CFLAGS) -lSDL2 -lSDL2_image -lSDL2_gfx -llua \
+	gcc -Os main.c $(CFLAGS) -lSDL2 -lSDL2_gfx -llua \
 		-o global-wars.exe
 
 clean:

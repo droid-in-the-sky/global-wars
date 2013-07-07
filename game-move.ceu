@@ -57,50 +57,38 @@ do
                 var _char[10] str;
                 _sprintf(str, "%d", a);
 
-                var int x, y;           // army
-                var int x1,y1, x2,y2;   // arrow
+                var int x, y;    // army
 
-                // fortify
-                if fr == 0 then
-                    x = map:cx[to] - 40;    // TODO: hardcoded
+                // fortify arrow
+               if fr == 0 then
+                    x = map:cx[to] - 20;    // TODO: hardcoded
                     y = map:cy[to] - 40;    // TODO: hardcoded
+                    _thickLineRGBA(_REN,
+                        map:cx[to] - 20,
+                        map:cy[to] - 40,    // TODO: hardcoded
+                        map:cx[to],
+                        map:cy[to],
+                        1, 0,0,0, 0xAA);
 
-                    // arrow
-                    x1 = x;
-                    x2 = x;
-                    y1 = y + 12;
-                    y2 = y + 25;
-
-                // move
+                // move arrow
                 else
                     var int dx = map:cx[to] - map:cx[fr];
                     var int dy = map:cy[to] - map:cy[fr];
-                    x = dx/2 + map:cx[fr];
-                    y = dy/2 + map:cy[fr];
+                    x = map:cx[fr] + dx/2 - dy/4;
+                    y = map:cy[fr] + dy/2 - dx/4;
 
-                    // apply offsets to avoid superposition
-                    var int s;
-                    var int* p;
-                    if _abs(dx) > _abs(dy) then
-                        p = &y;
-                    else
-                        p = &x;
-                    end
-                    if fr > to then
-                        s = 1;
-                    else
-                        s = -1;
-                    end
-                    *p = *p + s*15;     // TODO: harcoded
-
-                    // arrow
-                    x2 = x + (map:cx[to] - x)/2;
-                    x1 = x + (x2 - x)/2;
-                    y2 = y + (map:cy[to] - y)/2;
-                    y1 = y + (y2 - y)/2;
+                    var u16[3] xs;
+                        xs[0] = map:cx[to];
+                        xs[1] = x;
+                        xs[2] = map:cx[fr];
+                    var u16[3] ys;
+                        ys[0] = map:cy[to];
+                        ys[1] = y;
+                        ys[2] = map:cy[fr];
+                    _bezierRGBA(_REN, xs,ys, 3, 2, 0,0,0, 0xAA);
                 end
 
-                _thickLineRGBA(_REN, x1,y1, x2,y2, 1, 0,0,0, 0xAA);
+                // army
                 _boxRGBA(_REN,
                          x-10, y-10,    // TODO: hardcoded
                          x+10, y+10,    // TODO: hardcoded

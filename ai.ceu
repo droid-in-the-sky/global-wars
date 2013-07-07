@@ -17,26 +17,41 @@ native do
 end
 */
 
-var _SDL_Window* win;
-    finalize
-        win = _SDL_CreateWindow("AI",
-                            500, 400, 800, 480, _SDL_WINDOW_SHOWN);
-    with
-        _SDL_DestroyWindow(win);
+// SCREEN
+    var _SDL_Window* win;
+        finalize
+            win = _SDL_CreateWindow("AI",
+                                500, 400, 800, 480, _SDL_WINDOW_SHOWN);
+        with
+            _SDL_DestroyWindow(win);
+        end
+    _SDL_GetWindowSize(win, &_REN_W, &_REN_H);
+    _REN = _SDL_CreateRenderer(win, -1, 0);
+    finalize with
+        _SDL_DestroyRenderer(_REN);
     end
-_SDL_GetWindowSize(win, &_REN_W, &_REN_H);
 
-_REN = _SDL_CreateRenderer(win, -1, 0);
-finalize with
-    _SDL_DestroyRenderer(_REN);
-end
+// LUA
+    _L = _luaL_newstate();
+    finalize with
+        _lua_close(_L);
+    end
+    _lua_atpanic(_L, _ceu_lua_atpanic);
+    _luaL_openlibs(_L);
 
-_L = _luaL_newstate();
-finalize with
-    _lua_close(_L);
-end
-_lua_atpanic(_L, _ceu_lua_atpanic);
-_luaL_openlibs(_L);
+// FONT
+    native do
+        TTF_Font* FONT;
+    end
+    _TTF_Init();
+        finalize with
+            _TTF_Quit();
+        end
+    _FONT = _TTF_OpenFont("fnts/Deutsch.ttf", 20);
+        finalize with
+            _TTF_CloseFont(_FONT);
+        end
+    _assert(_FONT != null);
 
 par/or do
     await SDL_QUIT;
@@ -90,17 +105,13 @@ with
         _lua_call(_L, 1, 0);                // [ ]
 
         var Map map;
+
         var GameNav nav with
             this.map = &map;
+            this.me  = 1;
         end;
 
-        await SDL_MOUSEBUTTONDOWN;
-        par/or do
-            await SDL_MOUSEBUTTONDOWN;
-            break;
-        with
-            await 200ms;
-        end
+        await nav.ok;
     end
 
 // G3
@@ -124,17 +135,13 @@ with
         _lua_call(_L, 1, 0);               // [ ]
 
         var Map map;
+
         var GameNav nav with
             this.map = &map;
+            this.me  = 1;
         end;
 
-        await SDL_MOUSEBUTTONDOWN;
-        par/or do
-            await SDL_MOUSEBUTTONDOWN;
-            break;
-        with
-            await 200ms;
-        end
+        await nav.ok;
     end
 with
     every SDL_REDRAW do

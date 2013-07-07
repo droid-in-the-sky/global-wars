@@ -112,13 +112,13 @@ do
     var UIGrid g2 with
         this.ren = _REN;
         this.lay_lins = 2;
-        this.lay_cols = 2;
+        this.lay_cols = 3;
         this.lay = _GF_g2;
         this.uis_n = 3;
         native do
-            int GF_g2[4] = {
-                0,  0,  // fs
-                1,  2,  // no, ok
+            int GF_g2[] = {
+                -1,  0,  0,  // fs
+                -1,  1,  2   // no, ok
             };
         end
     end;

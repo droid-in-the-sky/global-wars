@@ -15,14 +15,16 @@ input void SDL_MOUSEBUTTONDOWN;
 input _SDL_KeyboardEvent* SDL_KEYDOWN;
 
 class GameNav with
-    var Map* map = null;
-    var int state = 0;
+    var Map* map   = null;
+    var int  me    = 0;
+    var int  state = 0;
     event void ok;
 do
     _assert(_REN != null);
     _assert(_L   != null);
 
     _assert(this.map != null);
+    _assert(this.me  != 0);
 
     _lua_getglobal(_L, "STATES");      // [ SS ]
     var int ns = _lua_objlen(_L, -1);
@@ -36,6 +38,20 @@ do
             this.state = ns - 1;    // previous "ing"
         end
     end
+
+    // bg = "me" color
+    var _SDL_Color bg;
+        _lua_getglobal(_L, "PLAYERS");  // [ PP ]
+        _lua_rawgeti(_L, -1, me);       // [ PP | P ]
+        _lua_getfield(_L, -1, "color"); // [ PP | P | C ]
+        _lua_rawgeti(_L, -1, 1);        // [ PP | P | C | r ]
+        _lua_rawgeti(_L, -2, 2);        // [ PP | P | C | r | g ]
+        _lua_rawgeti(_L, -3, 3);        // [ PP | P | C | r | g | b ]
+        bg.r = _lua_tointeger(_L, -3);
+        bg.g = _lua_tointeger(_L, -2);
+        bg.b = _lua_tointeger(_L, -1);
+        bg.a = 0xFF;
+        _lua_pop(_L, 6);                // [ ]
 
     // GRID "all"
     var _SDL_Rect r;        // whole screen
@@ -72,13 +88,14 @@ do
         _sprintf(str, "%s", "Navigate");
         var _SDL_Texture* tex;
             finalize
-                tex = _SDL_text2texture(_REN, _FONT, str, &_colors.black, null);
+                tex = _SDL_text2texture(_REN, _FONT, str, &_colors.black, &bg);
             with
                 _SDL_DestroyTexture(tex);
             end
         var UITexture ui_fs with
             this.ren = _REN;
             this.tex = tex;
+            this.clr_bg = &bg;
         end;
 
         finalize
@@ -95,13 +112,14 @@ do
     // GRID "menu"
     var UIGrid g2 with
         this.ren = _REN;
-        this.lay_lins = 1;
+        this.lay_lins = 2;
         this.lay_cols = 3;
         this.lay = _GN_g2;
         this.uis_n = 3;
         native do
-            int GN_g2[4] = {
-                0, 1, 2,  // < , > , ok
+            int GN_g2[] = {
+                -1, -1, -1,
+                 0,  1,  2,  // < , > , ok
             };
         end
     end;
@@ -263,7 +281,8 @@ with
             _lua_call(_L, 0, 0);
             var Map map;
             var GameNav nav with
-                this.map = &map;
+                this.map   = &map;
+                this.me    = 1;
                 this.state = 1;
             end;
             await nav.ok;
@@ -273,7 +292,8 @@ with
             _lua_call(_L, 0, 0);
             var Map map;
             var GameNav nav with
-                this.map = &map;
+                this.map   = &map;
+                this.me    = 1;
                 this.state = 1;
             end;
             await nav.ok;
@@ -283,7 +303,8 @@ with
             _lua_call(_L, 0, 0);
             var Map map;
             var GameNav nav with
-                this.map = &map;
+                this.map   = &map;
+                this.me    = 1;
                 this.state = 1;
             end;
             await nav.ok;

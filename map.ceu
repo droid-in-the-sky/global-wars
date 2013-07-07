@@ -188,6 +188,7 @@ do
             _lua_pop(_L, 5);               // [ ]
 
             // for each border { {p1,p2}, {p3,p4}, ... }
+/**
             _lua_getglobal(_L, "BORDERS"); // [ B ]
             loop i_, _lua_objlen(_L,1) do
                 var int i = i_ + 1;     // C => Lua indexing
@@ -207,6 +208,7 @@ do
                 _lua_pop(_L, 7);           // [ B ]
             end
             _lua_pop(_L, 1);               // [ ]
+**/
         end
     end
 end

@@ -1,4 +1,5 @@
 native nohold
+    _bezierRGBA(),
     _boxColor(),
     _boxRGBA(),
     _filledPolygonRGBA(),
