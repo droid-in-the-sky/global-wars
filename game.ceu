@@ -1,0 +1,168 @@
+import lua.ceu;
+import sdl.ceu;
+import sdl-gfx.ceu;
+
+import map.ceu;
+import game-nav.ceu;
+import game-fortify.ceu;
+
+input void SDL_REDRAW;
+input _SDL_KeyboardEvent* SDL_KEYDOWN;
+input void SDL_MOUSEBUTTONDOWN;
+
+class Game with
+    var int        me   = 0;
+    var _char*     file = null;
+do
+    _assert(_REN != null);
+    _assert(_L   != null);
+
+    _assert(this.me != 0);
+
+    _assert(this.file != null);
+        _luaL_loadfile(_L, this.file);  // [ f ]
+        _lua_call(_L, 0, 0);            // [ ]
+
+    var Map map;
+
+    // run the game navigate=>(fortify||attack)=>...
+
+    loop do
+
+        // # states
+        _lua_getglobal(_L, "STATES");       // [ SS ]
+        var int ns = _lua_objlen(_L, -1);
+        _lua_pop(_L, 1);                    // [ ]
+
+        // avoid navigation for "0st" state
+        if ns > 1 then
+            var GameNav nav with
+                this.map = &map;
+            end;
+            await nav.ok;
+        end
+
+        // current state type
+        _lua_getglobal(_L, "STATES");       // [ SS ]
+        _lua_rawgeti(_L, -1, ns);           // [ SS | S ]
+        _lua_getfield(_L, -1, "type");      // [ SS | S | type ]
+        _assert(_lua_type(_L,-1) == _LUA_TSTRING);
+
+        // state = FORTIFY
+        if _strcmp("fortify", _lua_tostring(_L,-1)) == 0 then
+            _lua_pop(_L, 3);                // [ ]
+            var GameFortify fort with
+                this.map = &map;
+                this.me  = me;
+            end;
+            await fort.ok;
+        else
+            _assert(0);
+        end
+
+        // [ ]
+        _assert(_lua_gettop(_L) == 0);
+
+        // AI
+        _lua_getglobal(_L, "PLAYERS");      // [ PP ]
+        loop p_, _lua_objlen(_L,-1) do
+            var int p = p_ + 1;
+            if p == this.me then
+                continue;
+            end
+
+            // asserts for AI
+            _lua_rawgeti(_L, -1, p);        // [ PP | P ]
+            _lua_getfield(_L, -1, "type");  // [ PP | P | tp ]
+            _assert(_lua_type(_L,-1) == _LUA_TSTRING);
+            _assert(_strcmp("ai", _lua_tostring(_L,-1)) == 0);
+            _lua_pop(_L, 2);                // [ PP ]
+
+            // call AI move
+            _lua_getglobal(_L, "SRV_move"); // [ PP | srv ]
+            _lua_pushnumber(_L, p);         // [ PP | srv | p ]
+            _lua_getglobal(_L, "AI_move");  // [ PP | srv | p | ai ]
+            _lua_pushnumber(_L, ns);        // [ PP | srv | p | ai | s ]
+            _lua_pushnumber(_L, p);         // [ PP | srv | p | ai | s | p ]
+            _lua_call(_L, 2, 1);            // [ PP | srv | p | MSp ]
+            _lua_call(_L, 2, 0);            // [ PP ]
+        end
+        _lua_pop(_L, 1);                    // [ ]
+        _lua_getglobal(_L, "SRV_go");       // [ f ]
+        _lua_call(_L, 0, 0);                // [ ]
+    end
+end
+
+/*
+native do
+    lua_State*    L   = NULL;
+    SDL_Renderer* REN = NULL;
+    int REN_W, REN_H;
+end
+*/
+
+// SCREEN
+    var _SDL_Window* win;
+        finalize
+            win = _SDL_CreateWindow("Game",
+                                500, 400, 800, 480, _SDL_WINDOW_SHOWN);
+        with
+            _SDL_DestroyWindow(win);
+        end
+    _SDL_GetWindowSize(win, &_REN_W, &_REN_H);
+
+    _REN = _SDL_CreateRenderer(win, -1, 0);
+    finalize with
+        _SDL_DestroyRenderer(_REN);
+    end
+
+// LUA
+    _L = _luaL_newstate();
+    finalize with
+        _lua_close(_L);
+    end
+    _lua_atpanic(_L, _ceu_lua_atpanic);
+    _luaL_openlibs(_L);
+
+// FONT
+    native do
+        TTF_Font* FONT;
+    end
+    _TTF_Init();
+        finalize with
+            _TTF_Quit();
+        end
+    _FONT = _TTF_OpenFont("fnts/Deutsch.ttf", 20);
+        finalize with
+            _TTF_CloseFont(_FONT);
+        end
+    _assert(_FONT != null);
+
+par/or do
+    await SDL_QUIT;
+/*** SIMUL
+with
+    @include(simul.ceu)
+***/
+with
+    every SDL_REDRAW do
+        _boxRGBA(_REN, 0,0, _REN_W,_REN_H, 0,0,0, 0xFF);
+    end
+with
+    _luaL_loadfile(_L, "server.lua");  // [ f ]
+    _lua_call(_L, 0, 0);               // [ ]
+    _luaL_loadfile(_L, "ai.lua");      // [ f ]
+    _lua_call(_L, 0, 0);               // [ ]
+
+    var Game game with
+        this.file = "_g.lua";
+        this.me   = 1;
+    end;
+    await FOREVER;
+with
+    every SDL_REDRAW do
+        _SDL_RenderPresent(_REN);
+    end
+end
+
+return 0;

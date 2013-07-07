@@ -60,7 +60,8 @@ function AI_move (s, p)
                     aa = math.random(a-1)
 --print('mov', aa, c1, c2)
                 end
-                MSp[#MSp+1] = { aa, c1, c2 }
+                --MSp[#MSp+1] = { aa, c1, c2 }
+                SRV_move_inc(MSp, aa, c1, c2)
             end
         end
     end

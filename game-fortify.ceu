@@ -247,8 +247,10 @@ do
                 _lua_getglobal(_L, "SRV_move_inc"); // [ f ]
                 _lua_rawgeti(_L, _LUA_REGISTRYINDEX, ref);
                                                     // [ f | t ]
-                _lua_pushnumber(_L, c);             // [ f | t | c ];
-                _lua_call(_L, 2, 0);                // [ ]
+                _lua_pushnumber(_L, 1);             // [ f | t | 1 | c ];
+                _lua_pushnumber(_L, 0);             // [ f | t | 1 | 0 | c ];
+                _lua_pushnumber(_L, c);             // [ f | t | 1 | 0 | c ];
+                _lua_call(_L, 4, 0);                // [ ]
 
                 fs_tmp = fs_tmp - 1;
                 emit e => fs_tmp;

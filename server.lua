@@ -229,15 +229,15 @@ function SRV_move_rem ()
     MOVES [#MOVES]  = nil
 end
 
-function SRV_move_inc (T, c)
+function SRV_move_inc (T, A, FR, TO)
     for _, t in ipairs(T) do
         local a, fr, to = unpack(t)
-        if to == c then
-            t[1] = a + 1
+        if fr==FR and to==TO then
+            t[1] = a + A
             return
         end
     end
-    T[#T+1] = { 1, 0, c }
+    T[#T+1] = { A, FR, TO }
 end
 
 function SRV_move_ins (p, MSp)
