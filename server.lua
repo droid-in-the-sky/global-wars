@@ -107,10 +107,8 @@ function SRV_save (file)
     f:close()
 end
 
-local function SRV_go ()
-    if #MOVES[#MOVES] ~= #PLAYERS then
-        return  false   -- not yet
-    end
+function SRV_go ()
+    assert(#MOVES[#MOVES] == #PLAYERS)
 
     local S2 = STATES[#STATES]  -- already w/o moved armies
     local S3 = copy(S2)         -- after fortifying/attacking
@@ -222,17 +220,16 @@ function SRV_fs (S, p)
 end
 
 function SRV_move (p, MSp)
-    local fs = SRV_tmp_ins(p, MSp)
+    local fs = SRV_move_ins(p, MSp)
     assert(fs == 0, fs)
-    return SRV_go()      -- try to GO
 end
 
-function SRV_tmp_rem ()
+function SRV_move_rem ()
     STATES[#STATES] = nil
     MOVES [#MOVES]  = nil
 end
 
-function SRV_tmp_inc (T, c)
+function SRV_move_inc (T, c)
     for _, t in ipairs(T) do
         local a, fr, to = unpack(t)
         if to == c then
@@ -243,7 +240,7 @@ function SRV_tmp_inc (T, c)
     T[#T+1] = { 1, 0, c }
 end
 
-function SRV_tmp_ins (p, MSp)
+function SRV_move_ins (p, MSp)
     --   p: player
     -- MSp: moves of "p"
 

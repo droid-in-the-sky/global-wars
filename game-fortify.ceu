@@ -15,6 +15,7 @@ input void SDL_MOUSEBUTTONDOWN;
 class GameFortify with
     var Map* map = null;
     var int  me  = 0;
+    event void ok;
 do
     _assert(_REN  != null);
     _assert(_L    != null);
@@ -143,6 +144,17 @@ do
     g2.uis[1] = null; // no, after 1 click
     g2.uis[2] = null; // ok, when fs==0
 
+
+    // "ref" holds the table w/ armies
+
+    _lua_pushnil(_L);       // [ nil ]
+    var int ref = _luaL_ref(_L, _LUA_REGISTRYINDEX);
+                            // [ ]
+        finalize with
+            _luaL_unref(_L, _LUA_REGISTRYINDEX, ref);
+        end
+
+
     // loop until all "fs" are chosen
     //  - restart on "no"   (only when fs<tot)
     //  - quit    on "ok"   (only when fs==0)
@@ -152,25 +164,23 @@ do
         // emitted whenever "fs" changes
         event int e;
 
+        var int fs_tmp = fs;
+
+        // restart armies table
+        _lua_newtable(_L);      // [ armies ]
+        _lua_rawseti(_L, _LUA_REGISTRYINDEX, ref);
+                                // [ ]
+
         par/or do
-            var int fs_tmp = fs;
-
-            _lua_newtable(_L);      // [ armies ]
-            var int ref = _luaL_ref(_L, _LUA_REGISTRYINDEX);
-                                    // [ ]
-                finalize with
-                    _luaL_unref(_L, _LUA_REGISTRYINDEX, ref);
-                end
-
             loop do
                 // new state "fortifying"
-                _lua_getglobal(_L, "SRV_tmp_ins");      // [ f ]
+                _lua_getglobal(_L, "SRV_move_ins");     // [ f ]
                 _lua_pushnumber(_L, this.me);           // [ f | p ]
                 _lua_rawgeti(_L, _LUA_REGISTRYINDEX, ref);
                                                         // [ f | p | t ]
                 _lua_call(_L, 2, 0);                    // [ ]
                 finalize with
-                    _lua_getglobal(_L, "SRV_tmp_rem");  // [ f ]
+                    _lua_getglobal(_L, "SRV_move_rem"); // [ f ]
                     _lua_call(_L, 0, 0);                // [ ]
                 end
 
@@ -234,7 +244,7 @@ do
                 end
 
                 // t <- c++
-                _lua_getglobal(_L, "SRV_tmp_inc");  // [ f ]
+                _lua_getglobal(_L, "SRV_move_inc"); // [ f ]
                 _lua_rawgeti(_L, _LUA_REGISTRYINDEX, ref);
                                                     // [ f | t ]
                 _lua_pushnumber(_L, c);             // [ f | t | c ];
@@ -283,7 +293,15 @@ do
             break;
         end
     end
-    // TODO: emit ok!
+
+    // new state "fortifying"
+    _lua_getglobal(_L, "SRV_move");         // [ f ]
+    _lua_pushnumber(_L, this.me);           // [ f | p ]
+    _lua_rawgeti(_L, _LUA_REGISTRYINDEX, ref);
+                                            // [ f | p | t ]
+    _lua_call(_L, 2, 0);                    // [ ]
+
+    emit this.ok;
 end
 
 /*
@@ -355,9 +373,8 @@ with
                 this.map = &map;
                 this.me  = 1;
             end;
-            var _SDL_KeyboardEvent* key;
-            key = await SDL_KEYDOWN
-                  until key:keysym.sym == _SDLK_ESCAPE;
+
+            await fort.ok;
         end
     end
 with

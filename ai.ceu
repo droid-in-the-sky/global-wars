@@ -71,21 +71,23 @@ with
     end
 
 // G2
-    _luaL_loadfile(_L, "g2.lua");      // [ f ]
-    _lua_call(_L, 0, 0);               // [ ]
+    _luaL_loadfile(_L, "g2.lua");           // [ f ]
+    _lua_call(_L, 0, 0);                    // [ ]
 
     loop do
-        _lua_getglobal(_L, "STATES");      // [ SS ]
+        _lua_getglobal(_L, "STATES");       // [ SS ]
         var int s = _lua_objlen(_L, -1);
-        _lua_pop(_L, 1);                   // [ ]
+        _lua_pop(_L, 1);                    // [ ]
 
         _AI_move(s, 1);
         _AI_move(s, 2);
+        _lua_getglobal(_L, "SRV_go");       // [ f ]
+        _lua_call(_L, 0, 0);                // [ ]
 
         // server save (assumes all moved)
-        _lua_getglobal(_L, "SRV_save");    // [ f ]
-        _lua_pushstring(_L, "_g2.lua");    // [ f | "g" ]
-        _lua_call(_L, 1, 0);               // [ ]
+        _lua_getglobal(_L, "SRV_save");     // [ f ]
+        _lua_pushstring(_L, "_g2.lua");     // [ f | "g" ]
+        _lua_call(_L, 1, 0);                // [ ]
 
         var Map map;
         var GameNav nav with
@@ -113,6 +115,8 @@ with
         _AI_move(s, 1);
         _AI_move(s, 2);
         _AI_move(s, 3);
+        _lua_getglobal(_L, "SRV_go");       // [ f ]
+        _lua_call(_L, 0, 0);                // [ ]
 
         // server save (assumes all moved)
         _lua_getglobal(_L, "SRV_save");    // [ f ]
