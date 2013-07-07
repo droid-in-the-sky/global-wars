@@ -16,7 +16,7 @@ ai:
 
 game:
 	ceu --m4 game.ceu
-	gcc -Os main.c $(CFLAGS) -lSDL2 -lSDL2_ttf -lSDL2_gfx -llua \
+	gcc -Os main.c $(CFLAGS) -lSDL2 -lSDL2_ttf -lSDL2_gfx -lSDL2_image -llua \
 		-o global-wars.exe
 
 fortify:
@@ -26,7 +26,7 @@ fortify:
 
 nav:
 	ceu --m4 game-nav.ceu
-	gcc -Os main.c $(CFLAGS) -lSDL2 -lSDL2_gfx -llua \
+	gcc -Os main.c $(CFLAGS) -lSDL2 -lSDL2_gfx -lSDL2_ttf -lSDL2_image -llua \
 		-o global-wars.exe
 
 move:

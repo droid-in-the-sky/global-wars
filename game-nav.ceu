@@ -3,6 +3,8 @@ import sdl.ceu;
 import sdl-gfx.ceu;
 
 import ui.ceu;
+import ui-texture.ceu;
+import ui-grid.ceu;
 import map.ceu;
 import game-state.ceu;
 import game-move.ceu;
@@ -15,6 +17,7 @@ input _SDL_KeyboardEvent* SDL_KEYDOWN;
 class GameNav with
     var Map* map = null;
     var int state = 0;
+    event void ok;
 do
     _assert(_REN != null);
     _assert(_L   != null);
@@ -34,31 +37,159 @@ do
         end
     end
 
+    // GRID "all"
+    var _SDL_Rect r;        // whole screen
+        r.x = 0;
+        r.y = 0;
+        r.w = _REN_W;
+        r.h = _REN_H;
+    var UIGrid g1 with
+        this.ren = _REN;
+        this.lay_lins = 4;
+        this.lay_cols = 4;
+        this.lay = _GN_g1;
+        this.uis_n = 2;
+        native do
+            int GN_g1[16] = {
+                -1, -1, -1, -1,
+                -1,  0,  0, -1,     // fs
+                -1,  0,  0, -1,
+                -1, -1, -1,  1      // menu
+            };
+        end
+    end;
+
+    // AWAIT center click
+    do
+        // show current state
+        var GameState st with
+            this.map = map;
+            this.idx = state;    // start from last
+        end;
+
+        // text texture
+        var _char[25] str;
+        _sprintf(str, "%s", "Navigate");
+        var _SDL_Texture* tex;
+            finalize
+                tex = _SDL_text2texture(_REN, _FONT, str, &_colors.black, null);
+            with
+                _SDL_DestroyTexture(tex);
+            end
+        var UITexture ui_fs with
+            this.ren = _REN;
+            this.tex = tex;
+        end;
+
+        finalize
+            g1.uis[0] = &ui_fs; // fs
+        with
+            g1.uis[0] = null;
+        end
+        g1.uis[1] = null;       // menu
+        emit g1.go_redim => &r;
+
+        await ui_fs.ok_clicked;
+    end
+
+    // GRID "menu"
+    var UIGrid g2 with
+        this.ren = _REN;
+        this.lay_lins = 1;
+        this.lay_cols = 3;
+        this.lay = _GN_g2;
+        this.uis_n = 3;
+        native do
+            int GN_g2[4] = {
+                0, 1, 2,  // < , > , ok
+            };
+        end
+    end;
+    // ui_l
+        var _SDL_Texture* tex_l;
+        finalize
+            tex_l = _IMG_LoadTexture(_REN, "imgs/left.png");
+        with
+            _SDL_DestroyTexture(tex_l);
+        end
+        var UITexture ui_l with
+            this.ren = _REN;
+            this.tex = tex_l;
+        end;
+    // ui_r
+        var _SDL_Texture* tex_r;
+        finalize
+            tex_r = _IMG_LoadTexture(_REN, "imgs/right.png");
+        with
+            _SDL_DestroyTexture(tex_r);
+        end
+        var UITexture ui_r with
+            this.ren = _REN;
+            this.tex = tex_r;
+        end;
+    // ui_ok
+        var _SDL_Texture* tex_ok;
+        finalize
+            tex_ok = _IMG_LoadTexture(_REN, "imgs/ok.png");
+        with
+            _SDL_DestroyTexture(tex_ok);
+        end
+        var UITexture ui_ok with
+            this.ren = _REN;
+            this.tex = tex_ok;
+        end;
+
+    g1.uis[0] = null;   // remove "fs"
+    g1.uis[1] = &g2;    // include "menu"
+
+    g2.uis[0] = &ui_l;  // <
+    g2.uis[1] = &ui_r;  // >
+    g2.uis[2] = &ui_ok; // ok
+
+    emit g1.go_redim => null;
+
     loop do
         var GameState st with
             this.map = map;
             this.idx = state;
         end;
 
-        var _SDL_KeyboardEvent* key;
+        var int dir;
 
-        // only even states have moves
-        if this.state % 2 == 0 then
-            var GameMove mv with
-                this.map = map;
-                this.idx = state/2;     // 2 states for 1 move
-            end;
-            key = await SDL_KEYDOWN;
-        else
-            key = await SDL_KEYDOWN;
+        par/or do
+            // only even states have moves
+            if this.state % 2 == 0 then
+                var GameMove mv with
+                    this.map = map;
+                    this.idx = state/2;     // 2 states for 1 move
+                end;
+                await FOREVER;
+            end
+            await FOREVER;
+        with
+            loop do
+                var _SDL_KeyboardEvent* key = await SDL_KEYDOWN;
+                if key:keysym.sym == _SDLK_RIGHT then
+                    dir =  1;
+                    break;
+                else/if key:keysym.sym == _SDLK_LEFT then
+                    dir = -1;
+                    break;
+                end
+            end
+        with
+            await ui_l.ok_clicked;
+            dir = -1;
+        with
+            await ui_r.ok_clicked;
+            dir =  1;
+        with
+            await ui_ok.ok_clicked;
+            break;
         end
 
         // forward // rewind
-        if key:keysym.sym == _SDLK_RIGHT then
-            this.state = state + 1;
-        else/if key:keysym.sym == _SDLK_LEFT then
-            this.state = state - 1;
-        end
+        this.state = state + dir;
 
         // cycle 1<=>ns
         if this.state > ns then
@@ -67,6 +198,8 @@ do
             this.state = ns;
         end
     end
+
+    emit this.ok;
 end
 
 /*
@@ -77,26 +210,41 @@ native do
 end
 */
 
-var _SDL_Window* win;
-    finalize
-        win = _SDL_CreateWindow("Game Navigation",
-                            500, 400, 800, 480, _SDL_WINDOW_SHOWN);
-    with
-        _SDL_DestroyWindow(win);
+// SCREEN
+    var _SDL_Window* win;
+        finalize
+            win = _SDL_CreateWindow("Game Navigation",
+                                500, 400, 800, 480, _SDL_WINDOW_SHOWN);
+        with
+            _SDL_DestroyWindow(win);
+        end
+    _SDL_GetWindowSize(win, &_REN_W, &_REN_H);
+    _REN = _SDL_CreateRenderer(win, -1, 0);
+    finalize with
+        _SDL_DestroyRenderer(_REN);
     end
-_SDL_GetWindowSize(win, &_REN_W, &_REN_H);
 
-_REN = _SDL_CreateRenderer(win, -1, 0);
-finalize with
-    _SDL_DestroyRenderer(_REN);
-end
+// LUA
+    _L = _luaL_newstate();
+    finalize with
+        _lua_close(_L);
+    end
+    _lua_atpanic(_L, _ceu_lua_atpanic);
+    _luaL_openlibs(_L);
 
-_L = _luaL_newstate();
-finalize with
-    _lua_close(_L);
-end
-_lua_atpanic(_L, _ceu_lua_atpanic);
-_luaL_openlibs(_L);
+// FONT
+    native do
+        TTF_Font* FONT;
+    end
+    _TTF_Init();
+        finalize with
+            _TTF_Quit();
+        end
+    _FONT = _TTF_OpenFont("fnts/Deutsch.ttf", 20);
+        finalize with
+            _TTF_CloseFont(_FONT);
+        end
+    _assert(_FONT != null);
 
 par/or do
     await SDL_QUIT;
@@ -118,7 +266,7 @@ with
                 this.map = &map;
                 this.state = 1;
             end;
-            await SDL_MOUSEBUTTONDOWN;
+            await nav.ok;
         end
         do
             _luaL_loadfile(_L, "g2.lua");
@@ -128,7 +276,7 @@ with
                 this.map = &map;
                 this.state = 1;
             end;
-            await SDL_MOUSEBUTTONDOWN;
+            await nav.ok;
         end
         do
             _luaL_loadfile(_L, "g3.lua");
@@ -138,7 +286,7 @@ with
                 this.map = &map;
                 this.state = 1;
             end;
-            await SDL_MOUSEBUTTONDOWN;
+            await nav.ok;
         end
     end
 with
