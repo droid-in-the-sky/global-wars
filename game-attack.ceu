@@ -23,6 +23,7 @@ class GameAttackOne with
 do
     _assert(_TEX_INC != null);
     _assert(_TEX_DEC != null);
+    _assert(_TEX_OK  != null);
 
     _assert(this.map != null);
     _assert(this.fr  != 0);
@@ -415,9 +416,9 @@ end
 
 // TEXS
     native do
-        SDL_Texture* TEX_INC;
-        SDL_Texture* TEX_DEC;
-        SDL_Texture* TEX_OK;
+        //SDL_Texture* TEX_OK  = NULL;
+        SDL_Texture* TEX_INC = NULL;
+        SDL_Texture* TEX_DEC = NULL;
     end
     _TEX_OK = _IMG_LoadTexture(_REN, "imgs/ok.png");
     finalize with
@@ -431,6 +432,7 @@ end
     finalize with
         _SDL_DestroyTexture(_TEX_INC);
     end
+    _assert(_TEX_OK  != null);
     _assert(_TEX_INC != null);
     _assert(_TEX_DEC != null);
 

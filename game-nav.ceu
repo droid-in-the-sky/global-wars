@@ -22,6 +22,9 @@ class GameNav with
 do
     _assert(_REN != null);
     _assert(_L   != null);
+    _assert(_TEX_L  != null);
+    _assert(_TEX_R  != null);
+    _assert(_TEX_OK != null);
 
     _assert(this.map != null);
     _assert(this.me  != 0);
@@ -94,37 +97,19 @@ do
         end
     end;
     // ui_l
-        var _SDL_Texture* tex_l;
-        finalize
-            tex_l = _IMG_LoadTexture(_REN, "imgs/left.png");
-        with
-            _SDL_DestroyTexture(tex_l);
-        end
         var UITexture ui_l with
             this.ren = _REN;
-            this.tex = tex_l;
+            this.tex = _TEX_L;
         end;
     // ui_r
-        var _SDL_Texture* tex_r;
-        finalize
-            tex_r = _IMG_LoadTexture(_REN, "imgs/right.png");
-        with
-            _SDL_DestroyTexture(tex_r);
-        end
         var UITexture ui_r with
             this.ren = _REN;
-            this.tex = tex_r;
+            this.tex = _TEX_R;
         end;
     // ui_ok
-        var _SDL_Texture* tex_ok;
-        finalize
-            tex_ok = _IMG_LoadTexture(_REN, "imgs/ok.png");
-        with
-            _SDL_DestroyTexture(tex_ok);
-        end
         var UITexture ui_ok with
             this.ren = _REN;
-            this.tex = tex_ok;
+            this.tex = _TEX_OK;
         end;
 
     g1.uis[0] = &g2;    // include "menu"
@@ -231,6 +216,28 @@ end
             _TTF_CloseFont(_FONT);
         end
     _assert(_FONT != null);
+
+// TEXS
+    native do
+        SDL_Texture* TEX_L  = NULL;
+        SDL_Texture* TEX_R  = NULL;
+        //SDL_Texture* TEX_OK = NULL;
+    end
+    _TEX_L = _IMG_LoadTexture(_REN, "imgs/left.png");
+    finalize with
+        _SDL_DestroyTexture(_TEX_L);
+    end
+    _TEX_R = _IMG_LoadTexture(_REN, "imgs/right.png");
+    finalize with
+        _SDL_DestroyTexture(_TEX_R);
+    end
+    _TEX_OK = _IMG_LoadTexture(_REN, "imgs/ok.png");
+    finalize with
+        _SDL_DestroyTexture(_TEX_OK);
+    end
+    _assert(_TEX_L  != null);
+    _assert(_TEX_R  != null);
+    _assert(_TEX_OK != null);
 
 par/or do
     await SDL_QUIT;
