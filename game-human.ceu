@@ -1,0 +1,208 @@
+import lua.ceu;
+import sdl.ceu;
+import sdl-gfx.ceu;
+
+import map.ceu;
+import game-nav.ceu;
+import game-fortify.ceu;
+import game-attack.ceu;
+
+input void SDL_REDRAW;
+input _SDL_KeyboardEvent* SDL_KEYDOWN;
+input void SDL_MOUSEBUTTONDOWN;
+
+class GameHuman with
+    var Map* map   = null;
+    var int  me    = 0;
+
+    event void ok;
+do
+    _assert(_REN != null);
+    _assert(_L   != null);
+
+    _assert(this.map != null);
+    _assert(this.me  != 0);
+
+    // last "fortify" state
+    var int state;
+        _lua_getglobal(_L, "STATES");       // [ SS ]
+        state = _lua_objlen(_L, -1);
+        _lua_rawgeti(_L, -1, state);       // [ SS | S ]
+        _lua_getfield(_L, -1, "type");     // [ SS | S | type ]
+        _assert( _lua_type(_L,-1) == _LUA_TSTRING );
+        _assert( _strcmp("fortify", _lua_tostring(_L,-1)) == 0 );
+        _lua_pop(_L, 3);                    // [ ]
+
+    // show navigate => (fortify||attack)
+
+    // avoid navigation for "0st" state
+    if state > 1 then
+        var GameNav nav with
+            this.map = map;
+            this.me  = me;
+        end;
+_printf("antes\n");
+        await nav.ok;
+_printf("depois\n");
+    end
+_printf(">st %d\n", state);
+
+    // current state type
+    _lua_getglobal(_L, "STATES");       // [ SS ]
+    _lua_rawgeti(_L, -1, state);        // [ SS | S ]
+    _lua_getfield(_L, -1, "type");      // [ SS | S | type ]
+    _assert(_lua_type(_L,-1) == _LUA_TSTRING);
+
+    // state = FORTIFY
+    if _strcmp("fortify", _lua_tostring(_L,-1)) == 0 then
+        _lua_pop(_L, 3);                // [ ]
+        var GameFortify fort with
+            this.map = map;
+            this.me  = me;
+        end;
+        await fort.ok;
+
+    // state = ATTACK
+    else/if _strcmp("attack", _lua_tostring(_L,-1)) == 0 then
+        _lua_pop(_L, 3);                // [ ]
+        var GameAttack att with
+            this.map = map;
+            this.me  = me;
+        end;
+        await att.ok;
+
+    // ERROR
+    else
+        _lua_pop(_L, 3);                // [ ]
+        _assert(0);
+    end
+
+    emit this.ok;
+end
+
+/*
+native do
+    lua_State*    L   = NULL;
+    SDL_Renderer* REN = NULL;
+    int REN_W, REN_H;
+end
+*/
+
+// SCREEN
+    var _SDL_Window* win;
+        finalize
+            win = _SDL_CreateWindow("Game",
+                                500, 400, 800, 480, _SDL_WINDOW_SHOWN);
+        with
+            _SDL_DestroyWindow(win);
+        end
+    _SDL_GetWindowSize(win, &_REN_W, &_REN_H);
+
+    _REN = _SDL_CreateRenderer(win, -1, 0);
+    finalize with
+        _SDL_DestroyRenderer(_REN);
+    end
+
+// LUA
+    _L = _luaL_newstate();
+    finalize with
+        _lua_close(_L);
+    end
+    _lua_atpanic(_L, _ceu_lua_atpanic);
+    _luaL_openlibs(_L);
+
+// FONT
+    native do
+        TTF_Font* FONT;
+    end
+    _TTF_Init();
+        finalize with
+            _TTF_Quit();
+        end
+    _FONT = _TTF_OpenFont("fnts/Deutsch.ttf", 20);
+        finalize with
+            _TTF_CloseFont(_FONT);
+        end
+    _assert(_FONT != null);
+
+// TEXS
+    native do
+        //SDL_Texture* TEX_L  = NULL;
+        //SDL_Texture* TEX_R  = NULL;
+        //SDL_Texture* TEX_OK = NULL;
+        //SDL_Texture* TEX_INC;
+        //SDL_Texture* TEX_DEC;
+    end
+    _TEX_L = _IMG_LoadTexture(_REN, "imgs/left.png");
+    finalize with
+        _SDL_DestroyTexture(_TEX_L);
+    end
+    _TEX_R = _IMG_LoadTexture(_REN, "imgs/right.png");
+    finalize with
+        _SDL_DestroyTexture(_TEX_R);
+    end
+    _TEX_NO = _IMG_LoadTexture(_REN, "imgs/no.png");
+    finalize with
+        _SDL_DestroyTexture(_TEX_NO);
+    end
+    _TEX_OK = _IMG_LoadTexture(_REN, "imgs/ok.png");
+    finalize with
+        _SDL_DestroyTexture(_TEX_OK);
+    end
+    _TEX_INC = _IMG_LoadTexture(_REN, "imgs/inc.png");
+    finalize with
+        _SDL_DestroyTexture(_TEX_INC);
+    end
+    _TEX_DEC = _IMG_LoadTexture(_REN, "imgs/dec.png");
+    finalize with
+        _SDL_DestroyTexture(_TEX_INC);
+    end
+    _assert(_TEX_L  != null);
+    _assert(_TEX_R  != null);
+    _assert(_TEX_OK != null);
+    _assert(_TEX_INC != null);
+    _assert(_TEX_DEC != null);
+
+par/or do
+    await SDL_QUIT;
+/*** SIMUL
+with
+    @include(simul.ceu)
+***/
+with
+    every SDL_REDRAW do
+        _boxRGBA(_REN, 0,0, _REN_W,_REN_H, 0,0,0, 0xFF);
+    end
+with
+    _luaL_loadfile(_L, "server.lua");  // [ f ]
+    _lua_call(_L, 0, 0);               // [ ]
+
+    _luaL_loadfile(_L, "g1.lua");      // [ f ]
+    _lua_call(_L, 0, 0);               // [ ]
+
+    var Map map;
+
+    do
+        var GameHuman human with
+            this.map = &map;
+            this.me  = 1;
+        end;
+        await human.ok;
+    end
+
+    await 1s;   // TODO: BUG!!!
+
+    do
+        var GameHuman human with
+            this.map = &map;
+            this.me  = 2;
+        end;
+        await human.ok;
+    end
+with
+    every SDL_REDRAW do
+        _SDL_RenderPresent(_REN);
+    end
+end
+
+return 0;

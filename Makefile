@@ -19,6 +19,11 @@ ai:
 	gcc -Os main.c $(CFLAGS) -lSDL2 -lSDL2_gfx -lSDL2_ttf -lSDL2_image -llua \
 		-o global-wars.exe
 
+human:
+	ceu --m4 game-human.ceu
+	gcc -Os main.c $(CFLAGS) -lSDL2 -lSDL2_gfx -lSDL2_image -lSDL2_ttf -llua \
+		-o global-wars.exe
+
 attack:
 	ceu --m4 game-attack.ceu
 	gcc -Os main.c $(CFLAGS) -lSDL2 -lSDL2_gfx -lSDL2_image -lSDL2_ttf -llua \

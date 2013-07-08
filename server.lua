@@ -107,8 +107,18 @@ function SRV_save (file)
     f:close()
 end
 
+local __moves = {}
+function SRV_move (p, MSp)
+    __moves[p] = MSp
+end
+
 function SRV_go ()
-    assert(#MOVES[#MOVES] == #PLAYERS)
+    assert(#__moves == #PLAYERS)
+    for p, MSp in ipairs(__moves) do
+        local fs = SRV_move_ins(p, MSp)
+        assert(fs == 0, fs)
+    end
+    __moves = {}
 
     local S2 = STATES[#STATES]  -- already w/o moved armies
     local S3 = copy(S2)         -- after fortifying/attacking
@@ -217,11 +227,6 @@ function SRV_fs (S, p)
         fs = 3              -- minimum of 3
     end
     return fs   -- 0 (dead), 3 (minimum), X (#c/2)
-end
-
-function SRV_move (p, MSp)
-    local fs = SRV_move_ins(p, MSp)
-    assert(fs == 0, fs)
 end
 
 function SRV_move_rem ()

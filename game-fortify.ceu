@@ -26,9 +26,15 @@ do
     _assert(this.map != null);
     _assert(this.me  != 0);
 
-    var int state;  // last state
-        _lua_getglobal(_L, "STATES");   // [ SS ]
+    // last "fortify" state
+    var int state;
+        _lua_getglobal(_L, "STATES");       // [ SS ]
         state = _lua_objlen(_L, -1);
+        _lua_rawgeti(_L, -1, state);       // [ SS | S ]
+        _lua_getfield(_L, -1, "type");     // [ SS | S | type ]
+        _assert( _lua_type(_L,-1) == _LUA_TSTRING );
+        _assert( _strcmp("fortify", _lua_tostring(_L,-1)) == 0 );
+        _lua_pop(_L, 2);                    // [ SS ]
 
     // # of armies to fortify
     var int fs;

@@ -57,7 +57,7 @@ end
     native do
         //SDL_Texture* TEX_L  = NULL;
         //SDL_Texture* TEX_R  = NULL;
-        //SDL_Texture* TEX_OK = NULL;
+        SDL_Texture* TEX_OK = NULL;
     end
     _TEX_L = _IMG_LoadTexture(_REN, "imgs/left.png");
     finalize with
