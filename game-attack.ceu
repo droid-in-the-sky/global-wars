@@ -63,21 +63,21 @@ do
                 r1.h = 0;
                 r1.x = x + 20;
                 r1.y = y;
-            emit ui_inc.go_redim => &r1;
+            ui_inc._go_rect(&r1);
 
             var _SDL_Rect r2;
                 r2.w = 0;
                 r2.h = 0;
                 r2.x = ui_inc.rect.x + ui_inc.rect.w;
                 r2.y = y;
-            emit ui_dec.go_redim => &r2;
+            ui_dec._go_rect(&r2);
 
             var _SDL_Rect r3;
                 r3.w = 0;
                 r3.h = 0;
                 r3.x = ui_dec.rect.x + ui_dec.rect.w;
                 r3.y = y;
-            emit ui_ok.go_redim => &r3;
+            ui_ok._go_rect(&r3);
 
             await map:ok_changed;
         end
@@ -202,7 +202,7 @@ do
             g1.uis[0] = null;
         end
         g1.uis[1] = null;       // menu
-        emit g1.go_redim => &r;
+        g1._go_rect(&r);
 
         await 2s;
     end
@@ -244,7 +244,7 @@ do
     g1.uis[1] = &g2;    // include "menu"
         g2.uis[0] = null;   // no
         g2.uis[1] = &ui_ok; // ok
-    emit g1.go_redim => null;
+    g1._go();
 
     // "ref" holds the attacks table: {a,fr,to}
     _lua_pushboolean(_L, 1);    // [ true ]
@@ -278,7 +278,7 @@ do
                 with
                     g2.uis[0] = null;
                 end
-                emit g1.go_redim => null;
+                g1._go();
                 await ui.ok_clicked;
             with
 
@@ -421,7 +421,7 @@ end
 
 // TEXS
     native do
-        //SDL_Texture* TEX_OK  = NULL;
+        SDL_Texture* TEX_OK  = NULL;
         SDL_Texture* TEX_INC = NULL;
         SDL_Texture* TEX_DEC = NULL;
     end

@@ -134,7 +134,7 @@ do
         end
 
         g1.uis[2] = null;       // menu
-        emit g1.go_redim => &r;
+        g1._go_rect(&r);
         await 2s;
     end
 
@@ -235,7 +235,7 @@ do
                 // re-arrange all:
                 // - loop entering
                 // - after every "e"
-                emit g1.go_redim => null;
+                g1._go();
 
                 if fs_tmp == 0 then
                     await FOREVER;
@@ -368,7 +368,7 @@ end
 // TEXS
     native do
         SDL_Texture* TEX_NO = NULL;
-        SDL_Texture* TEX_OK = NULL;
+        //SDL_Texture* TEX_OK = NULL;
     end
     _TEX_NO = _IMG_LoadTexture(_REN, "imgs/no.png");
     finalize with

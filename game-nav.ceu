@@ -117,7 +117,7 @@ do
         g2.uis[1] = &ui_r;  // >
         g2.uis[2] = &ui_ok; // ok
 
-    emit g1.go_redim => &r;
+    g1._go_rect(&r);
 
     loop do
         var GameState st with

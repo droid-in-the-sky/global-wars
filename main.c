@@ -107,8 +107,12 @@ int main (int argc, char *argv[])
         old = now;
 #endif
 
+        // redraw on wclock or any valid event (avoid undefined events)
+        int redraw = 0;
+
 #ifdef CEU_WCLOCKS
         if (WCLOCK_nxt != CEU_WCLOCK_INACTIVE) {
+            redraw = WCLOCK_nxt < 1000*dt;
             ceu_go_wclock(1000*dt);
             if (ret) goto END;
             while (WCLOCK_nxt <= 0) {
@@ -124,9 +128,9 @@ int main (int argc, char *argv[])
 #endif
 
         // OTHER EVENTS
-        int redraw = 1;     // timer and any valid event (case "default" don't)
         if (has)
         {
+            int handled = 1;        // =1 for defined events
 //printf("EVT: %x\n", evt.type);
             switch (evt.type) {
 #ifdef CEU_IN_SDL_QUIT
@@ -185,9 +189,10 @@ int main (int argc, char *argv[])
                     break;
 #endif
                 default:
-                    redraw = 0;
+                    handled = 0;    // undefined event
             }
             if (ret) goto END;
+            redraw = redraw || handled;
         }
 
 #ifdef CEU_IN_SDL_REDRAW
