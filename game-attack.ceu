@@ -435,7 +435,7 @@ end
 
 // TEXS
     native do
-        SDL_Texture* TEX_NO = NULL;
+        //SDL_Texture* TEX_NO = NULL;
         SDL_Texture* TEX_OK = NULL;
     end
     _TEX_NO = _IMG_LoadTexture(_REN, "imgs/no.png");

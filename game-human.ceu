@@ -147,19 +147,9 @@ end
     finalize with
         _SDL_DestroyTexture(_TEX_OK);
     end
-    _TEX_INC = _IMG_LoadTexture(_REN, "imgs/inc.png");
-    finalize with
-        _SDL_DestroyTexture(_TEX_INC);
-    end
-    _TEX_DEC = _IMG_LoadTexture(_REN, "imgs/dec.png");
-    finalize with
-        _SDL_DestroyTexture(_TEX_INC);
-    end
     _assert(_TEX_L  != null);
     _assert(_TEX_R  != null);
     _assert(_TEX_OK != null);
-    _assert(_TEX_INC != null);
-    _assert(_TEX_DEC != null);
 
 par/or do
     await SDL_QUIT;

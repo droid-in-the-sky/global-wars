@@ -16,7 +16,7 @@ do
     _assert(_L   != null);
 
     _assert(this.file != null);
-        _luaL_loadfile(_L, this.file);  // [ f ]
+        var int i = _luaL_loadfile(_L, this.file);  // [ f ]
         _lua_call(_L, 0, 0);            // [ ]
 
     var Map map;
@@ -127,8 +127,6 @@ end
         //SDL_Texture* TEX_L  = NULL;
         //SDL_Texture* TEX_R  = NULL;
         //SDL_Texture* TEX_OK = NULL;
-        //SDL_Texture* TEX_INC;
-        //SDL_Texture* TEX_DEC;
     end
     _TEX_L = _IMG_LoadTexture(_REN, "imgs/left.png");
     finalize with
@@ -146,19 +144,9 @@ end
     finalize with
         _SDL_DestroyTexture(_TEX_OK);
     end
-    _TEX_INC = _IMG_LoadTexture(_REN, "imgs/inc.png");
-    finalize with
-        _SDL_DestroyTexture(_TEX_INC);
-    end
-    _TEX_DEC = _IMG_LoadTexture(_REN, "imgs/dec.png");
-    finalize with
-        _SDL_DestroyTexture(_TEX_INC);
-    end
     _assert(_TEX_L  != null);
     _assert(_TEX_R  != null);
     _assert(_TEX_OK != null);
-    _assert(_TEX_INC != null);
-    _assert(_TEX_DEC != null);
 
 par/or do
     await SDL_QUIT;
@@ -171,13 +159,36 @@ with
         _boxRGBA(_REN, 0,0, _REN_W,_REN_H, 0,0,0, 0xFF);
     end
 with
-    _luaL_loadfile(_L, "server.lua");  // [ f ]
+
+    native do
+        /******/
+#ifdef __ANDROID__
+#define __ANDROID 1
+#define LUA_SERVER \
+    "/data/data/org.droid_in_the_sky.global_wars/lib/lib_lua_server.so"
+#define LUA_AI \
+    "/data/data/org.droid_in_the_sky.global_wars/lib/lib_lua_ai.so"
+#define LUA_GAME \
+    "/data/data/org.droid_in_the_sky.global_wars/lib/lib_lua__g.so"
+#else
+#define __ANDROID  0
+#define LUA_SERVER "server.lua"
+#define LUA_AI     "ai.lua"
+#define LUA_GAME   "_g.lua"
+#endif
+        /******/
+    end
+
+    _lua_pushboolean(_L, ___ANDROID);  // [ ? ]
+    _lua_setglobal(_L, "__ANDROID__"); // [ ]
+
+    _luaL_loadfile(_L, _LUA_SERVER);   // [ f ]
     _lua_call(_L, 0, 0);               // [ ]
-    _luaL_loadfile(_L, "ai.lua");      // [ f ]
+    _luaL_loadfile(_L, _LUA_AI);       // [ f ]
     _lua_call(_L, 0, 0);               // [ ]
 
     var Game game with
-        this.file = "_g.lua";
+        this.file = _LUA_GAME;
     end;
     await FOREVER;
 with

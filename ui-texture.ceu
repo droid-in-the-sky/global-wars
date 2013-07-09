@@ -64,7 +64,7 @@ end
 
 native nohold _SDL_text2texture();
 native do
-    #include "SDL2/SDL_ttf.h"
+    //#include "SDL2/SDL_ttf.h"
     SDL_Texture* SDL_text2texture (SDL_Renderer* ren,
                                    TTF_Font* font, char* text,
                                    SDL_Color* fg, SDL_Color* bg)

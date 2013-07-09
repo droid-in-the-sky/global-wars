@@ -10,6 +10,7 @@ all:
 		-o global-wars.exe
 
 game:
+	cp g3.lua _g.lua
 	ceu --m4 game.ceu
 	gcc -Os main.c $(CFLAGS) -lSDL2 -lSDL2_gfx -lSDL2_ttf -lSDL2_image -llua \
 		-o global-wars.exe
