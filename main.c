@@ -112,7 +112,7 @@ int main (int argc, char *argv[])
 
 #ifdef CEU_WCLOCKS
         if (WCLOCK_nxt != CEU_WCLOCK_INACTIVE) {
-            redraw = WCLOCK_nxt < 1000*dt;
+            redraw = WCLOCK_nxt <= 1000*dt;
             ceu_go_wclock(1000*dt);
             if (ret) goto END;
             while (WCLOCK_nxt <= 0) {

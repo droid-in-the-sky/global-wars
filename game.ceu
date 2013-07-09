@@ -3,22 +3,17 @@ import sdl.ceu;
 import sdl-gfx.ceu;
 
 import map.ceu;
-import game-nav.ceu;
-import game-fortify.ceu;
-import game-attack.ceu;
+import game-human.ceu;
 
 input void SDL_REDRAW;
 input _SDL_KeyboardEvent* SDL_KEYDOWN;
 input void SDL_MOUSEBUTTONDOWN;
 
 class Game with
-    var int        me   = 0;
-    var _char*     file = null;
+    var _char* file = null;
 do
     _assert(_REN != null);
     _assert(_L   != null);
-
-    _assert(this.me != 0);
 
     _assert(this.file != null);
         _luaL_loadfile(_L, this.file);  // [ f ]
@@ -26,81 +21,59 @@ do
 
     var Map map;
 
-    // run the game navigate=>(fortify||attack)=>...
+    // n players
+    var int ps;
+        _lua_getglobal(_L, "PLAYERS");  // [ PP ]
+        ps = _lua_objlen(_L, -1);
+        _lua_pop(_L, 1);                // [ ]
+
+    // while not finished
 
     loop do
 
-        // # states
+        // current #states
         _lua_getglobal(_L, "STATES");       // [ SS ]
         var int ns = _lua_objlen(_L, -1);
         _lua_pop(_L, 1);                    // [ ]
 
-        // avoid navigation for "0st" state
-        if ns > 1 then
-            var GameNav nav with
-                this.map = &map;
-                this.me  = me;
-            end;
-            await nav.ok;
-        end
+        // foreach player
+        loop p_, ps do
+            var int p = p_ + 1;     // C => Lua
 
-        // current state type
-        _lua_getglobal(_L, "STATES");       // [ SS ]
-        _lua_rawgeti(_L, -1, ns);           // [ SS | S ]
-        _lua_getfield(_L, -1, "type");      // [ SS | S | type ]
-        _assert(_lua_type(_L,-1) == _LUA_TSTRING);
-
-        // state = FORTIFY
-        if _strcmp("fortify", _lua_tostring(_L,-1)) == 0 then
-            _lua_pop(_L, 3);                // [ ]
-            var GameFortify fort with
-                this.map = &map;
-                this.me  = me;
-            end;
-            await fort.ok;
-
-        // state = ATTACK
-        else/if _strcmp("attack", _lua_tostring(_L,-1)) == 0 then
-            _lua_pop(_L, 3);                // [ ]
-            var GameAttack att with
-                this.map = &map;
-                this.me  = me;
-            end;
-            await att.ok;
-
-        // ERROR
-        else
-            _lua_pop(_L, 3);                // [ ]
-            _assert(0);
-        end
-
-        // AI
-        _lua_getglobal(_L, "PLAYERS");      // [ PP ]
-        loop p_, _lua_objlen(_L,-1) do
-            var int p = p_ + 1;
-            if p == this.me then
-                continue;
-            end
-
-            // asserts for AI
+            // AI or human?
+            _lua_getglobal(_L, "PLAYERS");  // [ PP ]
             _lua_rawgeti(_L, -1, p);        // [ PP | P ]
             _lua_getfield(_L, -1, "type");  // [ PP | P | tp ]
             _assert(_lua_type(_L,-1) == _LUA_TSTRING);
-            _assert(_strcmp("ai", _lua_tostring(_L,-1)) == 0);
-            _lua_pop(_L, 2);                // [ PP ]
 
-            // call AI move
-            _lua_getglobal(_L, "SRV_move"); // [ PP | srv ]
-            _lua_pushnumber(_L, p);         // [ PP | srv | p ]
-            _lua_getglobal(_L, "AI_move");  // [ PP | srv | p | ai ]
-            _lua_pushnumber(_L, ns);        // [ PP | srv | p | ai | s ]
-            _lua_pushnumber(_L, p);         // [ PP | srv | p | ai | s | p ]
-            _lua_call(_L, 2, 1);            // [ PP | srv | p | MSp ]
-            _lua_call(_L, 2, 0);            // [ PP ]
+            // AI
+            if _strcmp("ai", _lua_tostring(_L,-1)) == 0 then
+                _lua_pop(_L, 3);            // [ ]
+
+                // MSp = AI_move(s,p);
+                // SRV_move(p, MSp);
+                _lua_getglobal(_L, "SRV_move"); // [ srv ]
+                _lua_pushnumber(_L, p);         // [ srv | p ]
+                _lua_getglobal(_L, "AI_move");  // [ srv | p | ai ]
+                _lua_pushnumber(_L, ns);        // [ srv | p | ai | s ]
+                _lua_pushnumber(_L, p);         // [ srv | p | ai | s | p ]
+                _lua_call(_L, 2, 1);            // [ srv | p | MSp ]
+                _lua_call(_L, 2, 0);            // [ ]
+
+            // HUMAN
+            else
+                _lua_pop(_L, 3);            // [ ]
+                var GameHuman human with
+                    this.map = &map;
+                    this.me  = p;
+                end;
+                await human.ok;
+            end
         end
-        _lua_pop(_L, 1);                    // [ ]
-        _lua_getglobal(_L, "SRV_go");       // [ f ]
-        _lua_call(_L, 0, 0);                // [ ]
+
+        // next turn
+        _lua_getglobal(_L, "SRV_go");   // [ srv ]
+        _lua_call(_L, 0, 0);            // [ ]
     end
 end
 
@@ -205,7 +178,6 @@ with
 
     var Game game with
         this.file = "_g.lua";
-        this.me   = 1;
     end;
     await FOREVER;
 with
