@@ -53,6 +53,10 @@ do
                 var int to = _lua_tointeger(_L, -1);
                 _lua_pop(_L, 4);            // [ PP | MM | Mm | Mmp ]
 
+                if a == 0 then
+                    continue;   // don't show this move
+                end
+
                 // draw move (number of armies)
                 var _char[10] str;
                 _sprintf(str, "%d", a);
@@ -95,7 +99,7 @@ do
                          r,g,b, 0xAA);
                 _stringRGBA(_REN, x, y, str, 0,0,0, 0xAA);
             end
-        _lua_pop(_L, 1);                    // [ PP | MM | Mm | Mmp ]
+            _lua_pop(_L, 1);                    // [ PP | MM | Mm ]
         end
 
         _lua_pop(_L, 3);                    // [ ]

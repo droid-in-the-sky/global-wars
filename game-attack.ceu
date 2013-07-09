@@ -21,9 +21,8 @@ class GameAttackOne with
 
     event void ok;
 do
-    _assert(_TEX_INC != null);
-    _assert(_TEX_DEC != null);
-    _assert(_TEX_OK  != null);
+    _assert(_TEX_NO != null);
+    _assert(_TEX_OK != null);
 
     _assert(this.map != null);
     _assert(this.fr  != 0);
@@ -31,15 +30,9 @@ do
     _assert(this.ref != _LUA_NOREF);
     _assert(this.max != 0);
 
-    var UITexture ui_inc with
+    var UITexture ui_no with
         this.ren = _REN;
-        this.tex = _TEX_INC;
-        this.align_x = _UI_ALIGN_LEFT;
-    end;
-
-    var UITexture ui_dec with
-        this.ren = _REN;
-        this.tex = _TEX_DEC;
+        this.tex = _TEX_NO;
         this.align_x = _UI_ALIGN_LEFT;
     end;
 
@@ -50,8 +43,6 @@ do
     end;
 
     par/or do
-        await ui_ok.ok_clicked;
-    with
         loop do
             var int dx = map:cx[to] - map:cx[fr];
             var int dy = map:cy[to] - map:cy[fr];
@@ -63,51 +54,48 @@ do
                 r1.h = 0;
                 r1.x = x + 20;
                 r1.y = y;
-            ui_inc._go_rect(&r1);
+            ui_no._go_rect(&r1);
 
             var _SDL_Rect r2;
                 r2.w = 0;
                 r2.h = 0;
-                r2.x = ui_inc.rect.x + ui_inc.rect.w;
+                r2.x = ui_no.rect.x + ui_no.rect.w;
                 r2.y = y;
-            ui_dec._go_rect(&r2);
-
-            var _SDL_Rect r3;
-                r3.w = 0;
-                r3.h = 0;
-                r3.x = ui_dec.rect.x + ui_dec.rect.w;
-                r3.y = y;
-            ui_ok._go_rect(&r3);
+            ui_ok._go_rect(&r2);
 
             await map:ok_changed;
         end
     with
-        var int tot = 0;  // total balance
-        var int v   = 1;  // initial inc
+        await ui_ok.ok_clicked;         // ok: quit, keep current
+    with
+        await ui_no.ok_clicked;         // no: quit, set to 0
+        _lua_getglobal(_L, "SRV_move_inc"); // [ f ]
+        _lua_rawgeti(_L, _LUA_REGISTRYINDEX, ref);
+                                                // [ f | t ]
+        _lua_pushnumber(_L, 0);             // [ f | t | 1 | c ];
+        _lua_pushnumber(_L, fr);            // [ f | t | 1 | fr | to ];
+        _lua_pushnumber(_L, to);            // [ f | t | 1 | fr | to ];
+        _lua_pushboolean(_L, 1);            // [ f | t | 1 | fr | to | set ];
+        _lua_call(_L, 5, 0);                // [ ]
 
+    with
         loop do
-            tot = tot + v;
-
             // t <- c++
             _lua_getglobal(_L, "SRV_move_inc"); // [ f ]
             _lua_rawgeti(_L, _LUA_REGISTRYINDEX, ref);
                                                 // [ f | t ]
-            _lua_pushnumber(_L, v);             // [ f | t | 1 | c ];
+            _lua_pushnumber(_L, 1);             // [ f | t | 1 | c ];
             _lua_pushnumber(_L, fr);            // [ f | t | 1 | fr | to ];
             _lua_pushnumber(_L, to);            // [ f | t | 1 | fr | to ];
-            _lua_call(_L, 4, 0);                // [ ]
+            _lua_call(_L, 4, 1);                // [ a ]
+            var int a = _lua_tointeger(_L, -1);
+            _lua_pop(_L, 1);                    // [ ]
 
-            par/or do
-                await ui_inc.ok_clicked;
-                v = 1;
-            with
-                await ui_dec.ok_clicked;
-                v = -1;
-            end
+            var int c = await this.map:ok_clicked
+                        until (c == to);    // inc: +1 until max
 
-            if v== 1 and tot==max
-            or v==-1 and tot==0 then
-                v = 0;      // no more armies to add/remove
+            if a == max then
+                await FOREVER;
             end
         end
     end
@@ -289,7 +277,7 @@ do
                 // one loop foreach "attack"
                 loop do
 
-                    // new state "attacking"
+                    // new temporary state "attacking"
                     _lua_getglobal(_L, "SRV_move_ins");     // [ f ]
                     _lua_pushnumber(_L, this.me);           // [ f | p ]
                     _lua_rawgeti(_L, _LUA_REGISTRYINDEX, ref);
@@ -421,25 +409,19 @@ end
 
 // TEXS
     native do
-        SDL_Texture* TEX_OK  = NULL;
-        SDL_Texture* TEX_INC = NULL;
-        SDL_Texture* TEX_DEC = NULL;
+        SDL_Texture* TEX_NO = NULL;
+        SDL_Texture* TEX_OK = NULL;
+    end
+    _TEX_NO = _IMG_LoadTexture(_REN, "imgs/no.png");
+    finalize with
+        _SDL_DestroyTexture(_TEX_NO);
     end
     _TEX_OK = _IMG_LoadTexture(_REN, "imgs/ok.png");
     finalize with
         _SDL_DestroyTexture(_TEX_OK);
     end
-    _TEX_INC = _IMG_LoadTexture(_REN, "imgs/inc.png");
-    finalize with
-        _SDL_DestroyTexture(_TEX_INC);
-    end
-    _TEX_DEC = _IMG_LoadTexture(_REN, "imgs/dec.png");
-    finalize with
-        _SDL_DestroyTexture(_TEX_INC);
-    end
+    _assert(_TEX_NO  != null);
     _assert(_TEX_OK  != null);
-    _assert(_TEX_INC != null);
-    _assert(_TEX_DEC != null);
 
 par/or do
     await SDL_QUIT;
