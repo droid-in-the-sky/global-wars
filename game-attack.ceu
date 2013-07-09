@@ -12,7 +12,7 @@ input void SDL_REDRAW;
 input _SDL_KeyboardEvent* SDL_KEYDOWN;
 input void SDL_MOUSEBUTTONDOWN;
 
-class GameAttackOne with
+class GameAttackOneUI with
     var Map* map = null;
     var int  fr  = 0;
     var int  to  = 0;
@@ -96,6 +96,95 @@ do
 
             if a == max then
                 await FOREVER;
+            end
+        end
+    end
+
+    emit this.ok;
+end
+
+class GameAttackOne with
+    var Map* map   = null;
+    var int  ref   = _LUA_NOREF;
+    var int  me    = 0;
+    var int  state = 0;
+
+    event void ok;
+do
+    _assert(_TEX_NO != null);
+    _assert(_TEX_OK != null);
+
+    _assert(this.map   != null);
+    _assert(this.ref   != _LUA_NOREF);
+    _assert(this.me    != 0);
+    _assert(this.state != 0);
+
+    // new temporary state "attacking"
+    _lua_getglobal(_L, "SRV_move_ins");     // [ f ]
+    _lua_pushnumber(_L, this.me);           // [ f | p ]
+    _lua_rawgeti(_L, _LUA_REGISTRYINDEX, ref);
+                                            // [ f | p | t ]
+    _lua_call(_L, 2, 0);                    // [ ]
+    finalize with
+        _lua_getglobal(_L, "SRV_move_rem"); // [ f ]
+        _lua_call(_L, 0, 0);                // [ ]
+    end
+
+    // show next state
+    var GameState st with
+        this.map = map;
+        this.idx = state+1;     // tmp state
+    end;
+
+    // show next move
+    var GameMove mv with
+        this.map = map;
+        this.idx = (state+1)/2; // tmp move
+    end;
+
+    // fr = clicked "me" country
+    var int fr;
+    var int max;
+    loop do
+        fr = await map:ok_clicked;
+        _lua_getglobal(_L, "STATES");   // [ SS ]
+        _lua_rawgeti(_L, -1, state+1);  // [ SS | S ]
+        _lua_rawgeti(_L, -1, me);       // [ SS | S | Sp ]
+        _lua_rawgeti(_L, -1, fr);       // [ SS | S | Sp | Spc ]
+        max = _lua_tointeger(_L, -1) - 1;
+        _lua_pop(_L, 4);
+        if max > 0 then
+            break;  // my country, a>1: ok!
+        end
+    end
+
+    par/or do
+        every SDL_REDRAW do
+            _boxColor(_REN,
+                     map:cx[fr]-20, map:cy[fr]-20,
+                     map:cx[fr]+20, map:cy[fr]+20,
+                     _colors.white);
+        end
+    with
+        loop do
+            // to = clicked another country
+            var int to = await map:ok_clicked;
+
+            // same: deselect
+            if fr == to then
+                break;          // next
+
+            // other: attack/move
+            else
+                var GameAttackOneUI ui with
+                    this.map = map;
+                    this.fr  = fr;
+                    this.to  = to;
+                    this.ref = ref;
+                    this.max = max;
+                end;
+                await ui.ok;
+                break;      // next
             end
         end
     end
@@ -276,77 +365,14 @@ do
 
                 // one loop foreach "attack"
                 loop do
-
-                    // new temporary state "attacking"
-                    _lua_getglobal(_L, "SRV_move_ins");     // [ f ]
-                    _lua_pushnumber(_L, this.me);           // [ f | p ]
-                    _lua_rawgeti(_L, _LUA_REGISTRYINDEX, ref);
-                                                            // [ f | p | t ]
-                    _lua_call(_L, 2, 0);                    // [ ]
-                    finalize with
-                        _lua_getglobal(_L, "SRV_move_rem"); // [ f ]
-                        _lua_call(_L, 0, 0);                // [ ]
-                    end
-
-                    // show next state
-                    var GameState st with
-                        this.map = map;
-                        this.idx = state+1;     // tmp state
+                    var GameAttackOne one with
+                        this.map   = map;
+                        this.ref   = ref;
+                        this.me    = me;
+                        this.state = state;
                     end;
-
-                    // show next move
-                    var GameMove mv with
-                        this.map = map;
-                        this.idx = (state+1)/2; // tmp move
-                    end;
-
-                    // fr = clicked "me" country
-                    var int fr;
-                    var int max;
-                    loop do
-                        fr = await map:ok_clicked;
-                        _lua_getglobal(_L, "STATES");   // [ SS ]
-                        _lua_rawgeti(_L, -1, state+1);  // [ SS | S ]
-                        _lua_rawgeti(_L, -1, me);       // [ SS | S | Sp ]
-                        _lua_rawgeti(_L, -1, fr);       // [ SS | S | Sp | Spc ]
-                        max = _lua_tointeger(_L, -1) - 1;
-                        _lua_pop(_L, 4);
-                        if max > 0 then
-                            break;  // my country, a>1: ok!
-                        end
-                    end
-
-                    par/or do
-                        every SDL_REDRAW do
-                            _boxColor(_REN,
-                                     map:cx[fr]-20, map:cy[fr]-20,
-                                     map:cx[fr]+20, map:cy[fr]+20,
-                                     _colors.white);
-                        end
-                    with
-                        loop do
-                            // to = clicked another country
-                            var int to = await map:ok_clicked;
-
-                            // same: deselect
-                            if fr == to then
-                                break;          // next
-
-                            // other: attack/move
-                            else
-                                var GameAttackOne one with
-                                    this.map = map;
-                                    this.fr  = fr;
-                                    this.to  = to;
-                                    this.ref = ref;
-                                    this.max = max;
-                                end;
-                                await one.ok;
-                                emit e;
-                                break;      // next
-                            end
-                        end
-                    end
+                    await one.ok;
+                    emit e;
                 end
             end
         end
