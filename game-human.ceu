@@ -1,11 +1,14 @@
-import lua.ceu;
-import sdl.ceu;
-import sdl-gfx.ceu;
+#ifndef _GAME_HUMAN_CEU
+#define _GAME_HUMAN_CEU
 
-import map.ceu;
-import game-nav.ceu;
-import game-fortify.ceu;
-import game-attack.ceu;
+#include "lua.ceu"
+#include "sdl.ceu"
+#include "sdl-gfx.ceu"
+
+#include "map.ceu"
+#include "game-nav.ceu"
+#include "game-fortify.ceu"
+#include "game-attack.ceu"
 
 input void SDL_REDRAW;
 input _SDL_KeyboardEvent* SDL_KEYDOWN;
@@ -78,13 +81,13 @@ do
     emit this.ok;
 end
 
-/*
+#ifdef __GAME_HUMAN_CEU
+
 native do
     lua_State*    L   = NULL;
     SDL_Renderer* REN = NULL;
     int REN_W, REN_H;
 end
-*/
 
 // SCREEN
     var _SDL_Window* win;
@@ -125,11 +128,10 @@ end
 
 // TEXS
     native do
-        //SDL_Texture* TEX_L  = NULL;
-        //SDL_Texture* TEX_R  = NULL;
-        //SDL_Texture* TEX_OK = NULL;
-        //SDL_Texture* TEX_INC;
-        //SDL_Texture* TEX_DEC;
+        SDL_Texture* TEX_L   = NULL;
+        SDL_Texture* TEX_R   = NULL;
+        SDL_Texture* TEX_NO  = NULL;
+        SDL_Texture* TEX_OK  = NULL;
     end
     _TEX_L = _IMG_LoadTexture(_REN, "imgs/left.png");
     finalize with
@@ -149,6 +151,7 @@ end
     end
     _assert(_TEX_L  != null);
     _assert(_TEX_R  != null);
+    _assert(_TEX_NO != null);
     _assert(_TEX_OK != null);
 
 par/or do
@@ -165,26 +168,46 @@ with
     _luaL_loadfile(_L, "server.lua");  // [ f ]
     _lua_call(_L, 0, 0);               // [ ]
 
-    _luaL_loadfile(_L, "g1.lua");      // [ f ]
-    _lua_call(_L, 0, 0);               // [ ]
-
-    var Map map;
-
     do
-        var GameHuman human with
-            this.map = &map;
-            this.me  = 1;
-        end;
-        await human.ok;
+        _luaL_loadfile(_L, "g1.lua");      // [ f ]
+        _lua_call(_L, 0, 0);               // [ ]
+        var Map map;
+        do
+            var GameHuman human with
+                this.map = &map;
+                this.me  = 1;
+            end;
+            await human.ok;
+        end
+        do
+            var GameHuman human with
+                this.map = &map;
+                this.me  = 2;
+            end;
+            await human.ok;
+        end
     end
 
     do
-        var GameHuman human with
-            this.map = &map;
-            this.me  = 2;
-        end;
-        await human.ok;
+        _luaL_loadfile(_L, "g4.lua");      // [ f ]
+        _lua_call(_L, 0, 0);               // [ ]
+        var Map map;
+        do
+            var GameHuman human with
+                this.map = &map;
+                this.me  = 1;
+            end;
+            await human.ok;
+        end
+        do
+            var GameHuman human with
+                this.map = &map;
+                this.me  = 2;
+            end;
+            await human.ok;
+        end
     end
+
 with
     every SDL_REDRAW do
         _SDL_RenderPresent(_REN);
@@ -192,3 +215,6 @@ with
 end
 
 return 0;
+
+#endif
+#endif

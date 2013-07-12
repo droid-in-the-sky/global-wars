@@ -11,51 +11,51 @@ all:
 
 game:
 	cp g3.lua _g.lua
-	ceu --m4 game.ceu
+	ceu --cpp-args "-D __GAME_CEU" game.ceu
 	gcc -Os main.c $(CFLAGS) -lSDL2 -lSDL2_gfx -lSDL2_ttf -lSDL2_image -llua \
 		-o global-wars.exe
 
 ai:
-	ceu --m4 ai.ceu
+	ceu --cpp-args "-D __AI_CEU" ai.ceu
 	gcc -Os main.c $(CFLAGS) -lSDL2 -lSDL2_gfx -lSDL2_ttf -lSDL2_image -llua \
 		-o global-wars.exe
 
 human:
-	ceu --m4 game-human.ceu
+	ceu --cpp-args "-D __GAME_HUMAN_CEU" game-human.ceu
 	gcc -Os main.c $(CFLAGS) -lSDL2 -lSDL2_gfx -lSDL2_image -lSDL2_ttf -llua \
 		-o global-wars.exe
 
 attack:
-	ceu --m4 game-attack.ceu
+	ceu --cpp-args "-D __GAME_ATTACK_CEU" game-attack.ceu
 	gcc -Os main.c $(CFLAGS) -lSDL2 -lSDL2_gfx -lSDL2_image -lSDL2_ttf -llua \
 		-o global-wars.exe
 
 fortify:
-	ceu --m4 game-fortify.ceu
+	ceu --cpp-args "-D __GAME_FORTIFY_CEU" game-fortify.ceu
 	gcc -Os main.c $(CFLAGS) -lSDL2 -lSDL2_gfx -lSDL2_image -lSDL2_ttf -llua \
 		-o global-wars.exe
 
 nav:
-	ceu --m4 game-nav.ceu
+	ceu --cpp-args "-D __GAME_NAV_CEU" game-nav.ceu
 	gcc -Os main.c $(CFLAGS) -lSDL2 -lSDL2_gfx -lSDL2_image -lSDL2_ttf -llua \
 		-o global-wars.exe
 
 move:
-	ceu --m4 game-move.ceu
+	ceu --cpp-args "-D __GAME_MOVE_CEU" game-move.ceu
 	gcc -Os main.c $(CFLAGS) -lSDL2 -lSDL2_gfx -llua \
 		-o global-wars.exe
 
 state:
-	ceu --m4 game-state.ceu
+	ceu --cpp-args "-D __GAME_STATE_CEU" game-state.ceu
 	gcc -Os main.c $(CFLAGS) -lSDL2 -lSDL2_gfx -llua \
 		-o global-wars.exe
 
 map:
-	ceu --m4 map.ceu
+	ceu --cpp-args "-D __MAP_CEU" map.ceu
 	gcc -Os main.c $(CFLAGS) -lSDL2 -lSDL2_gfx -llua \
 		-o global-wars.exe
 
 clean:
-	rm -f *.exe _ceu_* *.ceu_m4 _g*.lua
+	rm -f *.exe _ceu_* _g*.lua
 
 .PHONY: all game map clean

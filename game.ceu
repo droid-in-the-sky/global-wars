@@ -1,9 +1,12 @@
-import lua.ceu;
-import sdl.ceu;
-import sdl-gfx.ceu;
+#ifndef _GAME_CEU
+#define _GAME_CEU
 
-import map.ceu;
-import game-human.ceu;
+#include "lua.ceu"
+#include "sdl.ceu"
+#include "sdl-gfx.ceu"
+
+#include "map.ceu"
+#include "game-human.ceu"
 
 input void SDL_REDRAW;
 input _SDL_KeyboardEvent* SDL_KEYDOWN;
@@ -20,6 +23,9 @@ do
         _lua_call(_L, 0, 0);            // [ ]
 
     var Map map;
+    var MapFinger fgr with
+        this.map = &map;
+    end;
 
     // n players
     var int ps;
@@ -77,13 +83,13 @@ do
     end
 end
 
-/*
+#ifdef __GAME_CEU
+
 native do
     lua_State*    L   = NULL;
     SDL_Renderer* REN = NULL;
     int REN_W, REN_H;
 end
-*/
 
 // SCREEN
     var _SDL_Window* win;
@@ -108,6 +114,13 @@ end
     _lua_atpanic(_L, _ceu_lua_atpanic);
     _luaL_openlibs(_L);
 
+#ifdef __ANDROID__
+    _lua_pushboolean(_L, 1);           // [ 1 ]
+#else
+    _lua_pushboolean(_L, 0);           // [ 0 ]
+#endif
+    _lua_setglobal(_L, "__ANDROID__"); // [ ]
+
 // FONT
     native do
         TTF_Font* FONT;
@@ -124,9 +137,10 @@ end
 
 // TEXS
     native do
-        //SDL_Texture* TEX_L  = NULL;
-        //SDL_Texture* TEX_R  = NULL;
-        //SDL_Texture* TEX_OK = NULL;
+        SDL_Texture* TEX_L  = NULL;
+        SDL_Texture* TEX_R  = NULL;
+        SDL_Texture* TEX_NO = NULL;
+        SDL_Texture* TEX_OK = NULL;
     end
     _TEX_L = _IMG_LoadTexture(_REN, "imgs/left.png");
     finalize with
@@ -146,6 +160,7 @@ end
     end
     _assert(_TEX_L  != null);
     _assert(_TEX_R  != null);
+    _assert(_TEX_NO != null);
     _assert(_TEX_OK != null);
 
 par/or do
@@ -160,10 +175,7 @@ with
     end
 with
 
-    native do
-        /******/
 #ifdef __ANDROID__
-#define __ANDROID 1
 #define LUA_SERVER \
     "/data/data/org.droid_in_the_sky.global_wars/lib/lib_lua_server.so"
 #define LUA_AI \
@@ -171,24 +183,18 @@ with
 #define LUA_GAME \
     "/data/data/org.droid_in_the_sky.global_wars/lib/lib_lua__g.so"
 #else
-#define __ANDROID  0
 #define LUA_SERVER "server.lua"
 #define LUA_AI     "ai.lua"
 #define LUA_GAME   "_g.lua"
 #endif
-        /******/
-    end
 
-    _lua_pushboolean(_L, ___ANDROID);  // [ ? ]
-    _lua_setglobal(_L, "__ANDROID__"); // [ ]
-
-    _luaL_loadfile(_L, _LUA_SERVER);   // [ f ]
+    _luaL_loadfile(_L, LUA_SERVER);    // [ f ]
     _lua_call(_L, 0, 0);               // [ ]
-    _luaL_loadfile(_L, _LUA_AI);       // [ f ]
+    _luaL_loadfile(_L, LUA_AI);        // [ f ]
     _lua_call(_L, 0, 0);               // [ ]
 
     var Game game with
-        this.file = _LUA_GAME;
+        this.file = LUA_GAME;
     end;
     await FOREVER;
 with
@@ -198,3 +204,6 @@ with
 end
 
 return 0;
+
+#endif
+#endif

@@ -1,12 +1,15 @@
-import lua.ceu;
-import sdl.ceu;
-import sdl-gfx.ceu;
+#ifndef _GAME_ATTACK_CEU
+#define _GAME_ATTACK_CEU
 
-import ui-texture.ceu;
-import ui-grid.ceu;
-import map.ceu;
-import game-state.ceu;
-import game-move.ceu;
+#include "lua.ceu"
+#include "sdl.ceu"
+#include "sdl-gfx.ceu"
+
+#include "ui-texture.ceu"
+#include "ui-grid.ceu"
+#include "map.ceu"
+#include "game-state.ceu"
+#include "game-move.ceu"
 
 input void SDL_REDRAW;
 input _SDL_KeyboardEvent* SDL_KEYDOWN;
@@ -388,13 +391,13 @@ do
     emit this.ok;
 end
 
-/*
+#ifdef __GAME_ATTACK_CEU
+
 native do
     lua_State*    L   = NULL;
     SDL_Renderer* REN = NULL;
     int REN_W, REN_H;
 end
-*/
 
 // SCREEN
     var _SDL_Window* win;
@@ -435,7 +438,7 @@ end
 
 // TEXS
     native do
-        //SDL_Texture* TEX_NO = NULL;
+        SDL_Texture* TEX_NO = NULL;
         SDL_Texture* TEX_OK = NULL;
     end
     _TEX_NO = _IMG_LoadTexture(_REN, "imgs/no.png");
@@ -484,3 +487,6 @@ with
 end
 
 return 0;
+
+#endif
+#endif

@@ -1,9 +1,12 @@
-import lua.ceu;
-import sdl.ceu;
-import sdl-gfx.ceu;
+#ifndef _GAME_MOVE_CEU
+#define _GAME_MOVE_CEU
 
-import ui.ceu;
-import map.ceu;
+#include "lua.ceu"
+#include "sdl.ceu"
+#include "sdl-gfx.ceu"
+
+#include "ui.ceu"
+#include "map.ceu"
 
 input void SDL_REDRAW;
 input _SDL_KeyboardEvent* SDL_KEYDOWN;
@@ -106,13 +109,15 @@ do
     end
 end
 
-/*
+/* Test */
+
+#ifdef __GAME_MOVE_CEU
+
 native do
     lua_State*    L   = NULL;
     SDL_Renderer* REN = NULL;
     int REN_W, REN_H;
 end
-*/
 
 var _SDL_Window* win;
     finalize
@@ -170,3 +175,6 @@ with
 end
 
 return 0;
+
+#endif
+#endif

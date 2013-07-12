@@ -1,9 +1,12 @@
-import lua.ceu;
-import sdl.ceu;
-import sdl-gfx.ceu;
+#ifndef _MAP_CEU
+#define _MAP_CEU
 
-import ui.ceu;
-import colors.ceu;
+#include "lua.ceu"
+#include "sdl.ceu"
+#include "sdl-gfx.ceu"
+
+#include "ui.ceu"
+#include "colors.ceu"
 
 input void SDL_QUIT;
 input void SDL_REDRAW;
@@ -24,9 +27,14 @@ class Map with
     var u16* cx;  // all country centers
     var u16* cy;  // all country centers
 
-    event int  go_zoom, go_x, go_y;
-    event int  ok_clicked;
-    event void ok_changed;
+    event int       go_zoom;
+    event (int,int) go_xy;
+    event int       ok_clicked;
+    event void      ok_changed;
+
+    var int x = 0;
+    var int y = 0;
+    var int zoom = 100;
 do
     _assert(_REN != null);
     _assert(_L   != null);
@@ -46,10 +54,6 @@ do
     with
         _free(this.cy);
     end
-
-    var int zzz = 100;
-    var int xxx = 0;
-    var int yyy = 0;
 
     var int xc = _REN_W / 2;
     var int yc = _REN_H / 2;
@@ -76,14 +80,14 @@ do
 
         // best fit
         if dx < dy then
-            zzz = 100*_REN_W / w;
+            zoom = 100*_REN_W / w;
         else
-            zzz = 100*_REN_H / h;
+            zoom = 100*_REN_H / h;
         end
 
         // center on x / y
-        xxx = dx/2 - xmin;
-        yyy = dy/2 - ymin;
+        this.x = dx/2 - xmin;
+        this.y = dy/2 - ymin;
     end
 
     par do
@@ -96,8 +100,8 @@ do
                 _lua_getfield(_L, -1, "center");   // [ M | C | pt ]
                 _lua_rawgeti(_L, -1, 1);           // [ M | C | pt | x ]
                 _lua_rawgeti(_L, -2, 2);           // [ M | C | pt | x | y ]
-                this.cx[i] = _P(_lua_tointeger(_L,-2), xc, xxx, zzz);
-                this.cy[i] = _P(_lua_tointeger(_L,-1), yc, yyy, zzz);
+                this.cx[i] = _P(_lua_tointeger(_L,-2), xc, this.x, zoom);
+                this.cy[i] = _P(_lua_tointeger(_L,-1), yc, this.y, zoom);
                 _lua_pop(_L, 4);                   // [ ]
             end
             _lua_pop(_L, 1);                   // [ ]
@@ -105,25 +109,20 @@ do
             emit this.ok_changed;
 
             par/or do
-                var int v = await go_zoom;      // ZOOM
-                zzz = zzz + v;
-                if zzz < 1 then
-                    zzz = 1;
-                end
+                this.zoom = await go_zoom;     // ZOOM
             with
-                var int v = await go_x;         // PAN X
-                xxx = xxx + v;
-            with
-                var int v = await go_y;         // PAN Y
-                yyy = yyy + v;
+                var int x,y;
+                (x,y) = await go_xy;           // PAN
+                this.x = x;
+                this.y = y;
             end
         end
     with
         // OK_CLICKED
         var _SDL_MouseButtonEvent* but;
         every but = SDL_MOUSEBUTTONDOWN do
-            var int x = _I(but:x, xc, xxx, zzz);
-            var int y = _I(but:y, yc, yyy, zzz);
+            var int x = _I(but:x, xc, this.x, zoom);
+            var int y = _I(but:y, yc, this.y, zoom);
             _lua_getglobal(_L, "MAP_vspoint"); // [ f ]
             _lua_pushnumber(_L, x);            // [ f | x ]
             _lua_pushnumber(_L, y);            // [ f | x | y ]
@@ -157,8 +156,8 @@ do
                 loop j, pts do
                     _lua_rawgeti(_L, 4, n);   // [ . | xs[n] ]
                     _lua_rawgeti(_L, 5, n);   // [ . | xs[n] | ys[n] ]
-                    xs[j] = _P(_lua_tointeger(_L,-2), xc, xxx, zzz);
-                    ys[j] = _P(_lua_tointeger(_L,-1), yc, yyy, zzz);
+                    xs[j] = _P(_lua_tointeger(_L,-2), xc, this.x, zoom);
+                    ys[j] = _P(_lua_tointeger(_L,-1), yc, this.y, zoom);
                     _lua_pop(_L, 2);          // [ . ]
                     n = n + 1; // traverses xs/ys continuously
                 end
@@ -203,10 +202,10 @@ do
                 _lua_rawgeti(_L, -3, 1);   // [ B | t | p1 | p2 | x1 | y1 | x2 ]
                 _lua_rawgeti(_L, -4, 2);   // [ B | t | p1 | p2 | x1 | y1 | x2 | y2 ]
                 _lineRGBA(_REN,
-                    _P(_lua_tointeger(_L,-4), xc, xxx, zzz),
-                    _P(_lua_tointeger(_L,-3), yc, yyy, zzz),
-                    _P(_lua_tointeger(_L,-2), xc, xxx, zzz),
-                    _P(_lua_tointeger(_L,-1), yc, yyy, zzz),
+                    _P(_lua_tointeger(_L,-4), xc, this.x, zoom),
+                    _P(_lua_tointeger(_L,-3), yc, this.y, zoom),
+                    _P(_lua_tointeger(_L,-2), xc, this.x, zoom),
+                    _P(_lua_tointeger(_L,-1), yc, this.y, zoom),
                     0,0,0, 0xFF);
                 _lua_pop(_L, 7);           // [ B ]
             end
@@ -215,6 +214,89 @@ do
         end
     end
 end
+
+/* MapFinger */
+
+input _SDL_TouchFingerEvent* SDL_FINGERDOWN;
+input _SDL_TouchFingerEvent* SDL_FINGERUP;
+input _SDL_TouchFingerEvent* SDL_FINGERMOTION;
+
+class MapFinger with
+    var Map* map = null;
+do
+    _assert(this.map != null);
+
+    loop do
+        var _SDL_TouchFingerEvent* e1_ = await SDL_FINGERDOWN;
+        var _SDL_TouchFingerEvent  e1 = *e1_;
+
+        var _SDL_TouchFingerEvent* e2_;
+        par/or do
+            e2_ = await SDL_FINGERUP         // restart all on release of "f1"
+            until e2_:fingerId == e1.fingerId;
+        with
+            // PAN
+            par/or do
+                 e2_ = await SDL_FINGERDOWN  // go to zoom when pressing "f2"
+                       until e2_:fingerId != e1.fingerId;
+            with
+                var int x = map:x;
+                var int y = map:y;
+                loop do                      // stay in pan while not "f2"
+                    e2_ = await SDL_FINGERMOTION
+                          until e2_:fingerId == e1.fingerId;
+                    emit map:go_xy => (x + (e2_:x-e1.x)*_REN_W/2,
+                                       y + (e2_:y-e1.y)*_REN_H/2);
+                end
+            end
+
+            // ZOOM until "f1" is released
+            var _SDL_TouchFingerEvent e2 = *e2_;
+            var _SDL_TouchFingerEvent* e3_;
+
+            loop do
+                var _float dx = e2.x - e1.x;
+                var _float dy = e2.y - e1.y;
+                var _float mA = dx * dy;
+
+                par/or do
+                    e3_ = await SDL_FINGERUP // restart zoom on release of "f2"
+                          until e3_:fingerId == e2.fingerId;
+                with
+                    loop do                     // stay in zoom until any release
+                        e3_ = await SDL_FINGERMOTION;
+                        var _float mB = e3_:dx * e3_:dy;
+                        if (mA > 0) and (mB < 0) or     // main diagonal
+                           (mA < 0) and (mB > 0) then   // opposite diagonal
+                            continue;  // unexpected zoom gesture
+                        end
+
+                        var int z;
+                        if (e3_:x > e1.x) and (e3_:x > e2.x)
+                        or
+                           (e3_:x < e1.x) and (e3_:x < e2.x) then
+                            z =  3;
+                        else
+                            z = -3;
+                        end
+
+                        emit map:go_zoom => map:zoom + z;
+                        e2 = *e3_;
+                    end
+                end
+
+                // next zoom start finger
+                e3_ = await SDL_FINGERDOWN
+                      until e3_:fingerId != e1.fingerId;
+                e2 = *e3_;
+            end
+        end
+    end
+end
+
+/* Test */
+
+#ifdef __MAP_CEU
 
 native do
     lua_State*    L   = NULL;
@@ -243,11 +325,18 @@ end
 _lua_atpanic(_L, _ceu_lua_atpanic);
 _luaL_openlibs(_L);
 
+#ifdef __ANDROID__
+_lua_pushboolean(_L, 1);           // [ 1 ]
+#else
+_lua_pushboolean(_L, 0);           // [ 0 ]
+#endif
+_lua_setglobal(_L, "__ANDROID__"); // [ ]
+
 par/or do
     await SDL_QUIT;
 /*** SIMUL
 with
-    @include(simul.ceu)
+    #include "simul.ceu"
 ***/
 with
     every SDL_REDRAW do
@@ -255,10 +344,18 @@ with
     end
 with
     do
+#ifdef __ANDROID__
+        _luaL_loadfile(_L,               // [ f ]
+            "/data/data/org.droid_in_the_sky.global_wars/lib/lib_lua_map1.so");
+#else
         _luaL_loadfile(_L, "map1.lua");  // [ f ]
+#endif
         _lua_call(_L, 0, 0);             // [ ]
         var Map map;
-        await 2s;
+        var MapFinger fgr with
+            this.map = &map;
+        end;
+        await FOREVER;
     end
 
     _luaL_loadfile(_L, "map2.lua");  // [ f ]
@@ -270,9 +367,9 @@ with
         loop i, 200 do
             await 50ms;
             if i % 2 == 0 then
-                emit map.go_x => -1;
+                emit map.go_xy => (-1,0);
             else
-                emit map.go_y => -1;
+                emit map.go_xy => (0,-1);
             end
         end
     with
@@ -293,3 +390,6 @@ end
 
 return 0;
 
+#endif
+
+#endif

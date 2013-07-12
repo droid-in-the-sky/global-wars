@@ -1,4 +1,8 @@
-dofile 'map2.lua'
+if __ANDROID__ then
+    dofile '/data/data/org.droid_in_the_sky.global_wars/lib/lib_lua_map2.so'
+else
+    dofile 'map2.lua'
+end
 
 PLAYERS = {
     [1] = {
