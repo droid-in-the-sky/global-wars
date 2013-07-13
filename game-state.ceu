@@ -33,7 +33,7 @@ do
         _stringColor(_REN, 10, 10, title, _colors.white);
 
         // foreach player p
-        loop p_, _lua_objlen(_L,1) do
+        loop p_, _lua_objlen(_L,-3) do
             var int p = p_ + 1;
 
             _lua_rawgeti(_L, -1, p);        // [ PP | SS | Ss | Ssp ]

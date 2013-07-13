@@ -34,7 +34,7 @@ do
 
     _lua_getglobal(_L, "STATES");      // [ SS ]
     var int ns = _lua_objlen(_L, -1);
-    _lua_remove(_L, 1);                // [ ]
+    _lua_pop(_L, 1);                   // [ ]
 
     // defaults to last
     if this.state == 0 then
