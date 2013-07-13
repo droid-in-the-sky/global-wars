@@ -9,6 +9,11 @@ all:
 	gcc -Os main.c $(CFLAGS) -lSDL2 -lSDL2_gfx -lSDL2_image -lSDL2_ttf -llua \
 		-o global-wars.exe
 
+menu-new:
+	ceu --cpp-args "-D __MENU_NEW_CEU" menu-new.ceu
+	gcc -Os main.c $(CFLAGS) -lSDL2 -lSDL2_gfx -lSDL2_ttf -lSDL2_image -llua \
+		-o global-wars.exe
+
 menu-games:
 	cp main.lua.orig main.lua
 	ceu --cpp-args "-D __MENU_GAMES_CEU" menu-games.ceu

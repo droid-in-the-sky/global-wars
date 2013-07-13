@@ -192,12 +192,6 @@ do
         await 2s;
     end
 
-    // ui_ok
-    var UITexture ui_ok with
-        this.ren = _REN;
-        this.tex = _TEX_OK;
-    end;
-
     // GRID "menu"
     var UIGrid g2 with
         this.ren = _REN;
@@ -211,6 +205,12 @@ do
                 -1,  0,  1  // ok
             };
         end
+    end;
+
+    // ui_ok
+    var UITexture ui_ok with
+        this.ren = _REN;
+        this.tex = _TEX_OK;
     end;
 
     g1.uis[0] = null;   // remove "fs"
