@@ -49,20 +49,6 @@ do
         fs = _lua_tointeger(_L, -1);
         _lua_pop(_L, 3);                // [ ]
 
-    // bg = "me" color
-    var _SDL_Color bg;
-        _lua_getglobal(_L, "PLAYERS");  // [ PP ]
-        _lua_rawgeti(_L, -1, me);       // [ PP | P ]
-        _lua_getfield(_L, -1, "color"); // [ PP | P | C ]
-        _lua_rawgeti(_L, -1, 1);        // [ PP | P | C | r ]
-        _lua_rawgeti(_L, -2, 2);        // [ PP | P | C | r | g ]
-        _lua_rawgeti(_L, -3, 3);        // [ PP | P | C | r | g | b ]
-        bg.r = _lua_tointeger(_L, -3);
-        bg.g = _lua_tointeger(_L, -2);
-        bg.b = _lua_tointeger(_L, -1);
-        bg.a = 0xFF;
-        _lua_pop(_L, 6);                // [ ]
-
     // GRID "all"
     var _SDL_Rect r;        // whole screen
         r.x = 0;
@@ -98,14 +84,15 @@ do
         _sprintf(str, "%s", "Fortify");
         var _SDL_Texture* tex;
             finalize
-                tex = _SDL_text2texture(_REN, _FONT, str, &_colors.black, &bg);
+                tex = _SDL_text2texture(_REN, _FONT, str,
+                                        &_colors.black, _BGS[this.me]);
             with
                 _SDL_DestroyTexture(tex);
             end
         var UITexture ui1 with
             this.ren = _REN;
             this.tex = tex;
-            this.clr_bg = &bg;
+            this.clr_bg = _BGS[me];
         end;
 
         finalize
@@ -120,14 +107,15 @@ do
         _sprintf(str, "%d", fs);
         var _SDL_Texture* tex;
             finalize
-                tex = _SDL_text2texture(_REN, _FONT, str, &_colors.black, &bg);
+                tex = _SDL_text2texture(_REN, _FONT, str,
+                                        &_colors.black, _BGS[this.me]);
             with
                 _SDL_DestroyTexture(tex);
             end
         var UITexture ui2 with
             this.ren = _REN;
             this.tex = tex;
-            this.clr_bg = &bg;
+            this.clr_bg = _BGS[me];
         end;
 
         finalize
@@ -218,7 +206,7 @@ do
                 var _SDL_Texture* tex;
                     finalize
                         tex = _SDL_text2texture(_REN, _FONT, str,
-                                                &_colors.black, &bg);
+                                                &_colors.black, _BGS[this.me]);
                     with
                         _SDL_DestroyTexture(tex);
                     end
@@ -226,7 +214,7 @@ do
                 var UITexture ui_fs with
                     this.ren = _REN;
                     this.tex = tex;
-                    this.clr_bg = &bg;
+                    this.clr_bg = _BGS[me];
                 end;
 
                 finalize
@@ -324,65 +312,7 @@ end
 
 #ifdef __GAME_FORTIFY_CEU
 
-native do
-    lua_State*    L   = NULL;
-    SDL_Renderer* REN = NULL;
-    int REN_W, REN_H;
-end
-
-// SCREEN
-    var _SDL_Window* win;
-        finalize
-            win = _SDL_CreateWindow("Game",
-                                500, 400, 800, 480, _SDL_WINDOW_SHOWN);
-        with
-            _SDL_DestroyWindow(win);
-        end
-    _SDL_GetWindowSize(win, &_REN_W, &_REN_H);
-
-    _REN = _SDL_CreateRenderer(win, -1, 0);
-    finalize with
-        _SDL_DestroyRenderer(_REN);
-    end
-
-// LUA
-    _L = _luaL_newstate();
-    finalize with
-        _lua_close(_L);
-    end
-    _lua_atpanic(_L, _ceu_lua_atpanic);
-    _luaL_openlibs(_L);
-
-// FONT
-    native do
-        TTF_Font* FONT;
-    end
-    _TTF_Init();
-        finalize with
-            _TTF_Quit();
-        end
-    _FONT = _TTF_OpenFont("fnts/Deutsch.ttf", 20);
-        finalize with
-            _TTF_CloseFont(_FONT);
-        end
-    _assert(_FONT != null);
-
-// TEXS
-// TEXS
-    native do
-        SDL_Texture* TEX_NO = NULL;
-        SDL_Texture* TEX_OK = NULL;
-    end
-    _TEX_NO = _IMG_LoadTexture(_REN, "imgs/no.png");
-    finalize with
-        _SDL_DestroyTexture(_TEX_NO);
-    end
-    _TEX_OK = _IMG_LoadTexture(_REN, "imgs/ok.png");
-    finalize with
-        _SDL_DestroyTexture(_TEX_OK);
-    end
-    _assert(_TEX_NO != null);
-    _assert(_TEX_OK != null);
+#include "all.ceu"
 
 par/or do
     await SDL_QUIT;

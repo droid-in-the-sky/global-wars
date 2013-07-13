@@ -30,17 +30,6 @@ do
         loop p_, _lua_objlen(_L,1) do
             var int p = p_ + 1;
 
-            // player r,g,b
-            _lua_rawgeti(_L, 1, p);         // [ PP | MM | Mm | P ]
-            _lua_getfield(_L, -1, "color"); // [ PP | MM | Mm | P | clr ]
-            _lua_rawgeti(_L, -1, 1);        // [ PP | MM | Mm | P | clr | r ]
-            _lua_rawgeti(_L, -2, 2);        // [ PP | MM | Mm | P | clr | r | g ]
-            _lua_rawgeti(_L, -3, 3);        // [ PP | MM | Mm | P | clr | r | g | b ]
-            var int r = _lua_tointeger(_L, -3);
-            var int g = _lua_tointeger(_L, -2);
-            var int b = _lua_tointeger(_L, -1);
-            _lua_pop(_L, 5);                // [ PP | MM | Mm ]
-
             // foreach move "i" in "Mm" from player "p"
             _lua_rawgeti(_L, -1, p);        // [ PP | MM | Mm | Mmp ]
             loop i_, _lua_objlen(_L,-1) do
@@ -96,10 +85,12 @@ do
                 end
 
                 // army
-                _boxRGBA(_REN,
+                var _SDL_Color bg = *_BGS[p];
+                bg.a = 0xAA;
+                _boxColor(_REN,
                          x-10, y-10,    // TODO: hardcoded
                          x+10, y+10,    // TODO: hardcoded
-                         r,g,b, 0xAA);
+                         bg);
                 _stringRGBA(_REN, x, y, str, 0,0,0, 0xAA);
             end
             _lua_pop(_L, 1);                    // [ PP | MM | Mm ]
@@ -109,36 +100,9 @@ do
     end
 end
 
-/* Test */
-
 #ifdef __GAME_MOVE_CEU
 
-native do
-    lua_State*    L   = NULL;
-    SDL_Renderer* REN = NULL;
-    int REN_W, REN_H;
-end
-
-var _SDL_Window* win;
-    finalize
-        win = _SDL_CreateWindow("Game Move",
-                            500, 400, 800, 480, _SDL_WINDOW_SHOWN);
-    with
-        _SDL_DestroyWindow(win);
-    end
-_SDL_GetWindowSize(win, &_REN_W, &_REN_H);
-
-_REN = _SDL_CreateRenderer(win, -1, 0);
-finalize with
-    _SDL_DestroyRenderer(_REN);
-end
-
-_L = _luaL_newstate();
-finalize with
-    _lua_close(_L);
-end
-_lua_atpanic(_L, _ceu_lua_atpanic);
-_luaL_openlibs(_L);
+#include "all.ceu"
 
 par/or do
     await SDL_QUIT;

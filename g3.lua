@@ -5,18 +5,12 @@ else
 end
 
 PLAYERS = {
-    [1] = {
-        type  = 'human',
-        color = { 0xFF, 0x00, 0x00 },
-    },
-    [2] = {
-        type  = 'ai',
-        color = { 0x00, 0x00, 0xFF },
-    },
-    [3] = {
-        type  = 'ai',
-        color = { 0xFF, 0xFF, 0xFF },
-    },
+    'human',
+    'ai',
+    'ai',
+    false,
+    false,
+    false,
 }
 
 STATES = {

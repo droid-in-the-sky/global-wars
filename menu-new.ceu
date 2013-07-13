@@ -12,19 +12,8 @@
 
 input void SDL_REDRAW;
 
-native do
-    SDL_Color* BGS[7] = {
-        &colors.white,
-        &colors.gray,
-        &colors.blue,
-        &colors.red,
-        &colors.yellow,
-        &colors.green,
-    };
-end
-
 class MenuNewPlayer with
-    var int     n    = -1;
+    var int     n    = 0;
     var UIGrid* grid = null;
 do
     _assert(_REN       != null);
@@ -33,21 +22,21 @@ do
     _assert(_TEX_AI    != null);
     _assert(_TEX_NONE  != null);
 
-    _assert(this.n    != -1);
+    _assert(this.n    != 0);
     _assert(this.grid != null);
 
     var int first? = 1;
 
     loop do
         // human
-        if (not first?) or (this.n == 0) then
+        if (not first?) or (this.n == 1) then
             do
                 var UITexture ui with
                     this.ren    = _REN;
                     this.tex    = _TEX_HUMAN;
                     this.clr_bg = _BGS[n];
                 end;
-                this.grid:_go_ui(this.n, &ui)
+                this.grid:_go_ui(this.n-1, &ui)
                     finalize with nothing; end; // grid > ui
                 await ui.ok_clicked;
             end
@@ -60,7 +49,7 @@ do
                 this.tex    = _TEX_AI;
                 this.clr_bg = _BGS[n];
             end;
-            this.grid:_go_ui(this.n, &ui)
+            this.grid:_go_ui(this.n-1, &ui)
                 finalize with nothing; end; // grid > ui
             await ui.ok_clicked;
         end
@@ -72,7 +61,7 @@ do
                 this.tex    = _TEX_NONE;
                 this.clr_bg = _BGS[n];
             end;
-            this.grid:_go_ui(this.n, &ui)
+            this.grid:_go_ui(this.n-1, &ui)
                 finalize with nothing; end; // grid > ui
             await ui.ok_clicked;
         end
@@ -110,7 +99,7 @@ do
         r.h = _REN_H;
     grid_ps._go_rect(&r);
 
-    var int i = 0;
+    var int i = 1;
     var MenuNewPlayer [6] ps with
         this.n    = i;
         this.grid = &grid_ps;
@@ -122,72 +111,9 @@ end
 
 #ifdef __MENU_NEW_CEU
 
+#include "all.ceu"
+
 input void SDL_QUIT;
-
-native do
-    lua_State*    L   = NULL;
-    SDL_Renderer* REN = NULL;
-    int REN_W, REN_H;
-end
-
-// SCREEN
-    var _SDL_Window* win;
-        finalize
-            win = _SDL_CreateWindow("Menu New",
-                                500, 400, 800, 480, _SDL_WINDOW_SHOWN);
-        with
-            _SDL_DestroyWindow(win);
-        end
-    _SDL_GetWindowSize(win, &_REN_W, &_REN_H);
-
-    _REN = _SDL_CreateRenderer(win, -1, 0);
-    finalize with
-        _SDL_DestroyRenderer(_REN);
-    end
-
-// LUA
-    _L = _luaL_newstate();
-    finalize with
-        _lua_close(_L);
-    end
-    _lua_atpanic(_L, _ceu_lua_atpanic);
-    _luaL_openlibs(_L);
-
-// FONT
-    native do
-        TTF_Font* FONT;
-    end
-    _TTF_Init();
-        finalize with
-            _TTF_Quit();
-        end
-    _FONT = _TTF_OpenFont("fnts/Deutsch.ttf", 20);
-        finalize with
-            _TTF_CloseFont(_FONT);
-        end
-    _assert(_FONT != null);
-
-// TEXS
-    native do
-        SDL_Texture* TEX_HUMAN = NULL;
-        SDL_Texture* TEX_AI    = NULL;
-        SDL_Texture* TEX_NONE  = NULL;
-    end
-    _TEX_HUMAN = _IMG_LoadTexture(_REN, "imgs/human.png");
-    finalize with
-        _SDL_DestroyTexture(_TEX_HUMAN);
-    end
-    _TEX_AI = _IMG_LoadTexture(_REN, "imgs/ai.png");
-    finalize with
-        _SDL_DestroyTexture(_TEX_AI);
-    end
-    _TEX_NONE = _IMG_LoadTexture(_REN, "imgs/none.png");
-    finalize with
-        _SDL_DestroyTexture(_TEX_NONE);
-    end
-    _assert(_TEX_HUMAN != null);
-    _assert(_TEX_AI    != null);
-    _assert(_TEX_NONE  != null);
 
 par/or do
     await SDL_QUIT;

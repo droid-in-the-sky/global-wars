@@ -48,6 +48,8 @@ local function table2string (t, tab, cache)
             v = '"'..v..'"'
         elseif type(v) == 'table' then
             v = table2string(v, tab+4, cache)
+        else
+            v = tostring(v)
         end
 
         ret[#ret+1] = string.rep(' ',tab+4)..'['..k..'] = '..v..','
@@ -70,6 +72,7 @@ function SRV_move (p, MSp)
 end
 
 function SRV_go ()
+    assert(#PLAYERS == 6)
     assert(#__moves == #PLAYERS)
     for p, MSp in ipairs(__moves) do
         local fs = SRV_move_ins(p, MSp)
@@ -107,13 +110,15 @@ function SRV_go ()
             local o         -- original owner
             local n = 0
             for p=1, #PLAYERS do
-                A[p] = S3[p][c]     -- # of armies of "p" in "c"
-                if S2[p][c] > 0 then
-                    o = p           -- owner in previous state
-                end
-                if A[p] > 0 then
-                    n = n + 1       -- # of players in "c"
-                end
+                if PLAYERS[p] then
+                    A[p] = S3[p][c]     -- # of armies of "p" in "c"
+                    if S2[p][c] > 0 then
+                        o = p           -- owner in previous state
+                    end
+                    if A[p] > 0 then
+                        n = n + 1       -- # of players in "c"
+                    end
+            end
 --print(c, p, A[p], A[p]>0, n)
             end
 
@@ -148,16 +153,20 @@ function SRV_go ()
                 local wv = 0    -- win value
                 local wp        -- win player
                 for p=1, #PLAYERS do
-                    local v = A[p][i] or 0
-                    if v > wv then
-                        wv = v
-                        wp = p
+                    if PLAYERS[p] then
+                        local v = A[p][i] or 0
+                        if v > wv then
+                            wv = v
+                            wp = p
+                        end
                     end
                 end
 
                 for p=1, #PLAYERS do
-                    if S3[p][c]>0 and p~=wp then
-                        S3[p][c] = S3[p][c] - 1
+                    if PLAYERS[p] then
+                        if S3[p][c]>0 and p~=wp then
+                            S3[p][c] = S3[p][c] - 1
+                        end
                     end
                 end
             end
@@ -169,7 +178,10 @@ end
 
 -- number of "p" armies to fortify on "S"
 function SRV_fs (S, p)
-    assert(S.type == 'fortify')
+    assert(S.type == 'fortify', 'SRV_fs')
+    if PLAYERS[p] == false then
+        return 0
+    end
 
     -- # of countries owned by "p"
     local A = 0
@@ -218,7 +230,7 @@ function SRV_move_ins (p, MSp)
 
     -- S1: current server state on "s"
     local S1 = STATES[s]
-    assert(S1.type=='fortify' or S1.type=='attack')
+    assert(S1.type=='fortify' or S1.type=='attack', 'SRV_move_ins')
 
     -- S2: next state after move, before fortify/attack
     local S2
@@ -233,7 +245,7 @@ function SRV_move_ins (p, MSp)
             S2.type = 'attacking'
         end
     else                     -- other "p" already moved
-        assert(s == #STATES-1)  -- at most 1 behind
+        assert(s == #STATES-1, 'SRV_move_ins')  -- at most 1 behind
         S2 = STATES[#STATES]    -- take ongoing state
     end
 
@@ -256,7 +268,7 @@ function SRV_move_ins (p, MSp)
             assert(S1.type == 'fortify', S1.type)
             fs = fs - a
         else
-            assert(S1.type == 'attack')
+            assert(S1.type == 'attack', 'SRV_move_ins')
             assert(S1[p][fr] > a, 'player '..p..' can\'t move from '..fr)
                 -- at least "a+1" to move "a"
 

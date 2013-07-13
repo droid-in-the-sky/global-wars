@@ -27,12 +27,6 @@ do
         this.map = &map;
     end;
 
-    // n players
-    var int ps;
-        _lua_getglobal(_L, "PLAYERS");  // [ PP ]
-        ps = _lua_objlen(_L, -1);
-        _lua_pop(_L, 1);                // [ ]
-
     // while not finished
 
     loop do
@@ -43,37 +37,49 @@ do
         _lua_pop(_L, 1);                    // [ ]
 
         // foreach player
-        loop p_, ps do
+        loop p_, 6 do
             var int p = p_ + 1;     // C => Lua
 
-            // AI or human?
+            // none, AI or human?
             _lua_getglobal(_L, "PLAYERS");  // [ PP ]
-            _lua_rawgeti(_L, -1, p);        // [ PP | P ]
-            _lua_getfield(_L, -1, "type");  // [ PP | P | tp ]
-            _assert(_lua_type(_L,-1) == _LUA_TSTRING);
+            _lua_rawgeti(_L, -1, p);        // [ PP | tp ]
 
-            // AI
-            if _strcmp("ai", _lua_tostring(_L,-1)) == 0 then
-                _lua_pop(_L, 3);            // [ ]
+            // NONE
+            if _lua_toboolean(_L, -1) == 0 then
+                _lua_pop(_L, 2);                    // [ ]
 
-                // MSp = AI_move(s,p);
-                // SRV_move(p, MSp);
-                _lua_getglobal(_L, "SRV_move"); // [ srv ]
-                _lua_pushnumber(_L, p);         // [ srv | p ]
-                _lua_getglobal(_L, "AI_move");  // [ srv | p | ai ]
-                _lua_pushnumber(_L, ns);        // [ srv | p | ai | s ]
-                _lua_pushnumber(_L, p);         // [ srv | p | ai | s | p ]
-                _lua_call(_L, 2, 1);            // [ srv | p | MSp ]
-                _lua_call(_L, 2, 0);            // [ ]
+                // SRV_move(p, {});
+                _lua_getglobal(_L, "SRV_move");     // [ srv ]
+                _lua_pushnumber(_L, p);             // [ srv | p ]
+                _lua_newtable(_L);                  // [ srv | {} ]
+                _lua_call(_L, 2, 0);
 
-            // HUMAN
             else
-                _lua_pop(_L, 3);            // [ ]
-                var GameHuman human with
-                    this.map = &map;
-                    this.me  = p;
-                end;
-                await human.ok;
+                _assert(_lua_type(_L,-1) == _LUA_TSTRING);
+
+                // AI
+                if _strcmp("ai", _lua_tostring(_L,-1)) == 0 then
+                    _lua_pop(_L, 2);                // [ ]
+
+                    // MSp = AI_move(s,p);
+                    // SRV_move(p, MSp);
+                    _lua_getglobal(_L, "SRV_move"); // [ srv ]
+                    _lua_pushnumber(_L, p);         // [ srv | p ]
+                    _lua_getglobal(_L, "AI_move");  // [ srv | p | ai ]
+                    _lua_pushnumber(_L, ns);        // [ srv | p | ai | s ]
+                    _lua_pushnumber(_L, p);         // [ srv | p | ai | s | p ]
+                    _lua_call(_L, 2, 1);            // [ srv | p | MSp ]
+                    _lua_call(_L, 2, 0);            // [ ]
+
+                // HUMAN
+                else
+                    _lua_pop(_L, 2);                // [ ]
+                    var GameHuman human with
+                        this.map = &map;
+                        this.me  = p;
+                    end;
+                    await human.ok;
+                end
             end
         end
 

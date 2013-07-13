@@ -9,69 +9,7 @@
 input void SDL_REDRAW;
 input void SDL_MOUSEBUTTONDOWN;
 
-native do
-    lua_State*    L   = NULL;
-    SDL_Renderer* REN = NULL;
-    int REN_W, REN_H;
-end
-
-// SCREEN
-    var _SDL_Window* win;
-        finalize
-            win = _SDL_CreateWindow("AI",
-                                500, 400, 800, 480, _SDL_WINDOW_SHOWN);
-        with
-            _SDL_DestroyWindow(win);
-        end
-    _SDL_GetWindowSize(win, &_REN_W, &_REN_H);
-    _REN = _SDL_CreateRenderer(win, -1, 0);
-    finalize with
-        _SDL_DestroyRenderer(_REN);
-    end
-
-// LUA
-    _L = _luaL_newstate();
-    finalize with
-        _lua_close(_L);
-    end
-    _lua_atpanic(_L, _ceu_lua_atpanic);
-    _luaL_openlibs(_L);
-
-// FONT
-    native do
-        TTF_Font* FONT;
-    end
-    _TTF_Init();
-        finalize with
-            _TTF_Quit();
-        end
-    _FONT = _TTF_OpenFont("fnts/Deutsch.ttf", 20);
-        finalize with
-            _TTF_CloseFont(_FONT);
-        end
-    _assert(_FONT != null);
-
-// TEXS
-    native do
-        SDL_Texture* TEX_L  = NULL;
-        SDL_Texture* TEX_R  = NULL;
-        SDL_Texture* TEX_OK = NULL;
-    end
-    _TEX_L = _IMG_LoadTexture(_REN, "imgs/left.png");
-    finalize with
-        _SDL_DestroyTexture(_TEX_L);
-    end
-    _TEX_R = _IMG_LoadTexture(_REN, "imgs/right.png");
-    finalize with
-        _SDL_DestroyTexture(_TEX_R);
-    end
-    _TEX_OK = _IMG_LoadTexture(_REN, "imgs/ok.png");
-    finalize with
-        _SDL_DestroyTexture(_TEX_OK);
-    end
-    _assert(_TEX_L  != null);
-    _assert(_TEX_R  != null);
-    _assert(_TEX_OK != null);
+#include "all.ceu"
 
 par/or do
     await SDL_QUIT;
@@ -84,24 +22,37 @@ with
         _boxRGBA(_REN, 0,0, _REN_W,_REN_H, 0,0,0, 0xFF);
     end
 with
-    await SDL_MOUSEBUTTONDOWN;
-
     _luaL_loadfile(_L, "server.lua");  // [ f ]
     _lua_call(_L, 0, 0);               // [ ]
 
     _luaL_loadfile(_L, "ai.lua");      // [ f ]
     _lua_call(_L, 0, 0);               // [ ]
 
-    native nohold _AI_move();
+    native nohold _move();
     native do
-        void AI_move (int s, int p) {
-            lua_getglobal(L, "SRV_move");    // [ srv ]
-            lua_pushnumber(L, p);            // [ srv | p ]
-            lua_getglobal(L, "AI_move");     // [ srv | p | ai ]
-            lua_pushnumber(L, s);            // [ srv | p | ai | s ]
-            lua_pushnumber(L, p);            // [ srv | p | ai | s | p ]
-            lua_call(L, 2, 1);               // [ srv | p | MSp ]
-            lua_call(L, 2, 0);               // [ ]
+        void move (int s) {
+            int p;
+            lua_getglobal(L, "PLAYERS");            // [ PP ]
+            for (p=1; p<=6; p++) {
+                lua_rawgeti(L, -1, p);              // [ PP | P ]
+                if (lua_toboolean(L,-1) == 0) {
+                    lua_getglobal(L, "SRV_move");   // [ PP | P | srv ]
+                    lua_pushnumber(L, p);           // [ PP | P | srv | p ]
+                    lua_newtable(L);                // [ PP | P | srv | p | {} ]
+                    lua_call(L, 2, 0);              // [ PP | P ]
+                } else {
+                    assert(lua_type(L,-1) == LUA_TSTRING);
+                    lua_getglobal(L, "SRV_move");   // [ PP | P | srv ]
+                    lua_pushnumber(L, p);           // [ PP | P | srv | p ]
+                    lua_getglobal(L, "AI_move");    // [ PP | P | srv | p | ai ]
+                    lua_pushnumber(L, s);           // [ PP | P | srv | p | ai | s ]
+                    lua_pushnumber(L, p);           // [ PP | P | srv | p | ai | s | p ]
+                    lua_call(L, 2, 1);              // [ PP | P | srv | p | MSp ]
+                    lua_call(L, 2, 0);              // [ PP | P ]
+                }
+                lua_pop(L, 1);                      // [ PP ]
+            }
+            lua_pop(L, 1);                          // [ ]
         }
     end
 
@@ -114,8 +65,7 @@ with
         var int s = _lua_objlen(_L, -1);
         _lua_pop(_L, 1);                    // [ ]
 
-        _AI_move(s, 1);
-        _AI_move(s, 2);
+        _move(s);
         _lua_getglobal(_L, "SRV_go");       // [ f ]
         _lua_call(_L, 0, 0);                // [ ]
 
@@ -143,9 +93,7 @@ with
         var int s = _lua_objlen(_L, -1);
         _lua_pop(_L, 1);                   // [ ]
 
-        _AI_move(s, 1);
-        _AI_move(s, 2);
-        _AI_move(s, 3);
+        _move(s);
         _lua_getglobal(_L, "SRV_go");       // [ f ]
         _lua_call(_L, 0, 0);                // [ ]
 

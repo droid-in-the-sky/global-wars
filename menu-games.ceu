@@ -36,10 +36,16 @@ do
         _lua_call(_L, 0, 0);            // [ ]
 
     // n players
-    var int ps;
-        _lua_getglobal(_L, "PLAYERS");  // [ PP ]
-        ps = _lua_objlen(_L, -1);
-        _lua_pop(_L, 1);                // [ ]
+    var int ps = 0;
+    _lua_getglobal(_L, "PLAYERS");      // [ PP ]
+    loop p, 6 do
+        _lua_rawgeti(_L, -1, p+1);      // [ PP | P ]
+        if _lua_toboolean(_L, -1) == 1 then
+            ps = ps + 1;
+        end
+        _lua_pop(_L, 1);
+    end
+    _lua_pop(_L, 1);                    // [ ]
 
     var int state_n;
         _lua_getglobal(_L, "STATES");   // [ SS ]

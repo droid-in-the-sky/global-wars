@@ -36,17 +36,6 @@ do
         loop p_, _lua_objlen(_L,1) do
             var int p = p_ + 1;
 
-            // player r,g,b
-            _lua_rawgeti(_L, 1, p);         // [ PP | SS | Ss | P ]
-            _lua_getfield(_L, -1, "color"); // [ PP | SS | Ss | P | clr ]
-            _lua_rawgeti(_L, -1, 1);        // [ PP | SS | Ss | P | clr | r ]
-            _lua_rawgeti(_L, -2, 2);        // [ PP | SS | Ss | P | clr | r | g ]
-            _lua_rawgeti(_L, -3, 3);        // [ PP | SS | Ss | P | clr | r | g | b ]
-            var int r = _lua_tointeger(_L, -3);
-            var int g = _lua_tointeger(_L, -2);
-            var int b = _lua_tointeger(_L, -1);
-            _lua_pop(_L, 5);                // [ PP | SS | Ss ]
-
             _lua_rawgeti(_L, -1, p);        // [ PP | SS | Ss | Ssp ]
 
             // foreach country c
@@ -59,10 +48,10 @@ do
                 if n > 0 then
                     var _char[10] str;
                     _sprintf(str, "%d", n);
-                    _boxRGBA(_REN,
+                    _boxColor(_REN,
                              map:cx[c]-10, map:cy[c]-10,
                              map:cx[c]+10, map:cy[c]+10,
-                             r,g,b, 0xFF);
+                             *_BGS[p]);
                     _stringColor(_REN, map:cx[c], map:cy[c], str,
                                 _colors.black);
                 end
@@ -75,36 +64,9 @@ do
     end
 end
 
-/* Test */
-
 #ifdef __GAME_STATE_CEU
 
-native do
-    lua_State*    L   = NULL;
-    SDL_Renderer* REN = NULL;
-    int REN_W, REN_H;
-end
-
-var _SDL_Window* win;
-    finalize
-        win = _SDL_CreateWindow("Game State",
-                            500, 400, 800, 480, _SDL_WINDOW_SHOWN);
-    with
-        _SDL_DestroyWindow(win);
-    end
-_SDL_GetWindowSize(win, &_REN_W, &_REN_H);
-
-_REN = _SDL_CreateRenderer(win, -1, 0);
-finalize with
-    _SDL_DestroyRenderer(_REN);
-end
-
-_L = _luaL_newstate();
-finalize with
-    _lua_close(_L);
-end
-_lua_atpanic(_L, _ceu_lua_atpanic);
-_luaL_openlibs(_L);
+#include "all.ceu"
 
 par/or do
     await SDL_QUIT;
