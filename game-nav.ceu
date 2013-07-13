@@ -193,8 +193,7 @@ with
 with
     loop do
         do
-            _luaL_loadfile(_L, "g1.lua");
-            _lua_call(_L, 0, 0);
+            _assert(_luaL_dofile(_L, "g1.lua") == 0);
             var Map map;
             var GameNav nav with
                 this.map   = &map;
@@ -204,8 +203,7 @@ with
             await nav.ok;
         end
         do
-            _luaL_loadfile(_L, "g1.lua");
-            _lua_call(_L, 0, 0);
+            _assert(_luaL_dofile(_L, "g1.lua") == 0);
             var Map map;
             var GameNav nav with
                 this.map   = &map;
@@ -214,8 +212,7 @@ with
             await nav.ok;
         end
         do
-            _luaL_loadfile(_L, "g2.lua");
-            _lua_call(_L, 0, 0);
+            _assert(_luaL_dofile(_L, "g2.lua") == 0);
             var Map map;
             var GameNav nav with
                 this.map   = &map;
@@ -225,8 +222,7 @@ with
             await nav.ok;
         end
         do
-            _luaL_loadfile(_L, "g3.lua");
-            _lua_call(_L, 0, 0);
+            _assert(_luaL_dofile(_L, "g3.lua") == 0);
             var Map map;
             var GameNav nav with
                 this.map   = &map;

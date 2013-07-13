@@ -325,13 +325,9 @@ with
         _boxRGBA(_REN, 0,0, _REN_W,_REN_H, 0,0,0, 0xFF);
     end
 with
-    _luaL_loadfile(_L, "server.lua");  // [ f ]
-    _lua_call(_L, 0, 0);               // [ ]
-
     loop do
         do
-            _luaL_loadfile(_L, "g1.lua");
-            _lua_call(_L, 0, 0);
+            _assert(_luaL_dofile(_L, "g1.lua") == 0);
             var Map map;
 
             var GameFortify fort with

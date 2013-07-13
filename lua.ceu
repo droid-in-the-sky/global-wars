@@ -57,6 +57,7 @@ native nohold
 
 native nohold
         _luaL_dofile(),
+        _luaL_dostring(),
         _luaL_loadfile(),
         _luaL_newstate(),
         _luaL_openlibs(),

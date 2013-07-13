@@ -15,6 +15,7 @@ input void SDL_REDRAW;
 class MenuNewPlayer with
     var int     n    = 0;
     var UIGrid* grid = null;
+    var _char*  type;
 do
     _assert(_REN       != null);
     _assert(_BGS       != null);
@@ -30,6 +31,7 @@ do
     loop do
         // human
         if (not first?) or (this.n == 1) then
+            this.type = "human";
             do
                 var UITexture ui with
                     this.ren    = _REN;
@@ -43,6 +45,7 @@ do
         end
 
         // ai
+        this.type = "ai";
         do
             var UITexture ui with
                 this.ren    = _REN;
@@ -55,6 +58,7 @@ do
         end
 
         // none
+        this.type = null;
         do
             var UITexture ui with
                 this.ren    = _REN;
@@ -76,6 +80,24 @@ do
     _assert(_REN != null);
     _assert(_L   != null);
 
+    var UIGrid grid with
+        this.ren = _REN;
+        this.lay_lins = 6;
+        this.lay_cols = 7;
+        this.lay = _MenuNew_grid;
+        this.uis_n = 2;
+        native do
+            int MenuNew_grid[] = {
+                0, 0, 0, 0, 0, 0, -1,
+                0, 0, 0, 0, 0, 0, -1,
+                0, 0, 0, 0, 0, 0, -1,
+                0, 0, 0, 0, 0, 0, -1,
+                0, 0, 0, 0, 0, 0, -1,
+                0, 0, 0, 0, 0, 0,  1
+            };
+        end
+    end;
+
     var UIGrid grid_ps with
         this.ren = _REN;
         this.lay_lins = 2;
@@ -92,12 +114,20 @@ do
         end
     end;
 
+    var UITexture ui_ok with
+        this.ren = _REN;
+        this.tex = _TEX_OK;
+    end;
+
     var _SDL_Rect r;        // whole screen
         r.x = 0;
         r.y = 0;
         r.w = _REN_W;
         r.h = _REN_H;
-    grid_ps._go_rect(&r);
+
+    grid.uis[0] = &grid_ps;
+    grid.uis[1] = &ui_ok;
+    grid._go_rect(&r);
 
     var int i = 1;
     var MenuNewPlayer [6] ps with
@@ -106,7 +136,44 @@ do
         i = i + 1;
     end;
 
-    await FOREVER;
+    await ui_ok.ok_clicked;
+
+    // PLAYERS = {}
+    _lua_newtable(_L);              // [ {} ]
+    _lua_setglobal(_L, "PLAYERS");  // [ ]
+
+    // PLAYERS[i] = type
+    _lua_getglobal(_L, "PLAYERS");          // [ PP ]
+    loop i_, 6 do
+        if ps[i_].type == null then
+            _lua_pushboolean(_L, 0);            // [ PP | false ]
+            _lua_rawseti(_L, -2, i_+1);         // [ PP ]
+        else
+            _lua_pushstring(_L, ps[i_].type);   // [ PP | v ]
+            _lua_rawseti(_L, -2, i_+1);         // [ PP ]
+        end
+    end
+    _lua_pop(_L, 1);                        // [ ]
+
+    // save in "games/XXXXXX.lua"
+    _assert(_luaL_dofile(_L, "scripts/menu-new-1.lua") == 0);
+                                    // [ file ]
+
+    // GAMES[#GAMES+1] = file
+    _lua_getglobal(_L, "GAMES");    // [ file | GG ]
+    var int n = _lua_objlen(_L, -1);
+    _lua_pushvalue(_L, -2);         // [ file | GG | file ]
+    _lua_rawseti(_L, -2, n+1);      // [ file | GG ]
+    _lua_pop(_L, 2);                // [ ]
+
+    // save main.lua
+    var _char* src =
+        "local f = assert(io.open('main.lua', 'w'))     \
+         f:write('GAMES = '..table2string(GAMES)..'\\n') \
+         f:close()";
+    _assert( _luaL_dostring(_L, src) == 0 );
+
+    emit this.ok;
 end
 
 #ifdef __MENU_NEW_CEU

@@ -79,8 +79,7 @@ with
         _boxColor(_REN, 0,0, _REN_W,_REN_H, _colors.black);
     end
 with
-    _luaL_loadfile(_L, "g1.lua");
-    _lua_call(_L, 0, 0);
+    _assert(_luaL_dofile(_L, "g1.lua") == 0);
     _lua_getglobal(_L, "STATES");  // [ SS ]
     var int len = _lua_objlen(_L, -1);
     _lua_pop(_L, 1);               // [ ]

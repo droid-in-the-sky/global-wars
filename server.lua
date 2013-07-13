@@ -21,7 +21,7 @@ local function country2player (S, c1)
     error'empty country'
 end
 
-local function table2string (t, tab, cache)
+function table2string (t, tab, cache)
     tab = tab or 0
     cache = cache or {}     -- refuse cycles
 

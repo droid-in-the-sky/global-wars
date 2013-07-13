@@ -311,12 +311,12 @@ with
 with
     do
 #ifdef __ANDROID__
-        _luaL_loadfile(_L,               // [ f ]
-            "/data/data/org.droid_in_the_sky.global_wars/lib/lib_lua_map1.so");
+        _assert(_luaL_dofile(_L,
+            "/data/data/org.droid_in_the_sky.global_wars/lib/lib_lua_map1.so")
+            == 0);
 #else
-        _luaL_loadfile(_L, "map1.lua");  // [ f ]
+        _assert(_luaL_dofile(_L, "map1.lua") == 0);
 #endif
-        _lua_call(_L, 0, 0);             // [ ]
         var Map map;
         var MapFinger fgr with
             this.map = &map;
@@ -324,8 +324,7 @@ with
         await FOREVER;
     end
 
-    _luaL_loadfile(_L, "map2.lua");  // [ f ]
-    _lua_call(_L, 0, 0);             // [ ]
+    _assert(_luaL_dofile(_L, "map2.lua") == 0);
     var Map map;
     await 2s;
 

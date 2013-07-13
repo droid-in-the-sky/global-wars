@@ -36,6 +36,22 @@ end
 #endif
     _lua_setglobal(_L, "__ANDROID__"); // [ ]
 
+#ifdef __ANDROID__
+#define LUA_MAIN \
+    "/data/data/org.droid_in_the_sky.global_wars/lib/lib_lua_main.so"
+#define LUA_SERVER \
+    "/data/data/org.droid_in_the_sky.global_wars/lib/lib_lua_server.so"
+#define LUA_AI \
+    "/data/data/org.droid_in_the_sky.global_wars/lib/lib_lua_ai.so"
+#else
+#define LUA_MAIN   "main.lua"
+#define LUA_SERVER "server.lua"
+#define LUA_AI     "ai.lua"
+#endif
+    _assert(_luaL_dofile(_L, LUA_MAIN)   == 0);
+    _assert(_luaL_dofile(_L, LUA_SERVER) == 0);
+    _assert(_luaL_dofile(_L, LUA_AI)     == 0);
+
 // FONT
     native do
         TTF_Font* FONT;
@@ -59,6 +75,7 @@ end
         SDL_Texture* TEX_R     = NULL;
         SDL_Texture* TEX_NO    = NULL;
         SDL_Texture* TEX_OK    = NULL;
+        SDL_Texture* TEX_RM    = NULL;
     end
     _TEX_HUMAN = _IMG_LoadTexture(_REN, "imgs/human.png");
     finalize with
@@ -88,6 +105,10 @@ end
     finalize with
         _SDL_DestroyTexture(_TEX_OK);
     end
+    _TEX_RM = _IMG_LoadTexture(_REN, "imgs/rm.png");
+    finalize with
+        _SDL_DestroyTexture(_TEX_RM);
+    end
     _assert(_TEX_HUMAN != null);
     _assert(_TEX_AI    != null);
     _assert(_TEX_NONE  != null);
@@ -95,6 +116,7 @@ end
     _assert(_TEX_R     != null);
     _assert(_TEX_NO    != null);
     _assert(_TEX_OK    != null);
+    _assert(_TEX_RM    != null);
 
 
 // BGS
