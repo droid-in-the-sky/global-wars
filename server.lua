@@ -64,49 +64,6 @@ function SRV_save (file)
     f:close()
 end
 
-local function table2string (t, tab, cache)
-    tab = tab or 0
-    cache = cache or {}     -- refuse cycles
-
-    local ret = {}
-
-    for k, v in pairs(t) do
-        assert(type(k) == 'number'  or
-               type(k) == 'string'  or
-               type(k) == 'boolean')
-        assert(type(v) == 'number'  or
-               type(v) == 'string'  or
-               type(v) == 'boolean' or
-               type(v) == 'table')
-        if type(v) == 'table' then
-            assert(not cache[v])
-            cache[v] = true
-        end
-
-        if type(k) == 'string' then
-            k = '"'..k..'"'
-        end
-
-        if type(v) == 'string' then
-            v = '"'..v..'"'
-        elseif type(v) == 'table' then
-            v = table2string(v, tab+4, cache)
-        end
-
-        ret[#ret+1] = string.rep(' ',tab+4)..'['..k..'] = '..v..','
-    end
-
-    return '{\n'..table.concat(ret,'\n')..'\n'..string.rep(' ',tab)..'}'
-end
-
-function SRV_save (file)
-    local f = assert(io.open(file, 'w'))
-    f:write('PLAYERS = '..table2string(PLAYERS)..'\n')
-    f:write('STATES  = '..table2string(STATES)..'\n')
-    f:write('MOVES   = '..table2string(MOVES)..'\n')
-    f:close()
-end
-
 local __moves = {}
 function SRV_move (p, MSp)
     __moves[p] = MSp

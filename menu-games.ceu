@@ -1,0 +1,369 @@
+#ifndef _MENU_GAMES_CEU
+#define _MENU_GAMES_CEU
+
+#include "lua.ceu"
+#include "sdl.ceu"
+#include "sdl-gfx.ceu"
+
+#include "colors.ceu"
+#include "ui.ceu"
+#include "ui-grid.ceu"
+#include "ui-texture.ceu"
+
+input void SDL_REDRAW;
+
+interface MenuGamesListener with
+    event int ok_rm;
+    event int ok_go;
+end
+
+class MenuGamesOne with
+    var _char* file = null;
+    var UI*    ui   = null;
+    var int    n    = 0;
+
+    var MenuGamesListener* lst = null;
+do
+    _assert(_REN != null);
+    _assert(_L   != null);
+    _assert(_TEX_RM != null);
+    _assert(_TEX_OK != null);
+
+    _assert(this.n    != 0);
+    _assert(this.lst  != null);
+    _assert(this.file != null);
+        _luaL_loadfile(_L, this.file);  // [ f ]
+        _lua_call(_L, 0, 0);            // [ ]
+
+    // n players
+    var int ps;
+        _lua_getglobal(_L, "PLAYERS");  // [ PP ]
+        ps = _lua_objlen(_L, -1);
+        _lua_pop(_L, 1);                // [ ]
+
+    var int state_n;
+        _lua_getglobal(_L, "STATES");   // [ SS ]
+        state_n = _lua_objlen(_L, -1);
+        _lua_rawgeti(_L, -1, state_n);  // [ SS | S ]
+    var _char[20] state_type;
+        _lua_getfield(_L, -1, "type");  // [ SS | S | type ]
+        _strcpy(state_type, _lua_tostring(_L,-1));
+        _lua_pop(_L, 3);                // [ ]
+
+    var UIGrid grid with
+        this.ren = _REN;
+        this.lay_lins = 4;
+        this.lay_cols = 6;
+        this.lay = __MENU_GAMES_CEU_grid;
+        this.uis_n = 9;
+        native do
+            int _MENU_GAMES_CEU_grid[] = {
+                 0,  0,  1,  1,  2,  2,     // ps
+                 0,  0,  3,  3,  4,  4,     // state_n
+                 0,  0,  5,  5,  6,  6,     // state_type
+                 0,  0, -1, -1,  7,  8      // del, go
+            };
+        end
+    end;
+
+    // PS
+        var _SDL_Texture* tex1;
+            finalize
+                tex1 = _SDL_text2texture(_REN, _FONT, "Players",
+                                        &_colors.black, &_colors.white);
+            with
+                _SDL_DestroyTexture(tex1);
+            end
+        var UITexture ui1 with
+            this.ren = _REN;
+            this.tex = tex1;
+        end;
+    //
+        var _char[5] str2;
+        _sprintf(str2, "%d", ps);
+        var _SDL_Texture* tex2;
+            finalize
+                tex2 = _SDL_text2texture(_REN, _FONT, str2,
+                                        &_colors.black, &_colors.white);
+            with
+                _SDL_DestroyTexture(tex2);
+            end
+        var UITexture ui2 with
+            this.ren = _REN;
+            this.tex = tex2;
+        end;
+
+    // STATE_N
+        var _SDL_Texture* tex3;
+            finalize
+                tex3 = _SDL_text2texture(_REN, _FONT, "Week",
+                                        &_colors.black, &_colors.white);
+            with
+                _SDL_DestroyTexture(tex3);
+            end
+        var UITexture ui3 with
+            this.ren = _REN;
+            this.tex = tex3;
+        end;
+    //
+        var _char[5] str4;
+        _sprintf(str4, "%d", state_n);
+        var _SDL_Texture* tex4;
+            finalize
+                tex4 = _SDL_text2texture(_REN, _FONT, str4,
+                                        &_colors.black, &_colors.white);
+            with
+                _SDL_DestroyTexture(tex4);
+            end
+        var UITexture ui4 with
+            this.ren = _REN;
+            this.tex = tex4;
+        end;
+
+    // STATE_TYPE
+        var _SDL_Texture* tex5;
+            finalize
+                tex5 = _SDL_text2texture(_REN, _FONT, "Action",
+                                        &_colors.black, &_colors.white);
+            with
+                _SDL_DestroyTexture(tex5);
+            end
+        var UITexture ui5 with
+            this.ren = _REN;
+            this.tex = tex5;
+        end;
+    //
+        var _SDL_Texture* tex6;
+            finalize
+                tex6 = _SDL_text2texture(_REN, _FONT, state_type,
+                                        &_colors.black, &_colors.white);
+            with
+                _SDL_DestroyTexture(tex6);
+            end
+        var UITexture ui6 with
+            this.ren = _REN;
+            this.tex = tex6;
+        end;
+
+    // RM
+        var UITexture ui7 with
+            this.ren = _REN;
+            this.tex = _TEX_RM;
+            this.align_x = _UI_ALIGN_LEFT;
+        end;
+    // OK
+        var UITexture ui8 with
+            this.ren = _REN;
+            this.tex = _TEX_OK;
+            this.align_x = _UI_ALIGN_LEFT;
+        end;
+    // TODO: OK <=> HOURGLASS
+
+    this.ui = &grid;
+    grid.uis[0] = null;
+    grid.uis[1] = &ui1;
+    grid.uis[2] = &ui2;
+    grid.uis[3] = &ui3;
+    grid.uis[4] = &ui4;
+    grid.uis[5] = &ui5;
+    grid.uis[6] = &ui6;
+    grid.uis[7] = &ui7;
+    grid.uis[8] = &ui8;
+
+    par do
+        await ui7.ok_clicked;
+        emit this.lst:ok_rm => this.n;
+    with
+        await ui8.ok_clicked;
+        emit this.lst:ok_go => this.n;
+    end
+end
+
+class MenuGames with
+    interface MenuGamesListener;
+do
+    _assert(_REN != null);
+    _assert(_L   != null);
+
+    loop do
+        _lua_getglobal(_L, "GAMES");        // [ GG ]
+        var int n = _lua_objlen(_L, -1);
+        if n == 0 then
+            break;
+        end
+
+        var int* lay;
+            finalize
+                lay = _malloc(n * sizeof(int));
+            with
+                _free(lay);
+            end
+        loop i, n do
+            lay[i] = i;
+        end
+
+        var UIGrid grid with
+            this.ren = _REN;
+            this.lay_lins = n;
+            this.lay_cols = 1;
+            this.lay = lay; // { 0, 1, ..., n-1 }
+            this.uis_n = n;
+        end;
+
+        var MenuGamesOne* one;
+        var MenuGamesListener* lst = &this;
+
+        loop i, n do
+            _lua_rawgeti(_L, -1, i+1);      // [ GG | f ]
+            one = new MenuGamesOne with
+                this.file := _lua_tostring(_L, -1);
+                            // not held
+                this.n    = i + 1;
+                this.lst  = lst;
+            end;
+            grid.uis[i] = one:ui;
+            _lua_pop(_L, 1);                // [ GG ]
+        end
+
+        _lua_pop(_L, 1);                    // [ ]
+
+        var _SDL_Rect r;        // whole screen
+            r.x = 0;
+            r.y = 0;
+            r.w = _REN_W;
+            r.h = _REN_H;
+        grid._go_rect(&r);
+
+        var int rm = await this.ok_rm;
+
+        // table.remove(GAMES, rm)
+            _lua_getglobal(_L, "table");        // [ t ]
+            _lua_getfield(_L, -1, "remove");    // [ t | f ]
+            _lua_getglobal(_L, "GAMES");        // [ t | f | GG ]
+            _lua_pushnumber(_L, rm);            // [ t | f | GG | idx ]
+            _lua_call(_L, 2, 0);                // [ t ]
+            _lua_pop(_L, 1);                    // [ ]
+
+        // save main.lua
+            // TODO
+    end
+end
+
+#ifdef __MENU_GAMES_CEU
+
+input void SDL_QUIT;
+
+native do
+    lua_State*    L   = NULL;
+    SDL_Renderer* REN = NULL;
+    int REN_W, REN_H;
+end
+
+// SCREEN
+    var _SDL_Window* win;
+        finalize
+            win = _SDL_CreateWindow("Menu Games",
+                                500, 400, 800, 480, _SDL_WINDOW_SHOWN);
+        with
+            _SDL_DestroyWindow(win);
+        end
+    _SDL_GetWindowSize(win, &_REN_W, &_REN_H);
+
+    _REN = _SDL_CreateRenderer(win, -1, 0);
+    finalize with
+        _SDL_DestroyRenderer(_REN);
+    end
+
+// LUA
+    _L = _luaL_newstate();
+    finalize with
+        _lua_close(_L);
+    end
+    _lua_atpanic(_L, _ceu_lua_atpanic);
+    _luaL_openlibs(_L);
+
+// FONT
+    native do
+        TTF_Font* FONT;
+    end
+    _TTF_Init();
+        finalize with
+            _TTF_Quit();
+        end
+    _FONT = _TTF_OpenFont("fnts/Deutsch.ttf", 20);
+        finalize with
+            _TTF_CloseFont(_FONT);
+        end
+    _assert(_FONT != null);
+
+// TEXS
+    native do
+        SDL_Texture* TEX_RM = NULL;
+        SDL_Texture* TEX_OK = NULL;
+    end
+    _TEX_RM = _IMG_LoadTexture(_REN, "imgs/rm.png");
+    finalize with
+        _SDL_DestroyTexture(_TEX_RM);
+    end
+    _TEX_OK = _IMG_LoadTexture(_REN, "imgs/ok.png");
+    finalize with
+        _SDL_DestroyTexture(_TEX_OK);
+    end
+    _assert(_TEX_RM  != null);
+    _assert(_TEX_OK  != null);
+
+class MenuGamesListenerImpl with
+    interface MenuGamesListener;
+do
+end
+
+par/or do
+    await SDL_QUIT;
+/*** SIMUL
+with
+    @include(simul.ceu)
+***/
+with
+    every SDL_REDRAW do
+        _boxRGBA(_REN, 0,0, _REN_W,_REN_H, 0,0,0, 0xFF);
+    end
+with
+    var _SDL_Rect r;        // whole screen
+        r.x = 0;
+        r.y = 0;
+        r.w = _REN_W;
+        r.h = _REN_H;
+
+    _luaL_loadfile(_L, "main.lua");     // [ f ]
+    _lua_call(_L, 0, 0);                // [ ]
+
+    do
+        var MenuGamesListenerImpl lst;
+        var MenuGamesOne one with
+            this.file = "g1.lua";
+            this.n    = 1;
+            this.lst  = &lst;
+        end;
+        one.ui:_go_rect(&r);
+        par/or do
+            var int n = await lst.ok_rm;
+            _printf("RM: %d\n", n);
+        with
+            var int n = await lst.ok_go;
+            _printf("GO: %d\n", n);
+        end
+    end
+
+    var MenuGames menu;
+    var int n = await menu.ok_go;
+    _printf("GO: %d\n", n);
+with
+    every SDL_REDRAW do
+        _SDL_RenderPresent(_REN);
+    end
+end
+
+return 0;
+
+#endif
+#endif

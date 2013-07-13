@@ -19,7 +19,7 @@ do
     _assert(_L   != null);
 
     _assert(this.file != null);
-        var int i = _luaL_loadfile(_L, this.file);  // [ f ]
+        _luaL_loadfile(_L, this.file);  // [ f ]
         _lua_call(_L, 0, 0);            // [ ]
 
     var Map map;
@@ -185,7 +185,7 @@ with
 #else
 #define LUA_SERVER "server.lua"
 #define LUA_AI     "ai.lua"
-#define LUA_GAME   "_g.lua"
+#define LUA_GAME   "_g1.lua"
 #endif
 
     _luaL_loadfile(_L, LUA_SERVER);    // [ f ]

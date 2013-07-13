@@ -40,7 +40,7 @@ do
     _assert(_L   != null);
 
     _lua_getglobal(_L, "MAP");     // [ M ]
-    this.n = _lua_objlen(_L,1);
+    this.n = _lua_objlen(_L,-1);
     _lua_pop(_L, 1);               // [ ]
 
     // cx / cy (pos n=0 unused, malloc 1 extra)
@@ -96,7 +96,7 @@ do
             _lua_getglobal(_L, "MAP");         // [ M ]
             loop i_, this.n do
                 var int i = i_ + 1;     // C => Lua indexing
-                _lua_rawgeti(_L, 1, i);            // [ M | C ]
+                _lua_rawgeti(_L, -1, i);           // [ M | C ]
                 _lua_getfield(_L, -1, "center");   // [ M | C | pt ]
                 _lua_rawgeti(_L, -1, 1);           // [ M | C | pt | x ]
                 _lua_rawgeti(_L, -2, 2);           // [ M | C | pt | x | y ]
@@ -148,14 +148,14 @@ do
                 var int i = i_ + 1;     // C => Lua indexing
                 var u16[10] xs, ys;     // TODO: negative values?
 
-                _lua_rawgeti(_L, 3, i);       // [ . | ns[i] ]
+                _lua_rawgeti(_L, -3, i);      // [ . | ns[i] ]
                 var int pts = _lua_tointeger(_L, -1);
                 _lua_pop(_L, 1);              // [ . ]
 
                 // for each point [0, ns[i])
                 loop j, pts do
-                    _lua_rawgeti(_L, 4, n);   // [ . | xs[n] ]
-                    _lua_rawgeti(_L, 5, n);   // [ . | xs[n] | ys[n] ]
+                    _lua_rawgeti(_L, -2, n);  // [ . | xs[n] ]
+                    _lua_rawgeti(_L, -2, n);  // [ . | xs[n] | ys[n] ]
                     xs[j] = _P(_lua_tointeger(_L,-2), xc, this.x, zoom);
                     ys[j] = _P(_lua_tointeger(_L,-1), yc, this.y, zoom);
                     _lua_pop(_L, 2);          // [ . ]
@@ -163,7 +163,7 @@ do
                 end
 
                 // push color
-                _lua_rawgeti(_L, 1, i);         // [ . | C ]
+                _lua_rawgeti(_L, -5, i);        // [ . | C ]
                 _lua_getfield(_L, -1, "color"); // [ . | C | clr ]
                 _lua_rawgeti(_L, -1, 1);        // [ . | C | clr | r ]
                 _lua_rawgeti(_L, -2, 2);        // [ . | C | clr | r | g ]
@@ -194,7 +194,7 @@ do
             _lua_getglobal(_L, "BORDERS"); // [ B ]
             loop i_, _lua_objlen(_L,1) do
                 var int i = i_ + 1;     // C => Lua indexing
-                _lua_rawgeti(_L, 1, i);    // [ B | t ]
+                _lua_rawgeti(_L, -1, i);   // [ B | t ]
                 _lua_rawgeti(_L, -1, 1);   // [ B | t | p1 ]
                 _lua_rawgeti(_L, -2, 2);   // [ B | t | p1 | p2 ]
                 _lua_rawgeti(_L, -2, 1);   // [ B | t | p1 | p2 | x1 ]
