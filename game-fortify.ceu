@@ -280,8 +280,10 @@ do
 
         with
             // button "OK"
-            var int v = await e
-                        until v == 0;
+            if fs > 0 then
+                var int v = await e
+                            until v == 0;
+            end
 
             var UITexture ui with
                 this.ren = _REN;
@@ -292,6 +294,10 @@ do
                 g2.uis[2] = &ui;
             with
                 g2.uis[2] = null;
+            end
+
+            if fs > 0 then
+                g2._go();   // needed if entering w/o the await
             end
 
             // QUIT

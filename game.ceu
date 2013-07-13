@@ -85,6 +85,20 @@ do
         // next turn
         _lua_getglobal(_L, "SRV_go");   // [ srv ]
         _lua_call(_L, 0, 0);            // [ ]
+
+        _luaL_loadstring(_L, "                          \
+            local file = ...                            \
+            local f = assert(io.open(file, 'w'))        \
+            f:write([[                                  \
+                dofile 'map2.lua'                       \
+                PLAYERS = ]]..table2string(PLAYERS)..[[ \
+                STATES  = ]]..table2string(STATES)..[[  \
+                MOVES   = ]]..table2string(MOVES)..[[   \
+            ]])                                         \
+            f:close()                                   \
+        ");                                 // [ f ]
+        _lua_pushstring(_L, this.file);     // [ f | file ]
+        _lua_call(_L, 1, 0);                // [ ]
     end
 end
 

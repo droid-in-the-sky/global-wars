@@ -58,22 +58,14 @@ function table2string (t, tab, cache)
     return '{\n'..table.concat(ret,'\n')..'\n'..string.rep(' ',tab)..'}'
 end
 
-function SRV_save (file)
-    local f = assert(io.open(file, 'w'))
-    f:write('PLAYERS = '..table2string(PLAYERS)..'\n')
-    f:write('STATES  = '..table2string(STATES)..'\n')
-    f:write('MOVES   = '..table2string(MOVES)..'\n')
-    f:close()
-end
-
 local __moves = {}
 function SRV_move (p, MSp)
     __moves[p] = MSp
 end
 
 function SRV_go ()
-    assert(#PLAYERS == 6)
-    assert(#__moves == #PLAYERS)
+    assert(#PLAYERS == 6, #PLAYERS)
+    assert(#__moves == #PLAYERS, #__moves)
     for p, MSp in ipairs(__moves) do
         local fs = SRV_move_ins(p, MSp)
         assert(fs == 0, fs)
@@ -96,7 +88,6 @@ function SRV_go ()
         -- foreach player move
         for _, M in ipairs(MSp) do
             local a, fr, to = unpack(M)
---print('srv', p, a, fr, to)
             S3[p][to] = S3[p][to] + a
                 -- accumulate (multiple moves from "p" to "to")
         end
@@ -119,7 +110,6 @@ function SRV_go ()
                         n = n + 1       -- # of players in "c"
                     end
             end
---print(c, p, A[p], A[p]>0, n)
             end
 
             assert(n > 0)
@@ -145,7 +135,6 @@ function SRV_go ()
                     function (n1,n2)
                         return n1 > n2
                     end)
---print(c,p,a, '//', unpack(dice))
             end
 
             -- compare up to the least # of armies
@@ -172,8 +161,6 @@ function SRV_go ()
             end
         end
     end
-
-    return true
 end
 
 -- number of "p" armies to fortify on "S"
@@ -274,7 +261,6 @@ function SRV_move_ins (p, MSp)
 
             -- remove from fr
             S2[p][fr] = S2[p][fr] - a;
---print(p, '('..a..') '..fr..'=>'..to)
         end
     end
 

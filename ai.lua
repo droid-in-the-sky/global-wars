@@ -18,8 +18,8 @@ function AI_move (s, p)
             while true do
                 local c = math.random(#MAP) --  on a random "c" that I own
                 if Sp[c] > 0 then
-                    MSp[#MSp+1] = { n, 0, c }
---print('ai', p, n, 0, c)
+                    --MSp[#MSp+1] = { n, 0, c }
+                    SRV_move_inc(MSp, n, 0, c)
                     break
                 end
             end
@@ -53,12 +53,10 @@ function AI_move (s, p)
                     else
                         aa = a - 1                  -- #a = max
                     end
---print('att', aa, c1, c2)
                 elseif #mov > 0 then
                     -- move random a from c1, to random c2
                     c2 = mov[ math.random(#mov) ]
                     aa = math.random(a-1)
---print('mov', aa, c1, c2)
                 end
                 --MSp[#MSp+1] = { aa, c1, c2 }
                 SRV_move_inc(MSp, aa, c1, c2)
