@@ -10,7 +10,6 @@ all:
 		-o global-wars.exe
 
 game:
-	cp g1.lua _g1.lua
 	ceu --cpp-args "-D __GAME_CEU" game.ceu
 	gcc -Os main.c $(CFLAGS) -lSDL2 -lSDL2_gfx -lSDL2_ttf -lSDL2_image -llua \
 		-o global-wars.exe
@@ -26,7 +25,6 @@ menu-new:
 		-o global-wars.exe
 
 menu-games:
-	cp main.lua.orig main.lua
 	ceu --cpp-args "-D __MENU_GAMES_CEU" menu-games.ceu
 	gcc -Os main.c $(CFLAGS) -lSDL2 -lSDL2_gfx -lSDL2_ttf -lSDL2_image -llua \
 		-o global-wars.exe

@@ -7,6 +7,7 @@
 
 #include "colors.ceu"
 #include "ui.ceu"
+#include "ui-scroll.ceu"
 #include "ui-grid.ceu"
 #include "ui-texture.ceu"
 
@@ -69,13 +70,17 @@ do
                  0,  0, -1, -1,  7,  8      // del, go
             };
         end
+
+        this.spc_x  = 10;
+        this.spc_y  = 10;
+        this.clr_cell_bg = &_colors.gray;
     end;
 
     // PS
         var _SDL_Texture* tex1;
             finalize
                 tex1 = _SDL_text2texture(_REN, _FONT, "Players",
-                                        &_colors.black, &_colors.white);
+                                        &_colors.black, null);
             with
                 _SDL_DestroyTexture(tex1);
             end
@@ -89,7 +94,7 @@ do
         var _SDL_Texture* tex2;
             finalize
                 tex2 = _SDL_text2texture(_REN, _FONT, str2,
-                                        &_colors.black, &_colors.white);
+                                        &_colors.black, null);
             with
                 _SDL_DestroyTexture(tex2);
             end
@@ -102,7 +107,7 @@ do
         var _SDL_Texture* tex3;
             finalize
                 tex3 = _SDL_text2texture(_REN, _FONT, "Week",
-                                        &_colors.black, &_colors.white);
+                                        &_colors.black, null);
             with
                 _SDL_DestroyTexture(tex3);
             end
@@ -116,7 +121,7 @@ do
         var _SDL_Texture* tex4;
             finalize
                 tex4 = _SDL_text2texture(_REN, _FONT, str4,
-                                        &_colors.black, &_colors.white);
+                                        &_colors.black, null);
             with
                 _SDL_DestroyTexture(tex4);
             end
@@ -129,7 +134,7 @@ do
         var _SDL_Texture* tex5;
             finalize
                 tex5 = _SDL_text2texture(_REN, _FONT, "Action",
-                                        &_colors.black, &_colors.white);
+                                        &_colors.black, null);
             with
                 _SDL_DestroyTexture(tex5);
             end
@@ -141,7 +146,7 @@ do
         var _SDL_Texture* tex6;
             finalize
                 tex6 = _SDL_text2texture(_REN, _FONT, state_type,
-                                        &_colors.black, &_colors.white);
+                                        &_colors.black, null);
             with
                 _SDL_DestroyTexture(tex6);
             end
@@ -197,27 +202,37 @@ do
             break;
         end
 
+        // GRID [ g1 | g2 | ... ]
+
+        var int n_ = n;
+        if n_ % 2 == 1 then
+            n_ = n_ + 1;        // fill to even number
+        end
         var int* lay;
             finalize
-                lay = _malloc(n * sizeof(int));
+                lay = _malloc(n_ * sizeof(int));
             with
                 _free(lay);
             end
-        loop i, n do
+        loop i, n_ do
             lay[i] = i;
         end
 
-        var UIGrid grid with
+        var UIGrid grid1 with
             this.ren = _REN;
-            this.lay_lins = n;
-            this.lay_cols = 1;
+            this.lay_lins = n_/2;
+            this.lay_cols = 2;
             this.lay = lay; // { 0, 1, ..., n-1 }
-            this.uis_n = n;
+            this.uis_n = n_;
+
+            this.rect.w = 5*_REN_W / 6 - 5;     // -5 avoids x-scroll
+            this.rect.h = n_*_REN_H / 6;
         end;
+
+        // GAMES: g1, g2, ...
 
         var MenuGamesOne* one;
         var MenuGamesListener* lst = &this;
-
         loop i, n do
             _lua_rawgeti(_L, -1, i+1);      // [ GG | f ]
             one = new MenuGamesOne with
@@ -226,44 +241,80 @@ do
                 this.n    = i + 1;
                 this.lst  = lst;
             end;
-            grid.uis[i] = one:ui;
+            grid1.uis[i] = one:ui;
             _lua_pop(_L, 1);                // [ GG ]
         end
-
         _lua_pop(_L, 1);                    // [ ]
+
+        // SCROLL [ g1 | g2 | ... ]
+
+        var UIScroll scroll with
+            this.ren = _REN;
+            this.ui  = &grid1;
+            this.clr_scroll = &_colors.white;
+        end;
+
+        // NEW
+
+        var UITexture ui_new with
+            this.ren = _REN;
+            this.tex = _TEX_OK;
+        end;
+
+        // GRID  [ scroll | new ]
+
+        var UIGrid grid2 with
+            this.ren = _REN;
+            this.lay_lins = 1;
+            this.lay_cols = 6;
+            this.uis_n = 2;
+            this.lay = _MENUGAMES_lay2;
+            native do
+                int MENUGAMES_lay2[] = { 0,0,0,0,0,1 };
+            end
+        end;
+        grid2.uis[0] = &scroll;
+        grid2.uis[1] = &ui_new;
 
         var _SDL_Rect r;        // whole screen
             r.x = 0;
             r.y = 0;
             r.w = _REN_W;
             r.h = _REN_H;
-        grid._go_rect(&r);
+        grid2._go_rect(&r);
 
-        var int rm = await this.ok_rm;
+        // AWAIT RM or NEW
 
-        // os.remove(GAMES[rm])
-            _lua_getglobal(_L, "os");           // [ os ]
-            _lua_getfield(_L, -1, "remove");    // [ os | f ]
-            _lua_getglobal(_L, "GAMES");        // [ os | f | GG ]
-            _lua_rawgeti(_L, -1, rm);           // [ os | f | GG | file ]
-            _lua_remove(_L, -2);                // [ os | f | file ]
-            _lua_call(_L, 1, 0);                // [ os ]
-            _lua_pop(_L, 1);                    // [ ]
+        par/or do
+            await ui_new.ok_clicked;
+            emit this.ok_go => 0;       // new game
+        with
+            var int rm = await this.ok_rm;
 
-        // table.remove(GAMES, rm)
-            _lua_getglobal(_L, "table");        // [ t ]
-            _lua_getfield(_L, -1, "remove");    // [ t | f ]
-            _lua_getglobal(_L, "GAMES");        // [ t | f | GG ]
-            _lua_pushnumber(_L, rm);            // [ t | f | GG | idx ]
-            _lua_call(_L, 2, 0);                // [ t ]
-            _lua_pop(_L, 1);                    // [ ]
+            // os.remove(GAMES[rm])
+                _lua_getglobal(_L, "os");           // [ os ]
+                _lua_getfield(_L, -1, "remove");    // [ os | f ]
+                _lua_getglobal(_L, "GAMES");        // [ os | f | GG ]
+                _lua_rawgeti(_L, -1, rm);           // [ os | f | GG | file ]
+                _lua_remove(_L, -2);                // [ os | f | file ]
+                _lua_call(_L, 1, 0);                // [ os ]
+                _lua_pop(_L, 1);                    // [ ]
 
-        // save main.lua
-            var _char* src =
-                "local f = assert(io.open('main.lua', 'w'))     \
-                 f:write('GAMES = '..table2string(GAMES)..'\\n') \
-                 f:close()";
-            _assert( _luaL_dostring(_L, src) == 0 );
+            // table.remove(GAMES, rm)
+                _lua_getglobal(_L, "table");        // [ t ]
+                _lua_getfield(_L, -1, "remove");    // [ t | f ]
+                _lua_getglobal(_L, "GAMES");        // [ t | f | GG ]
+                _lua_pushnumber(_L, rm);            // [ t | f | GG | idx ]
+                _lua_call(_L, 2, 0);                // [ t ]
+                _lua_pop(_L, 1);                    // [ ]
+
+            // save main.lua
+                var _char* src =
+                    "local f = assert(io.open('main.lua', 'w'))     \
+                     f:write('GAMES = '..table2string(GAMES)..'\\n') \
+                     f:close()";
+                _assert( _luaL_dostring(_L, src) == 0 );
+        end
     end
 end
 

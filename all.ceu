@@ -76,6 +76,7 @@ end
         SDL_Texture* TEX_NO    = NULL;
         SDL_Texture* TEX_OK    = NULL;
         SDL_Texture* TEX_RM    = NULL;
+        SDL_Texture* TEX_NEW   = NULL;
     end
     _TEX_HUMAN = _IMG_LoadTexture(_REN, "imgs/human.png");
     finalize with
@@ -109,6 +110,10 @@ end
     finalize with
         _SDL_DestroyTexture(_TEX_RM);
     end
+    _TEX_NEW = _IMG_LoadTexture(_REN, "imgs/new.png");
+    finalize with
+        _SDL_DestroyTexture(_TEX_NEW);
+    end
     _assert(_TEX_HUMAN != null);
     _assert(_TEX_AI    != null);
     _assert(_TEX_NONE  != null);
@@ -117,6 +122,7 @@ end
     _assert(_TEX_NO    != null);
     _assert(_TEX_OK    != null);
     _assert(_TEX_RM    != null);
+    _assert(_TEX_NEW   != null);
 
 
 // BGS

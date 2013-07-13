@@ -3,6 +3,7 @@ global-wars.exe
 .*.swo
 _ceu_*
 *.ceu_m4
+games/
 android-project/assets/
 android-project/bin/
 android-project/files/
