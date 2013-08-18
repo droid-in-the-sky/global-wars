@@ -6,7 +6,7 @@ CFLAGS += -D CEU_DEBUG -D DEBUG #-O0
 
 all:
 	ceu main.ceu
-	gcc -Os main.c $(CFLAGS) -lSDL2 -lSDL2_gfx -lSDL2_image -lSDL2_ttf -llua \
+	gcc -Os main.c $(CFLAGS) -lSDL2 -lSDL2_gfx -lSDL2_image -lSDL2_ttf -llua5.1 \
 		-o global-wars.exe
 
 game:

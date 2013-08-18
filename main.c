@@ -8,6 +8,7 @@
 #include "SDL_image.h"
 #include "SDL_mixer.h"
 #include "SDL_ttf.h"
+#include "SDL_net.h"
 #include "SDL_opengles.h"
 #define printf(args...)     __android_log_print(4, "SDL", ## args);
 #define fprintf(x, args...) __android_log_print(4, "SDL", ## args);
@@ -55,7 +56,11 @@ int SDL_main (int argc, char *argv[])
 int main (int argc, char *argv[])
 #endif
 {
-    SDL_Init(SDL_INIT_EVERYTHING);
+    int err = SDL_Init(SDL_INIT_EVERYTHING);
+    if (err != 0) {
+        printf("SDL_Init failed: %s\n", SDL_GetError());
+        return err;
+    }
 
 #ifdef CEU_IN_SDL_DT
     WCLOCK_nxt = 20000;
@@ -65,6 +70,10 @@ int main (int argc, char *argv[])
 
 #if defined(CEU_WCLOCKS) || defined(CEU_IN_SDL_DT)
     u32 old = SDL_GetTicks();
+#endif
+
+#ifdef CEU_THREADS
+    CEU_THREADS_MUTEX_LOCK(&CEU.threads_mutex);
 #endif
 
     ceu_go_init();
@@ -99,7 +108,15 @@ int main (int argc, char *argv[])
 #endif
 #endif  // CEU_IN_SDL_DT
 
+#ifdef CEU_THREADS
+        CEU_THREADS_MUTEX_UNLOCK(&CEU.threads_mutex);
+#endif
+
         int has = SDL_WaitEventTimeout(&evt, tm);
+
+#ifdef CEU_THREADS
+        CEU_THREADS_MUTEX_LOCK(&CEU.threads_mutex);
+#endif
 
 #if defined(CEU_WCLOCKS) || defined(CEU_IN_SDL_DT)
         u32 now = SDL_GetTicks();
@@ -219,6 +236,9 @@ int main (int argc, char *argv[])
 #endif
     }
 END:
+#ifdef CEU_THREADS
+    CEU_THREADS_MUTEX_UNLOCK(&CEU.threads_mutex);
+#endif
     SDL_Quit();         // TODO: slow
     return ret_val;
 }
