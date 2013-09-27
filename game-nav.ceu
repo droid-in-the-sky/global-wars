@@ -65,8 +65,8 @@ do
 
     // GRID "all"
     var _SDL_Rect r;        // whole screen
-        r.x = 0;
-        r.y = 0;
+        r.x = _REN_W / 2;
+        r.y = _REN_H / 2;
         r.w = _REN_W;
         r.h = _REN_H;
     var UIGrid g1 with
@@ -88,6 +88,7 @@ do
     // GRID "menu"
     var UIGrid g2 with
         this.ren = _REN;
+        this.bg_redim? = 1;
         this.lay_lins = 2;
         this.lay_cols = 3;
         this.lay = _GN_g2;
@@ -120,7 +121,7 @@ do
         g2.uis[1] = &ui_r;  // >
         g2.uis[2] = &ui_ok; // ok
 
-    g1._go_rect(&r);
+    g1._go(&r);
 
     loop do
         var GameState st with

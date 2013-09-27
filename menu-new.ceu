@@ -36,7 +36,7 @@ do
                 var UITexture ui with
                     this.ren    = _REN;
                     this.tex    = _TEX_HUMAN;
-                    this.clr_bg = _BGS[n];
+                    this.bg_clr = _BGS[n];
                 end;
                 this.grid:_go_ui(this.n-1, &ui)
                     finalize with nothing; end; // grid > ui
@@ -50,7 +50,7 @@ do
             var UITexture ui with
                 this.ren    = _REN;
                 this.tex    = _TEX_AI;
-                this.clr_bg = _BGS[n];
+                this.bg_clr = _BGS[n];
             end;
             this.grid:_go_ui(this.n-1, &ui)
                 finalize with nothing; end; // grid > ui
@@ -63,7 +63,7 @@ do
             var UITexture ui with
                 this.ren    = _REN;
                 this.tex    = _TEX_NONE;
-                this.clr_bg = _BGS[n];
+                this.bg_clr = _BGS[n];
             end;
             this.grid:_go_ui(this.n-1, &ui)
                 finalize with nothing; end; // grid > ui
@@ -99,13 +99,14 @@ do
     end;
 
     var UIGrid grid_ps with
-        this.ren = _REN;
-        this.lay_lins = 2;
-        this.lay_cols = 3;
-        this.lay = _MenuNew_grid_ps;
-        this.uis_n = 6;
-        this.spc_x = 20;
-        this.spc_y = 20;
+        this.ren       = _REN;
+        this.bg_redim? = 1;
+        this.lay_lins  = 2;
+        this.lay_cols  = 3;
+        this.lay       = _MenuNew_grid_ps;
+        this.uis_n     = 6;
+        this.spc_x     = 20;
+        this.spc_y     = 20;
         native do
             int MenuNew_grid_ps[] = {
                 0, 1, 2,
@@ -120,14 +121,14 @@ do
     end;
 
     var _SDL_Rect r;        // whole screen
-        r.x = 0;
-        r.y = 0;
+        r.x = _REN_W / 2;
+        r.y = _REN_H / 2;
         r.w = _REN_W;
         r.h = _REN_H;
 
     grid.uis[0] = &grid_ps;
     grid.uis[1] = &ui_ok;
-    grid._go_rect(&r);
+    grid._go(&r);
 
     var int i = 1;
     var MenuNewPlayer [6] ps with

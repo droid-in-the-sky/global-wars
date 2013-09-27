@@ -58,6 +58,7 @@ do
 
     var UIGrid grid with
         this.ren = _REN;
+        this.bg_redim? = 1;
         this.lay_lins = 4;
         this.lay_cols = 6;
         this.lay = __MENU_GAMES_CEU_grid;
@@ -277,11 +278,11 @@ do
         grid2.uis[1] = &ui_new;
 
         var _SDL_Rect r;        // whole screen
-            r.x = 0;
-            r.y = 0;
+            r.x = _REN_W / 2;
+            r.y = _REN_H / 2;
             r.w = _REN_W;
             r.h = _REN_H;
-        grid2._go_rect(&r);
+        grid2._go(&r);
 
         // AWAIT RM or NEW
 
@@ -341,8 +342,8 @@ with
     end
 with
     var _SDL_Rect r;        // whole screen
-        r.x = 0;
-        r.y = 0;
+        r.x = _REN_W / 2;
+        r.y = _REN_H / 2;
         r.w = _REN_W;
         r.h = _REN_H;
 
@@ -353,7 +354,7 @@ with
             this.n    = 1;
             this.lst  = &lst;
         end;
-        one.ui:_go_rect(&r);
+        one.ui:_go(&r);
         par/or do
             var int n = await lst.ok_rm;
             _printf("RM: %d\n", n);

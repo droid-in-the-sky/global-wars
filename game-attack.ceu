@@ -125,8 +125,8 @@ do
 
     // GRID "all"
     var _SDL_Rect r;        // whole screen
-        r.x = 0;
-        r.y = 0;
+        r.x = _REN_W / 2;
+        r.y = _REN_H / 2;
         r.w = _REN_W;
         r.h = _REN_H;
     var UIGrid g1 with
@@ -167,7 +167,7 @@ do
         var UITexture ui_fs with
             this.ren = _REN;
             this.tex = tex;
-            this.clr_bg = _BGS[me];
+            this.bg_clr = _BGS[me];
         end;
 
         finalize
@@ -176,7 +176,7 @@ do
             g1.uis[0] = null;
         end
         g1.uis[1] = null;       // menu
-        g1._go_rect(&r);
+        g1._go(&r);
 
         await 2s;
     end
@@ -184,6 +184,7 @@ do
     // GRID "menu"
     var UIGrid g2 with
         this.ren = _REN;
+        this.bg_redim? = 1;
         this.lay_lins = 2;
         this.lay_cols = 3;
         this.lay = _GA_g2;
@@ -206,7 +207,7 @@ do
     g1.uis[1] = &g2;    // include "menu"
         g2.uis[0] = null;   // no
         g2.uis[1] = &ui_ok; // ok
-    g1._go();
+    g1._go(null);
 
     // "ref" holds the attacks table: { {a,fr,to}, ... }
     _lua_pushboolean(_L, 1);    // [ true ]
@@ -240,7 +241,7 @@ do
                 with
                     g2.uis[0] = null;
                 end
-                g1._go();
+                g1._go(null);
                 await ui.ok_clicked;
             with
 

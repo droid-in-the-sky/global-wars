@@ -51,8 +51,8 @@ do
 
     // GRID "all"
     var _SDL_Rect r;        // whole screen
-        r.x = 0;
-        r.y = 0;
+        r.x = _REN_W / 2;
+        r.y = _REN_H / 2;
         r.w = _REN_W;
         r.h = _REN_H;
     var UIGrid g1 with
@@ -92,7 +92,7 @@ do
         var UITexture ui1 with
             this.ren = _REN;
             this.tex = tex;
-            this.clr_bg = _BGS[me];
+            this.bg_clr = _BGS[me];
         end;
 
         finalize
@@ -115,7 +115,7 @@ do
         var UITexture ui2 with
             this.ren = _REN;
             this.tex = tex;
-            this.clr_bg = _BGS[me];
+            this.bg_clr = _BGS[me];
         end;
 
         finalize
@@ -125,13 +125,14 @@ do
         end
 
         g1.uis[2] = null;       // menu
-        g1._go_rect(&r);
+        g1._go(&r);
         await 2s;
     end
 
     // GRID "menu"
     var UIGrid g2 with
         this.ren = _REN;
+        this.bg_redim? = 1;
         this.lay_lins = 2;
         this.lay_cols = 3;
         this.lay = _GF_g2;
@@ -214,7 +215,7 @@ do
                 var UITexture ui_fs with
                     this.ren = _REN;
                     this.tex = tex;
-                    this.clr_bg = _BGS[me];
+                    this.bg_clr = _BGS[me];
                 end;
 
                 finalize
@@ -226,7 +227,7 @@ do
                 // re-arrange all:
                 // - loop entering
                 // - after every "e"
-                g1._go();
+                g1._go(null);
 
                 if fs_tmp == 0 then
                     await FOREVER;
@@ -297,7 +298,7 @@ do
             end
 
             if fs > 0 then
-                g2._go();   // needed if entering w/o the await
+                g2._go(null);   // needed if entering w/o the await
             end
 
             // QUIT
