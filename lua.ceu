@@ -3,8 +3,13 @@
 
 native do
     /******/
+##ifdef __ANDROID__
+    ##include "lua.h"
+    ##include "lauxlib.h"
+##else
     ##include <lua5.1/lua.h>
     ##include <lua5.1/lauxlib.h>
+##endif
 
     int ceu_lua_atpanic (lua_State* lua) {
 ##ifdef CEU_DEBUG

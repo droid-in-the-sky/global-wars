@@ -125,7 +125,7 @@ do
         end
 
         g1.uis[2] = null;       // menu
-        g1._go(&r);
+        g1.go(&r);
         await 2s;
     end
 
@@ -227,7 +227,7 @@ do
                 // re-arrange all:
                 // - loop entering
                 // - after every "e"
-                g1._go(null);
+                g1.go(null);
 
                 if fs_tmp == 0 then
                     await FOREVER;
@@ -298,7 +298,7 @@ do
             end
 
             if fs > 0 then
-                g2._go(null);   // needed if entering w/o the await
+                g2.go(null);   // needed if entering w/o the await
             end
 
             // QUIT
@@ -351,7 +351,7 @@ with
     end
 end
 
-return 0;
+escape 0;
 
 #endif
 #endif

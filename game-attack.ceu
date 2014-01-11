@@ -176,7 +176,7 @@ do
             g1.uis[0] = null;
         end
         g1.uis[1] = null;       // menu
-        g1._go(&r);
+        g1.go(&r);
 
         await 2s;
     end
@@ -207,7 +207,7 @@ do
     g1.uis[1] = &g2;    // include "menu"
         g2.uis[0] = null;   // no
         g2.uis[1] = &ui_ok; // ok
-    g1._go(null);
+    g1.go(null);
 
     // "ref" holds the attacks table: { {a,fr,to}, ... }
     _lua_pushboolean(_L, 1);    // [ true ]
@@ -241,7 +241,7 @@ do
                 with
                     g2.uis[0] = null;
                 end
-                g1._go(null);
+                g1.go(null);
                 await ui.ok_clicked;
             with
 
@@ -339,7 +339,7 @@ with
     end
 end
 
-return 0;
+escape 0;
 
 #endif
 #endif

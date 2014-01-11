@@ -282,7 +282,7 @@ do
             r.y = _REN_H / 2;
             r.w = _REN_W;
             r.h = _REN_H;
-        grid2._go(&r);
+        grid2.go(&r);
 
         // AWAIT RM or NEW
 
@@ -354,7 +354,7 @@ with
             this.n    = 1;
             this.lst  = &lst;
         end;
-        one.ui:_go(&r);
+        one.ui:go(&r);
         par/or do
             var int n = await lst.ok_rm;
             _printf("RM: %d\n", n);
@@ -373,7 +373,7 @@ with
     end
 end
 
-return 0;
+escape 0;
 
 #endif
 #endif

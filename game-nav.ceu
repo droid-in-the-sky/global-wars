@@ -121,7 +121,7 @@ do
         g2.uis[1] = &ui_r;  // >
         g2.uis[2] = &ui_ok; // ok
 
-    g1._go(&r);
+    g1.go(&r);
 
     loop do
         var GameState st with
@@ -239,7 +239,7 @@ with
     end
 end
 
-return 0;
+escape 0;
 
 #endif
 #endif

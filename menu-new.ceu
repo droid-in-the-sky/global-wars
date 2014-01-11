@@ -38,7 +38,7 @@ do
                     this.tex    = _TEX_HUMAN;
                     this.bg_clr = _BGS[n];
                 end;
-                this.grid:_go_ui(this.n-1, &ui)
+                this.grid:go_ui(this.n-1, &ui)
                     finalize with nothing; end; // grid > ui
                 await ui.ok_clicked;
             end
@@ -52,7 +52,7 @@ do
                 this.tex    = _TEX_AI;
                 this.bg_clr = _BGS[n];
             end;
-            this.grid:_go_ui(this.n-1, &ui)
+            this.grid:go_ui(this.n-1, &ui)
                 finalize with nothing; end; // grid > ui
             await ui.ok_clicked;
         end
@@ -65,7 +65,7 @@ do
                 this.tex    = _TEX_NONE;
                 this.bg_clr = _BGS[n];
             end;
-            this.grid:_go_ui(this.n-1, &ui)
+            this.grid:go_ui(this.n-1, &ui)
                 finalize with nothing; end; // grid > ui
             await ui.ok_clicked;
         end
@@ -128,7 +128,7 @@ do
 
     grid.uis[0] = &grid_ps;
     grid.uis[1] = &ui_ok;
-    grid._go(&r);
+    grid.go(&r);
 
     var int i = 1;
     var MenuNewPlayer [6] ps with
@@ -203,7 +203,7 @@ with
     end
 end
 
-return 0;
+escape 0;
 
 #endif
 #endif

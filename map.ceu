@@ -230,29 +230,31 @@ do
         var _SDL_TouchFingerEvent* e1_ = await SDL_FINGERDOWN;
         var _SDL_TouchFingerEvent  e1 = *e1_;
 
-        var _SDL_TouchFingerEvent* e2_;
         par/or do
-            e2_ = await SDL_FINGERUP         // restart all on release of "f1"
+            var _SDL_TouchFingerEvent* e2_ =
+                   await SDL_FINGERUP         // restart all on release of "f1"
             until e2_:fingerId == e1.fingerId;
         with
             // PAN
+            var _SDL_TouchFingerEvent e2;
             par/or do
-                 e2_ = await SDL_FINGERDOWN  // go to zoom when pressing "f2"
-                       until e2_:fingerId != e1.fingerId;
+                var _SDL_TouchFingerEvent* e2_ =
+                    await SDL_FINGERDOWN  // go to zoom when pressing "f2"
+                        until e2_:fingerId != e1.fingerId;
+                e2 := *e2_; // struct
             with
                 var int x = map:x;
                 var int y = map:y;
                 loop do                      // stay in pan while not "f2"
-                    e2_ = await SDL_FINGERMOTION
-                          until e2_:fingerId == e1.fingerId;
+                    var _SDL_TouchFingerEvent* e2_ =
+                        await SDL_FINGERMOTION
+                            until e2_:fingerId == e1.fingerId;
                     emit map:go_xy => (x + (e2_:x-e1.x)*_REN_W/2,
                                        y + (e2_:y-e1.y)*_REN_H/2);
                 end
             end
 
             // ZOOM until "f1" is released
-            var _SDL_TouchFingerEvent e2 = *e2_;
-            var _SDL_TouchFingerEvent* e3_;
 
             loop do
                 var _float dx = e2.x - e1.x;
@@ -260,11 +262,13 @@ do
                 var _float mA = dx * dy;
 
                 par/or do
-                    e3_ = await SDL_FINGERUP // restart zoom on release of "f2"
+                    var _SDL_TouchFingerEvent* e3_ =
+                        await SDL_FINGERUP // restart zoom on release of "f2"
                           until e3_:fingerId == e2.fingerId;
                 with
                     loop do                     // stay in zoom until any release
-                        e3_ = await SDL_FINGERMOTION;
+                        var _SDL_TouchFingerEvent* e3_ =
+                            await SDL_FINGERMOTION;
                         var _float mB = e3_:dx * e3_:dy;
                         if (mA > 0) and (mB < 0) or     // main diagonal
                            (mA < 0) and (mB > 0) then   // opposite diagonal
@@ -281,14 +285,15 @@ do
                         end
 
                         emit map:go_zoom => map:zoom + z;
-                        e2 = *e3_;
+                        e2 := *e3_; // struct
                     end
                 end
 
                 // next zoom start finger
-                e3_ = await SDL_FINGERDOWN
+                var _SDL_TouchFingerEvent* e3_ =
+                    await SDL_FINGERDOWN
                       until e3_:fingerId != e1.fingerId;
-                e2 = *e3_;
+                e2 := *e3_; // struct
             end
         end
     end
@@ -353,7 +358,7 @@ with
     end
 end
 
-return 0;
+escape 0;
 
 #endif
 

@@ -1,17 +1,21 @@
 #include <stdio.h>
 
-// definitely lost: 3,285 bytes in 25 blocks
-
+// definitely lost: 2,478 bytes in 17 blocks
 
 #ifdef __ANDROID__
 #include "SDL.h"
 #include "SDL_image.h"
 #include "SDL_mixer.h"
 #include "SDL_ttf.h"
-#include "SDL_net.h"
-#include "SDL_opengles.h"
+//#include "SDL_net.h"
+//#include "SDL_opengles.h"
+#ifdef DEBUG
 #define printf(args...)     __android_log_print(4, "SDL", ## args);
 #define fprintf(x, args...) __android_log_print(4, "SDL", ## args);
+#else
+#define printf(args...)
+#define fprintf(x, args...)
+#endif
 #else
 #include "SDL2/SDL.h"
 #include "SDL2/SDL_image.h"
@@ -38,7 +42,6 @@ int ret_val;
 #include "_ceu_defs.h"
 
 s32 WCLOCK_nxt;
-
 #ifndef CEU_IN_SDL_DT
 #define ceu_out_wclock(us) WCLOCK_nxt = us;
 #endif
@@ -46,6 +49,16 @@ s32 WCLOCK_nxt;
 #ifdef CEU_ASYNCS
 int ASYNC_nxt = 0;
 #define ceu_out_async(v) ASYNC_nxt = v;
+#endif
+
+#ifdef __ANDROID__
+#define SDL_MOTION_FLOOD_AVOID
+#endif
+#ifdef SDL_MOTION_FLOOD_AVOID
+int FLOOD_FILTER (SDL_Event* evt, void* fingerId) {
+    return evt->type == SDL_FINGERMOTION &&
+           ((SDL_TouchFingerEvent*)evt)->fingerId == (int)fingerId;
+}
 #endif
 
 #include "_ceu_code.cceu"
@@ -62,17 +75,13 @@ int main (int argc, char *argv[])
         return err;
     }
 
-#ifdef CEU_IN_SDL_DT
-    WCLOCK_nxt = 20000;
-#else
     WCLOCK_nxt = CEU_WCLOCK_INACTIVE;
-#endif
-
 #if defined(CEU_WCLOCKS) || defined(CEU_IN_SDL_DT)
     u32 old = SDL_GetTicks();
 #endif
 
 #ifdef CEU_THREADS
+    // just before executing CEU code
     CEU_THREADS_MUTEX_LOCK(&CEU.threads_mutex);
 #endif
 
@@ -90,12 +99,25 @@ int main (int argc, char *argv[])
 #endif
 
     SDL_Event evt;
+#ifdef __ANDROID__
+    int isPaused = 0;
+#endif
+
     for (;;)
     {
+#ifdef CEU_THREADS
+        // unlock from INIT->START->REDRAW or last loop iteration
+        CEU_THREADS_MUTEX_UNLOCK(&CEU.threads_mutex);
+#endif
+
 #ifndef SDL_SIMUL
 
+        /*
+         * With    SDL_DT, 'tm=0' (update as fast as possible).
+         * Without SDL_DT, 'tm=?' respects the timers.
+         */
 #ifdef CEU_IN_SDL_DT
-        s32 tm = 0;
+        s32 tm =  0;
 #else
         s32 tm = -1;
 #ifdef CEU_WCLOCKS
@@ -108,15 +130,17 @@ int main (int argc, char *argv[])
 #endif
 #endif  // CEU_IN_SDL_DT
 
-#ifdef CEU_THREADS
-        CEU_THREADS_MUTEX_UNLOCK(&CEU.threads_mutex);
+        int has;
+#ifdef __ANDROID__
+        if (isPaused) {
+            has = SDL_WaitEvent(&evt);
+        } else
 #endif
-
-        int has = SDL_WaitEventTimeout(&evt, tm);
-
-#ifdef CEU_THREADS
-        CEU_THREADS_MUTEX_LOCK(&CEU.threads_mutex);
-#endif
+        {
+            has = SDL_WaitEventTimeout(&evt, tm);
+        }
+//if (has)
+    //printf("EVENT %x\n", evt.type);
 
 #if defined(CEU_WCLOCKS) || defined(CEU_IN_SDL_DT)
         u32 now = SDL_GetTicks();
@@ -124,25 +148,41 @@ int main (int argc, char *argv[])
         old = now;
 #endif
 
-        // redraw on wclock or any valid event (avoid undefined events)
+        // redraw on wclock|handled|DT
+        // (avoids redrawing for undefined events)
         int redraw = 0;
 
-#ifdef CEU_WCLOCKS
-        if (WCLOCK_nxt != CEU_WCLOCK_INACTIVE) {
-            redraw = WCLOCK_nxt <= 1000*dt;
-            ceu_go_wclock(1000*dt);
-            if (ret) goto END;
-            while (WCLOCK_nxt <= 0) {
-                ceu_go_wclock(0);
-                if (ret) goto END;
-            }
-        }
+#ifdef CEU_THREADS
+        // just before executing CEU code
+        CEU_THREADS_MUTEX_LOCK(&CEU.threads_mutex);
 #endif
 
-#ifdef CEU_IN_SDL_DT
-        ceu_go_event(CEU_IN_SDL_DT, (void*)dt);
-        if (ret) goto END;
+#ifdef __ANDROID__
+        if (!isPaused)
 #endif
+        {
+#ifdef CEU_WCLOCKS
+#ifndef CEU_IN_SDL_DT
+            if (WCLOCK_nxt != CEU_WCLOCK_INACTIVE)
+            {
+                redraw = WCLOCK_nxt <= 1000*dt;
+#endif
+                ceu_go_wclock(1000*dt);
+                if (ret) goto END;
+                while (WCLOCK_nxt <= 0) {
+                    ceu_go_wclock(0);
+                    if (ret) goto END;
+                }
+#ifndef CEU_IN_SDL_DT
+            }
+#endif
+#endif
+#ifdef CEU_IN_SDL_DT
+            ceu_go_event(CEU_IN_SDL_DT, (void*)dt);
+            redraw = 1;
+            if (ret) goto END;
+#endif
+        }
 
         // OTHER EVENTS
         if (has)
@@ -158,6 +198,30 @@ int main (int argc, char *argv[])
 #ifdef CEU_IN_SDL_WINDOWEVENT
                 case SDL_WINDOWEVENT:
                     ceu_go_event(CEU_IN_SDL_WINDOWEVENT, &evt);
+                    break;
+#endif
+
+#if defined(CEU_IN_SDL_APP_WILLENTERBACKGROUND) || defined(__ANDROID__)
+                case SDL_APP_WILLENTERBACKGROUND:
+#ifdef __ANDROID__
+                    // handle onPause/onResume
+                    isPaused = 1;
+#endif
+#ifdef CEU_IN_SDL_APP_WILLENTERBACKGROUND
+                    ceu_go_event(CEU_IN_SDL_APP_WILLENTERBACKGROUND, &evt);
+#endif
+                    break;
+#endif
+#if defined(CEU_IN_SDL_APP_WILLENTERFOREGROUND) || defined(__ANDROID__)
+                case SDL_APP_WILLENTERFOREGROUND:
+#ifdef __ANDROID__
+                    // handle onPause/onResume
+                    isPaused = 0;
+                    old = SDL_GetTicks();   // ignores previous 'old' on resume
+#endif
+#ifdef CEU_IN_SDL_APP_WILLENTERFOREGROUND
+                    ceu_go_event(CEU_IN_SDL_APP_WILLENTERFOREGROUND, &evt);
+#endif
                     break;
 #endif
 #ifdef CEU_IN_SDL_KEYDOWN
@@ -207,8 +271,13 @@ int main (int argc, char *argv[])
 #endif
 #ifdef CEU_IN_SDL_FINGERMOTION
                 case SDL_FINGERMOTION:
-                    handled = 0;
                     ceu_go_event(CEU_IN_SDL_FINGERMOTION, &evt);
+#ifdef SDL_MOTION_FLOOD_AVOID
+                    // handle MOTION floods
+                    SDL_FlushEventsFilter(FLOOD_FILTER,
+                        (void*)((SDL_TouchFingerEvent*)&evt)->fingerId);
+                    SDL_FlushEvents(SDL_DOLLARGESTURE, SDL_MULTIGESTURE);
+#endif
                     break;
 #endif
                 default:
@@ -219,8 +288,7 @@ int main (int argc, char *argv[])
         }
 
 #ifdef CEU_IN_SDL_REDRAW
-        //if (redraw) {
-        if (! SDL_PollEvent(NULL)) {
+        if (redraw) {
             ceu_go_event(CEU_IN_SDL_REDRAW, NULL);
             if (ret) goto END;
         }
@@ -237,6 +305,7 @@ int main (int argc, char *argv[])
     }
 END:
 #ifdef CEU_THREADS
+    // only reachable if LOCKED
     CEU_THREADS_MUTEX_UNLOCK(&CEU.threads_mutex);
 #endif
     SDL_Quit();         // TODO: slow
