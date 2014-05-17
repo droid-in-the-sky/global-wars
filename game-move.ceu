@@ -12,38 +12,34 @@ input void SDL_REDRAW;
 input _SDL_KeyboardEvent* SDL_KEYDOWN;
 
 class GameMove with
-    var Map* map = null;
+    var Map& map;
     var int  idx = 0;
 do
     _assert(_REN != null);
-    _assert(_L   != null);
-
-    _assert(this.map != null);
     _assert(this.idx != 0);
 
     every SDL_REDRAW do
-        _lua_getglobal(_L, "PLAYERS");      // [ PP ]
-        _lua_getglobal(_L, "MOVES");        // [ PP | MM ]
-        _lua_rawgeti(_L, -1, this.idx);     // [ PP | MM | Mm ]
-
         // foreach player p
-        loop p_, _lua_objlen(_L,1) do
+        var int n_players = [[ #PLAYERS ]];
+        loop p_ in n_players do
             var int p = p_ + 1;
 
+            var bool empty = [[ PLAYERS[@p]==false ]];
+            if empty then
+                continue;      // { p1, false, p2, false, ... }
+            end
+
+            [[ P = MOVES[@this.idx][@p] ]]
+
             // foreach move "i" in "Mm" from player "p"
-            _lua_rawgeti(_L, -1, p);        // [ PP | MM | Mm | Mmp ]
-            loop i_, _lua_objlen(_L,-1) do
+            var int n_moves = [[ P and #P or 0 ]];
+            loop i_ in n_moves do
                 var int i = i_ + 1;
-                _lua_rawgeti(_L, -1, i);    // [ PP | MM | Mm | Mmp | T ]
 
                 // get a=#armies, fr=from, to=to
-                _lua_rawgeti(_L, -1, 1);    // [ PP | MM | Mm | Mmp | T | a ]
-                _lua_rawgeti(_L, -2, 2);    // [ PP | MM | Mm | Mmp | T | a | fr ]
-                _lua_rawgeti(_L, -3, 3);    // [ PP | MM | Mm | Mmp | T | a | fr | to ]
-                var int a  = _lua_tointeger(_L, -3);
-                var int fr = _lua_tointeger(_L, -2);
-                var int to = _lua_tointeger(_L, -1);
-                _lua_pop(_L, 4);            // [ PP | MM | Mm | Mmp ]
+                var int a  = [[ P[@i][1] ]];
+                var int fr = [[ P[@i][2] ]];
+                var int to = [[ P[@i][3] ]];
 
                 if a == 0 then
                     continue;   // don't show this move
@@ -57,30 +53,30 @@ do
 
                 // fortify arrow
                if fr == 0 then
-                    x = map:cx[to] - 20;    // TODO: hardcoded
-                    y = map:cy[to] - 40;    // TODO: hardcoded
+                    x = map.cx[to] - 20;    // TODO: hardcoded
+                    y = map.cy[to] - 40;    // TODO: hardcoded
                     _thickLineRGBA(_REN,
-                        map:cx[to] - 20,
-                        map:cy[to] - 40,    // TODO: hardcoded
-                        map:cx[to],
-                        map:cy[to],
+                        map.cx[to] - 20,
+                        map.cy[to] - 40,    // TODO: hardcoded
+                        map.cx[to],
+                        map.cy[to],
                         1, 0,0,0, 0xAA);
 
                 // move arrow
                 else
-                    var int dx = map:cx[to] - map:cx[fr];
-                    var int dy = map:cy[to] - map:cy[fr];
-                    x = map:cx[fr] + dx/2 - dy/4;
-                    y = map:cy[fr] + dy/2 - dx/4;
+                    var int dx = map.cx[to] - map.cx[fr];
+                    var int dy = map.cy[to] - map.cy[fr];
+                    x = map.cx[fr] + dx/2 - dy/4;
+                    y = map.cy[fr] + dy/2 - dx/4;
 
                     var u16[3] xs;
-                        xs[0] = map:cx[to];
+                        xs[0] = map.cx[to];
                         xs[1] = x;
-                        xs[2] = map:cx[fr];
+                        xs[2] = map.cx[fr];
                     var u16[3] ys;
-                        ys[0] = map:cy[to];
+                        ys[0] = map.cy[to];
                         ys[1] = y;
-                        ys[2] = map:cy[fr];
+                        ys[2] = map.cy[fr];
                     _bezierRGBA(_REN, xs,ys, 3, 2, 0,0,0, 0xAA);
                 end
 
@@ -93,10 +89,7 @@ do
                          bg);
                 _stringRGBA(_REN, x, y, str, 0,0,0, 0xAA);
             end
-            _lua_pop(_L, 1);                    // [ PP | MM | Mm ]
         end
-
-        _lua_pop(_L, 3);                    // [ ]
     end
 end
 
@@ -115,18 +108,15 @@ with
         _boxColor(_REN, 0,0, _REN_W,_REN_H, _colors.black);
     end
 with
-    _assert(_luaL_dofile(_L, "g1.lua") == 0);
-    _lua_getglobal(_L, "MOVES");   // [ MM ]
-    var int len = _lua_objlen(_L, -1);
-    _lua_pop(_L, 1);               // [ ]
-
+    [[ dofile 'g1.lua' ]]
+    var int len = [[ #MOVES ]];
     var Map map;
 
     loop do
-        loop i, len do
+        loop i in len do
             var GameMove m with
-                this.map = &map;
-                this.idx = i+1;
+                _.map = map;
+                _.idx = i+1;
             end;
             await SDL_KEYDOWN;
         end

@@ -2,7 +2,6 @@
 #define _ALL_CEU
 
 native do
-    lua_State*    L   = NULL;
     SDL_Renderer* REN = NULL;
     int REN_W, REN_H;
 end
@@ -17,24 +16,18 @@ end
         end
     _SDL_GetWindowSize(win, &_REN_W, &_REN_H);
 
-    _REN = _SDL_CreateRenderer(win, -1, 0);
-    finalize with
+    finalize
+        _REN = _SDL_CreateRenderer(win, -1, 0);
+    with
         _SDL_DestroyRenderer(_REN);
     end
 
 // LUA
-    _L = _luaL_newstate();
-    finalize with
-        _lua_close(_L);
-    end
-    _lua_atpanic(_L, _ceu_lua_atpanic);
-    _luaL_openlibs(_L);
 #ifdef __ANDROID__
-    _lua_pushboolean(_L, 1);           // [ 1 ]
+    [[ __ANDROID__ = true ]]
 #else
-    _lua_pushboolean(_L, 0);           // [ 0 ]
+    [[ __ANDROID__ = false ]]
 #endif
-    _lua_setglobal(_L, "__ANDROID__"); // [ ]
 
 #ifdef __ANDROID__
 #define LUA_MAIN \
@@ -48,9 +41,11 @@ end
 #define LUA_SERVER "server.lua"
 #define LUA_AI     "ai.lua"
 #endif
-    _assert(_luaL_dofile(_L, LUA_MAIN)   == 0);
-    _assert(_luaL_dofile(_L, LUA_SERVER) == 0);
-    _assert(_luaL_dofile(_L, LUA_AI)     == 0);
+    [[
+        dofile(LUA_MAIN)
+        dofile(LUA_SERVER)
+        dofile(LUA_AI)
+    ]]
 
 // FONT
     native do
@@ -60,10 +55,11 @@ end
         finalize with
             _TTF_Quit();
         end
-    _FONT = _TTF_OpenFont("fnts/Deutsch.ttf", 20);
-        finalize with
-            _TTF_CloseFont(_FONT);
-        end
+    finalize
+        _FONT = _TTF_OpenFont("fnts/Deutsch.ttf", 20);
+    with
+        _TTF_CloseFont(_FONT);
+    end
     _assert(_FONT != null);
 
 // TEXS
@@ -78,40 +74,49 @@ end
         SDL_Texture* TEX_RM    = NULL;
         SDL_Texture* TEX_NEW   = NULL;
     end
-    _TEX_HUMAN = _IMG_LoadTexture(_REN, "imgs/human.png");
-    finalize with
+    finalize
+        _TEX_HUMAN = _IMG_LoadTexture(_REN, "imgs/human.png");
+    with
         _SDL_DestroyTexture(_TEX_HUMAN);
     end
-    _TEX_AI = _IMG_LoadTexture(_REN, "imgs/ai.png");
-    finalize with
+    finalize
+        _TEX_AI = _IMG_LoadTexture(_REN, "imgs/ai.png");
+    with
         _SDL_DestroyTexture(_TEX_AI);
     end
-    _TEX_NONE = _IMG_LoadTexture(_REN, "imgs/none.png");
-    finalize with
+    finalize
+        _TEX_NONE = _IMG_LoadTexture(_REN, "imgs/none.png");
+    with
         _SDL_DestroyTexture(_TEX_NONE);
     end
-    _TEX_L = _IMG_LoadTexture(_REN, "imgs/left.png");
-    finalize with
+    finalize
+        _TEX_L = _IMG_LoadTexture(_REN, "imgs/left.png");
+    with
         _SDL_DestroyTexture(_TEX_L);
     end
-    _TEX_R = _IMG_LoadTexture(_REN, "imgs/right.png");
-    finalize with
+    finalize
+        _TEX_R = _IMG_LoadTexture(_REN, "imgs/right.png");
+    with
         _SDL_DestroyTexture(_TEX_R);
     end
-    _TEX_NO = _IMG_LoadTexture(_REN, "imgs/no.png");
-    finalize with
+    finalize
+        _TEX_NO = _IMG_LoadTexture(_REN, "imgs/no.png");
+    with
         _SDL_DestroyTexture(_TEX_NO);
     end
-    _TEX_OK = _IMG_LoadTexture(_REN, "imgs/ok.png");
-    finalize with
+    finalize
+        _TEX_OK = _IMG_LoadTexture(_REN, "imgs/ok.png");
+    with
         _SDL_DestroyTexture(_TEX_OK);
     end
-    _TEX_RM = _IMG_LoadTexture(_REN, "imgs/rm.png");
-    finalize with
+    finalize
+        _TEX_RM = _IMG_LoadTexture(_REN, "imgs/rm.png");
+    with
         _SDL_DestroyTexture(_TEX_RM);
     end
-    _TEX_NEW = _IMG_LoadTexture(_REN, "imgs/new.png");
-    finalize with
+    finalize
+        _TEX_NEW = _IMG_LoadTexture(_REN, "imgs/new.png");
+    with
         _SDL_DestroyTexture(_TEX_NEW);
     end
     _assert(_TEX_HUMAN != null);

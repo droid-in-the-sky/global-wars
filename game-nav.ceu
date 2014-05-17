@@ -18,23 +18,19 @@ input void SDL_MOUSEBUTTONDOWN;
 input _SDL_KeyboardEvent* SDL_KEYDOWN;
 
 class GameNav with
-    var Map* map   = null;
+    var Map& map;
     var int  me    = 0;
     var int  state = 0;
     event void ok;
 do
     _assert(_REN != null);
-    _assert(_L   != null);
     _assert(_TEX_L  != null);
     _assert(_TEX_R  != null);
     _assert(_TEX_OK != null);
 
-    _assert(this.map != null);
     _assert(this.me  != 0);
 
-    _lua_getglobal(_L, "STATES");      // [ SS ]
-    var int ns = _lua_objlen(_L, -1);
-    _lua_pop(_L, 1);                   // [ ]
+    var int ns = [[ #STATES ]];
 
     // defaults to last
     if this.state == 0 then
@@ -46,19 +42,19 @@ do
     if this.state>1 and (this.state%2 == 1) then
         do
             var GameState st with
-                this.map = map;
-                this.idx = state-1;
+                _.map = map;
+                _.idx = state-1;
             end;
             var GameMove mv with
-                this.map = map;
-                this.idx = (state-1)/2;
+                _.map = map;
+                _.idx = (state-1)/2;
             end;
             await 2s;
         end
         do
             var GameState st with
-                this.map = map;
-                this.idx = state;
+                _.map = map;
+                _.idx = state;
             end;
         end
     end
@@ -70,11 +66,11 @@ do
         r.w = _REN_W;
         r.h = _REN_H;
     var UIGrid g1 with
-        this.ren = _REN;
-        this.lay_lins = 4;
-        this.lay_cols = 4;
-        this.lay = _GN_g1;
-        this.uis_n = 1;
+        _.ren := _REN;
+        _.lay_lins = 4;
+        _.lay_cols = 4;
+        _.lay := _GN_g1;
+        _.uis_n = 1;
         native do
             int GN_g1[16] = {
                 -1, -1, -1, -1,
@@ -87,12 +83,12 @@ do
 
     // GRID "menu"
     var UIGrid g2 with
-        this.ren = _REN;
-        this.bg_redim? = 1;
-        this.lay_lins = 2;
-        this.lay_cols = 3;
-        this.lay = _GN_g2;
-        this.uis_n = 3;
+        _.ren := _REN;
+        _.bg_redim? = 1;
+        _.lay_lins = 2;
+        _.lay_cols = 3;
+        _.lay := _GN_g2;
+        _.uis_n = 3;
         native do
             int GN_g2[] = {
                 -1, -1, -1,
@@ -102,18 +98,18 @@ do
     end;
     // ui_l
         var UITexture ui_l with
-            this.ren = _REN;
-            this.tex = _TEX_L;
+            _.ren := _REN;
+            _.tex := _TEX_L;
         end;
     // ui_r
         var UITexture ui_r with
-            this.ren = _REN;
-            this.tex = _TEX_R;
+            _.ren := _REN;
+            _.tex := _TEX_R;
         end;
     // ui_ok
         var UITexture ui_ok with
-            this.ren = _REN;
-            this.tex = _TEX_OK;
+            _.ren := _REN;
+            _.tex := _TEX_OK;
         end;
 
     g1.uis[0] = &g2;    // include "menu"
@@ -121,12 +117,12 @@ do
         g2.uis[1] = &ui_r;  // >
         g2.uis[2] = &ui_ok; // ok
 
-    g1.go(&r);
+    call/rec g1.go(&r);
 
     loop do
         var GameState st with
-            this.map = map;
-            this.idx = state;
+            _.map = map;
+            _.idx = state;
         end;
 
         var int dir;
@@ -135,8 +131,8 @@ do
             // only even states have moves
             if this.state % 2 == 0 then
                 var GameMove mv with
-                    this.map = map;
-                    this.idx = state/2;     // 2 states for 1 move
+                    _.map = map;
+                    _.idx = state/2;     // 2 states for 1 move
                 end;
                 await FOREVER;
             end
@@ -194,41 +190,41 @@ with
 with
     loop do
         do
-            _assert(_luaL_dofile(_L, "g1.lua") == 0);
+            [[ dofile 'g1.lua' ]];
             var Map map;
             var GameNav nav with
-                this.map   = &map;
-                this.me    = 1;
-                this.state = 1;
+                _.map   = map;
+                _.me    = 1;
+                _.state = 1;
             end;
             await nav.ok;
         end
         do
-            _assert(_luaL_dofile(_L, "g1.lua") == 0);
+            [[ dofile 'g1.lua' ]];
             var Map map;
             var GameNav nav with
-                this.map   = &map;
-                this.me    = 1;
+                _.map   = map;
+                _.me    = 1;
             end;
             await nav.ok;
         end
         do
-            _assert(_luaL_dofile(_L, "g2.lua") == 0);
+            [[ dofile 'g2.lua' ]];
             var Map map;
             var GameNav nav with
-                this.map   = &map;
-                this.me    = 1;
-                this.state = 1;
+                _.map   = map;
+                _.me    = 1;
+                _.state = 1;
             end;
             await nav.ok;
         end
         do
-            _assert(_luaL_dofile(_L, "g3.lua") == 0);
+            [[ dofile 'g3.lua' ]];
             var Map map;
             var GameNav nav with
-                this.map   = &map;
-                this.me    = 1;
-                this.state = 1;
+                _.map   = map;
+                _.me    = 1;
+                _.state = 1;
             end;
             await nav.ok;
         end

@@ -12,55 +12,47 @@ input void SDL_REDRAW;
 input _SDL_KeyboardEvent* SDL_KEYDOWN;
 
 class GameState with
-    var Map* map = null;
+    var Map& map;
     var int  idx = 0;       // TODO: change to "go"
 do
     _assert(_REN != null);
-    _assert(_L   != null);
-
-    _assert(this.map != null);
     _assert(this.idx != 0);
 
     every SDL_REDRAW do
-        _lua_getglobal(_L, "PLAYERS");      // [ PP ]
-        _lua_getglobal(_L, "STATES");       // [ PP | SS ]
-        _lua_rawgeti(_L, -1, this.idx);     // [ PP | SS | Ss ]
-
         var _char[20] title;
-        _lua_getfield(_L, -1, "type");      // [ PP | SS | Ss | tp ]
-        _sprintf(title, "[%d] %s", this.idx, _lua_tostring(_L,-1));
-        _lua_pop(_L, 1);                    // [ PP | SS | Ss ]
+        var char[20] title_ = [[ STATES[@this.idx].type ]];
+        _sprintf(title, "[%d] %s", this.idx, title_);
         _stringColor(_REN, 10, 10, title, _colors.white);
 
         // foreach player p
-        loop p_, _lua_objlen(_L,-3) do
+        var int n_players = [[ #PLAYERS ]];
+        loop p_ in n_players do
             var int p = p_ + 1;
 
-            _lua_rawgeti(_L, -1, p);        // [ PP | SS | Ss | Ssp ]
+            var bool empty = [[ PLAYERS[@p]==false ]];
+            if empty then
+                continue;      // { p1, false, p2, false, ... }
+            end
+
+            [[ P = STATES[@this.idx][@p] ]];
 
             // foreach country c
-            loop c_, _lua_objlen(_L,-1) do
+            var int n_countries = [[ #P ]];
+            loop c_ in n_countries do
                 var int c = c_ + 1;
-                _lua_rawgeti(_L, -1, c);    // [ PP | SS | Ss | Ssp | n ]
-                var int n = _lua_tointeger(_L, -1);    // # armies
-                _lua_pop(_L, 1);            // [ PP | SS | Ss | Ssp ]
-
+                var int n = [[ P[@c] ]];    // number of armies in country @c
                 if n > 0 then
                     var _char[10] str;
                     _sprintf(str, "%d", n);
                     _boxColor(_REN,
-                             map:cx[c]-10, map:cy[c]-10,
-                             map:cx[c]+10, map:cy[c]+10,
+                             map.cx[c]-10, map.cy[c]-10,
+                             map.cx[c]+10, map.cy[c]+10,
                              *_BGS[p]);
-                    _stringColor(_REN, map:cx[c], map:cy[c], str,
+                    _stringColor(_REN, map.cx[c], map.cy[c], str,
                                 _colors.black);
                 end
             end
-
-            _lua_pop(_L, 1);                // [ PP | SS | Ss ]
         end
-
-        _lua_pop(_L, 3);                    // [ ]
     end
 end
 
@@ -79,18 +71,16 @@ with
         _boxColor(_REN, 0,0, _REN_W,_REN_H, _colors.black);
     end
 with
-    _assert(_luaL_dofile(_L, "g1.lua") == 0);
-    _lua_getglobal(_L, "STATES");  // [ SS ]
-    var int len = _lua_objlen(_L, -1);
-    _lua_pop(_L, 1);               // [ ]
+    [[ dofile 'g1.lua' ]]
+    var int len = [[ #STATES ]];
 
     var Map map;
 
     loop do
-        loop i, len do
+        loop i in len do
             var GameState s with
-                this.map = &map;
-                this.idx = i+1;
+                _.map = map;
+                _.idx = i+1;
             end;
             await SDL_KEYDOWN;
         end

@@ -1,6 +1,7 @@
 #ifndef _MAP_CEU
 #define _MAP_CEU
 
+#include "c.ceu"
 #include "lua.ceu"
 #include "sdl.ceu"
 #include "sdl-gfx.ceu"
@@ -37,11 +38,8 @@ class Map with
     var int zoom = 100;
 do
     _assert(_REN != null);
-    _assert(_L   != null);
 
-    _lua_getglobal(_L, "MAP");     // [ M ]
-    this.n = _lua_objlen(_L,-1);
-    _lua_pop(_L, 1);               // [ ]
+    this.n = [[#MAP]];
 
     // cx / cy (pos n=0 unused, malloc 1 extra)
     finalize
@@ -59,19 +57,14 @@ do
     var int yc = _REN_H / 2;
 
     do
-        var int xmin, xmax;
-            _lua_getglobal(_L, "xs_min_max");  // [ f ]
-            _lua_call(_L, 0, 2);               // [ xmin | xmax ]
-            xmin = _lua_tointeger(_L, -2);
-            xmax = _lua_tointeger(_L, -1);
-            _lua_pop(_L, 2);                   // [ ]
-
-        var int ymin, ymax;
-            _lua_getglobal(_L, "ys_min_max");  // [ f ]
-            _lua_call(_L, 0, 2);               // [ ymin | ymax ]
-            ymin = _lua_tointeger(_L, -2);
-            ymax = _lua_tointeger(_L, -1);
-            _lua_pop(_L, 2);                   // [ ]
+        [[
+            xmin, xmax = xs_min_max()
+            ymin, ymax = ys_min_max()
+        ]]
+        var int xmin = [[xmin]];
+        var int xmax = [[xmax]];
+        var int ymin = [[ymin]];
+        var int ymax = [[ymax]];
 
         var int  w = xmax - xmin;
         var int  h = ymax - ymin;
@@ -93,101 +86,69 @@ do
     par do
         loop do
             // center
-            _lua_getglobal(_L, "MAP");         // [ M ]
-            loop i_, this.n do
+            loop i_ in this.n do
                 var int i = i_ + 1;     // C => Lua indexing
-                _lua_rawgeti(_L, -1, i);           // [ M | C ]
-                _lua_getfield(_L, -1, "center");   // [ M | C | pt ]
-                _lua_rawgeti(_L, -1, 1);           // [ M | C | pt | x ]
-                _lua_rawgeti(_L, -2, 2);           // [ M | C | pt | x | y ]
-                this.cx[i] = _P(_lua_tointeger(_L,-2), xc, this.x, zoom);
-                this.cy[i] = _P(_lua_tointeger(_L,-1), yc, this.y, zoom);
-                _lua_pop(_L, 4);                   // [ ]
+                this.cx[i] = [[ MAP[@i].center[1] ]];
+                this.cy[i] = [[ MAP[@i].center[2] ]];
+                this.cx[i] = _P(this.cx[i], xc, this.x, zoom);
+                this.cy[i] = _P(this.cy[i], yc, this.y, zoom);
             end
-            _lua_pop(_L, 1);                   // [ ]
 
             emit this.ok_changed;
 
             par/or do
                 this.zoom = await go_zoom;     // ZOOM
             with
-                var int x,y;
-                (x,y) = await go_xy;           // PAN
-                this.x = x;
-                this.y = y;
+                var int x_,y_;
+                (x_,y_) = await go_xy;           // PAN
+                this.x = x_;
+                this.y = y_;
             end
         end
     with
         // OK_CLICKED
         var _SDL_MouseButtonEvent* but;
-        every but = SDL_MOUSEBUTTONDOWN do
-            var int x = _I(but:x, xc, this.x, zoom);
-            var int y = _I(but:y, yc, this.y, zoom);
-            _lua_getglobal(_L, "MAP_vspoint"); // [ f ]
-            _lua_pushnumber(_L, x);            // [ f | x ]
-            _lua_pushnumber(_L, y);            // [ f | x | y ]
-            _lua_call(_L, 2, 1);               // [ c ]
-            var int c = _lua_tointeger(_L, -1);
-            _lua_pop(_L, 1);                   // [ ]
+        every but in SDL_MOUSEBUTTONDOWN do
+            var int x_ = _I(but:x, xc, this.x, zoom);
+            var int y_ = _I(but:y, yc, this.y, zoom);
+            var int c = [[ MAP_vspoint(@x_, @y_) ]];
             if c > 0 then
                 emit this.ok_clicked => c;
             end
         end
     with
         every SDL_REDRAW do
-            var int n = 1;      // traverses xs/ys continuously
-
-            _lua_getglobal(_L, "MAP");        // [ M | T ]
-            _lua_getglobal(_L, "TMAP");       // [ M | T ]
-                _lua_getfield(_L, -1, "ns");  // [ M | T | ns ]
-                _lua_getfield(_L, -2, "xs");  // [ M | T | ns | xs ]
-                _lua_getfield(_L, -3, "ys");  // [ M | T | ns | xs | ys ]
+            var int n_ = 1;      // traverses xs/ys continuously
 
             // for each country [0, #MAP)
-            loop i_, this.n do
+            loop i_ in this.n do
                 var int i = i_ + 1;     // C => Lua indexing
                 var u16[10] xs, ys;     // TODO: negative values?
 
-                _lua_rawgeti(_L, -3, i);      // [ . | ns[i] ]
-                var int pts = _lua_tointeger(_L, -1);
-                _lua_pop(_L, 1);              // [ . ]
+                var int pts = [[ TMAP.ns[@i] ]];
 
                 // for each point [0, ns[i])
-                loop j, pts do
-                    _lua_rawgeti(_L, -2, n);  // [ . | xs[n] ]
-                    _lua_rawgeti(_L, -2, n);  // [ . | xs[n] | ys[n] ]
-                    xs[j] = _P(_lua_tointeger(_L,-2), xc, this.x, zoom);
-                    ys[j] = _P(_lua_tointeger(_L,-1), yc, this.y, zoom);
-                    _lua_pop(_L, 2);          // [ . ]
-                    n = n + 1; // traverses xs/ys continuously
+                loop j in pts do
+                    xs[j] = [[ TMAP.xs[@n_] ]];
+                    ys[j] = [[ TMAP.ys[@n_] ]];
+                    xs[j] = _P(xs[j], xc, this.x, zoom);
+                    ys[j] = _P(ys[j], yc, this.y, zoom);
+                    n_ = n_ + 1; // traverses xs/ys continuously
                 end
 
-                // push color
-                _lua_rawgeti(_L, -5, i);        // [ . | C ]
-                _lua_getfield(_L, -1, "color"); // [ . | C | clr ]
-                _lua_rawgeti(_L, -1, 1);        // [ . | C | clr | r ]
-                _lua_rawgeti(_L, -2, 2);        // [ . | C | clr | r | g ]
-                _lua_rawgeti(_L, -3, 3);        // [ . | C | clr | r | g | b ]
-
                 // draw country with color
-                _filledPolygonRGBA(_REN, xs, ys, pts,
-                    _lua_tointeger(_L, -3),
-                    _lua_tointeger(_L, -2),
-                    _lua_tointeger(_L, -1),
-                    0xFF);
+                var int r = [[ MAP[@i].color[1] ]];
+                var int g = [[ MAP[@i].color[2] ]];
+                var int b = [[ MAP[@i].color[3] ]];
+                _filledPolygonRGBA(_REN, xs, ys, pts, r,g,b, 0xFF);
 
                 // draw country border
                 _polygonColor(_REN, xs, ys, pts, _colors.black);
-
-                // pop color
-                _lua_pop(_L, 5);                   // [ . ]
 
                 // draw center
                 //_boxColor(_REN, cx[i]-1,cy[i]-1, cx[i]+1,cy[i]+1, 
                 //_colors.black);
             end
-
-            _lua_pop(_L, 5);               // [ ]
 
             // for each border { {p1,p2}, {p3,p4}, ... }
 /**
@@ -222,10 +183,8 @@ input _SDL_TouchFingerEvent* SDL_FINGERUP;
 input _SDL_TouchFingerEvent* SDL_FINGERMOTION;
 
 class MapFinger with
-    var Map* map = null;
+    var Map& map;
 do
-    _assert(this.map != null);
-
     loop do
         var _SDL_TouchFingerEvent* e1_ = await SDL_FINGERDOWN;
         var _SDL_TouchFingerEvent  e1 = *e1_;
@@ -238,18 +197,18 @@ do
             // PAN
             var _SDL_TouchFingerEvent e2;
             par/or do
-                var _SDL_TouchFingerEvent* e2_ =
+                var _SDL_TouchFingerEvent* e2_ :=
                     await SDL_FINGERDOWN  // go to zoom when pressing "f2"
                         until e2_:fingerId != e1.fingerId;
-                e2 := *e2_; // struct
+                e2 = *e2_; // struct
             with
-                var int x = map:x;
-                var int y = map:y;
+                var int x = map.x;
+                var int y = map.y;
                 loop do                      // stay in pan while not "f2"
-                    var _SDL_TouchFingerEvent* e2_ =
+                    var _SDL_TouchFingerEvent* e2_ :=
                         await SDL_FINGERMOTION
                             until e2_:fingerId == e1.fingerId;
-                    emit map:go_xy => (x + (e2_:x-e1.x)*_REN_W/2,
+                    emit map.go_xy => (x + (e2_:x-e1.x)*_REN_W/2,
                                        y + (e2_:y-e1.y)*_REN_H/2);
                 end
             end
@@ -284,16 +243,16 @@ do
                             z = -3;
                         end
 
-                        emit map:go_zoom => map:zoom + z;
-                        e2 := *e3_; // struct
+                        emit map.go_zoom => map.zoom + z;
+                        e2 = *e3_;
                     end
                 end
 
                 // next zoom start finger
-                var _SDL_TouchFingerEvent* e3_ =
+                var _SDL_TouchFingerEvent* e3_ :=
                     await SDL_FINGERDOWN
                       until e3_:fingerId != e1.fingerId;
-                e2 := *e3_; // struct
+                e2 = *e3_;
             end
         end
     end
@@ -315,42 +274,39 @@ with
     end
 with
     do
-#ifdef __ANDROID__
-        _assert(_luaL_dofile(_L,
-            "/data/data/org.droid_in_the_sky.global_wars/lib/lib_lua_map1.so")
-            == 0);
-#else
-        _assert(_luaL_dofile(_L, "map1.lua") == 0);
-#endif
+        [[
+            if __ANDROID__ then
+                dofile '/data/data/org.droid_in_the_sky.global_wars/lib/lib_lua_map1.so'
+            else
+                dofile 'map1.lua'
+            end
+        ]]
         var Map map;
         var MapFinger fgr with
-            this.map = &map;
+            _.map = map;
         end;
-        await FOREVER;
+        await 3s;
     end
 
-    _assert(_luaL_dofile(_L, "map2.lua") == 0);
+    [[ dofile "map2.lua" ]]
     var Map map;
     await 2s;
 
-    par do
-        loop i, 200 do
-            await 50ms;
-            if i % 2 == 0 then
-                emit map.go_xy => (-1,0);
-            else
-                emit map.go_xy => (0,-1);
-            end
+    loop i in 200 do
+        await 50ms;
+        if i % 2 == 0 then
+            emit map.go_xy => (map.x+1,map.y+0);
+        else
+            emit map.go_xy => (map.x+0,map.y+1);
         end
-    with
-        loop i, 200 do
-            await 51ms;
-            emit map.go_zoom => -1;
-        end
-        loop do
-            await 101ms;
-            emit map.go_zoom => 1;
-        end
+    end
+    loop i in 200 do
+        await 51ms;
+        emit map.go_zoom => map.zoom-1;
+    end
+    loop do
+        await 101ms;
+        emit map.go_zoom => map.zoom+1;
     end
 with
     every SDL_REDRAW do

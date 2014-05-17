@@ -16,38 +16,24 @@ input _SDL_KeyboardEvent* SDL_KEYDOWN;
 input void SDL_MOUSEBUTTONDOWN;
 
 class GameFortify with
-    var Map* map = null;
+    var Map& map;
     var int  me  = 0;
     event void ok;
 do
     _assert(_REN  != null);
-    _assert(_L    != null);
     _assert(_FONT != null);
     _assert(_TEX_NO != null);
     _assert(_TEX_OK != null);
 
-    _assert(this.map != null);
     _assert(this.me  != 0);
 
     // last "fortify" state
-    var int state;
-        _lua_getglobal(_L, "STATES");       // [ SS ]
-        state = _lua_objlen(_L, -1);
-        _lua_rawgeti(_L, -1, state);       // [ SS | S ]
-        _lua_getfield(_L, -1, "type");     // [ SS | S | type ]
-        _assert( _lua_type(_L,-1) == _LUA_TSTRING );
-        _assert( _strcmp("fortify", _lua_tostring(_L,-1)) == 0 );
-        _lua_pop(_L, 2);                    // [ SS ]
+    var int state = [[ #STATES ]];
+    var char[25] str = [[ STATES[@state].type ]];
+    _assert( _strcmp("fortify", str) == 0 );
 
     // # of armies to fortify
-    var int fs;
-        _lua_rawgeti(_L, -1, state);    // [ SS | S ]
-        _lua_getglobal(_L, "SRV_fs");   // [ SS | S | f ]
-        _lua_pushvalue(_L, -2);         // [ SS | S | f | S ]
-        _lua_pushnumber(_L, me);        // [ SS | S | f | S | p ]
-        _lua_call(_L, 2, 1);            // [ SS | S | n ]
-        fs = _lua_tointeger(_L, -1);
-        _lua_pop(_L, 3);                // [ ]
+    var int fs = [[ SRV_fs(STATES[@state], @this.me) ]];
 
     // GRID "all"
     var _SDL_Rect r;        // whole screen
@@ -56,11 +42,11 @@ do
         r.w = _REN_W;
         r.h = _REN_H;
     var UIGrid g1 with
-        this.ren = _REN;
-        this.lay_lins = 4;
-        this.lay_cols = 4;
-        this.lay = _GF_g1;
-        this.uis_n = 3;
+        _.ren := _REN;
+        _.lay_lins = 4;
+        _.lay_cols = 4;
+        _.lay := _GF_g1;
+        _.uis_n = 3;
         native do
             int GF_g1[16] = {
                 -1, -1, -1, -1,
@@ -75,8 +61,8 @@ do
     do
         // show current state
         var GameState st with
-            this.map = map;
-            this.idx = state;    // start from last
+            _.map = map;
+            _.idx = state;    // start from last
         end;
 
         // "Fortify"
@@ -90,9 +76,9 @@ do
                 _SDL_DestroyTexture(tex);
             end
         var UITexture ui1 with
-            this.ren = _REN;
-            this.tex = tex;
-            this.bg_clr = _BGS[me];
+            _.ren := _REN;
+            _.tex := tex;
+            _.bg_clr := _BGS[me];
         end;
 
         finalize
@@ -113,9 +99,9 @@ do
                 _SDL_DestroyTexture(tex);
             end
         var UITexture ui2 with
-            this.ren = _REN;
-            this.tex = tex;
-            this.bg_clr = _BGS[me];
+            _.ren := _REN;
+            _.tex := tex;
+            _.bg_clr := _BGS[me];
         end;
 
         finalize
@@ -125,18 +111,18 @@ do
         end
 
         g1.uis[2] = null;       // menu
-        g1.go(&r);
+        call/rec g1.go(&r);
         await 2s;
     end
 
     // GRID "menu"
     var UIGrid g2 with
-        this.ren = _REN;
-        this.bg_redim? = 1;
-        this.lay_lins = 2;
-        this.lay_cols = 3;
-        this.lay = _GF_g2;
-        this.uis_n = 3;
+        _.ren := _REN;
+        _.bg_redim? = 1;
+        _.lay_lins = 2;
+        _.lay_cols = 3;
+        _.lay := _GF_g2;
+        _.uis_n = 3;
         native do
             int GF_g2[] = {
                 -1,  0,  0,  // fs
@@ -151,18 +137,13 @@ do
         g2.uis[2] = null; // ok, when fs==0
 
 
-    // "ref" holds the table w/ armies
-    _lua_pushboolean(_L, 1);    // [ true ]
-    var int ref = _luaL_ref(_L, _LUA_REGISTRYINDEX);
-                                // [ ]
-        finalize with
-            _luaL_unref(_L, _LUA_REGISTRYINDEX, ref);
-        end
-
-
     // loop until all "fs" are chosen
     //  - restart on "no"   (only when fs<tot)
     //  - quit    on "ok"   (only when fs==0)
+
+    finalize with
+        [[ armies = nil ]];
+    end
 
     loop do
 
@@ -172,33 +153,26 @@ do
         var int fs_tmp = fs;
 
         // restart armies table
-        _lua_newtable(_L);      // [ armies ]
-        _lua_rawseti(_L, _LUA_REGISTRYINDEX, ref);
-                                // [ ]
+        [[ armies = {} ]]
 
         par/or do
             loop do
                 // new state "fortifying"
-                _lua_getglobal(_L, "SRV_move_ins");     // [ f ]
-                _lua_pushnumber(_L, this.me);           // [ f | p ]
-                _lua_rawgeti(_L, _LUA_REGISTRYINDEX, ref);
-                                                        // [ f | p | t ]
-                _lua_call(_L, 2, 0);                    // [ ]
+                [[ SRV_move_ins(@this.me, armies) ]];
                 finalize with
-                    _lua_getglobal(_L, "SRV_move_rem"); // [ f ]
-                    _lua_call(_L, 0, 0);                // [ ]
+                    [[ SRV_move_rem() ]];
                 end
 
                 // show next state
                 var GameState st with
-                    this.map = map;
-                    this.idx = state+1;     // tmp state
+                    _.map = map;
+                    _.idx = state+1;     // tmp state
                 end;
 
                 // show next move
                 var GameMove mv with
-                    this.map = map;
-                    this.idx = (state+1)/2; // tmp move
+                    _.map = map;
+                    _.idx = (state+1)/2; // tmp move
                 end;
 
                 // text texture
@@ -213,9 +187,9 @@ do
                     end
 
                 var UITexture ui_fs with
-                    this.ren = _REN;
-                    this.tex = tex;
-                    this.bg_clr = _BGS[me];
+                    _.ren := _REN;
+                    _.tex := tex;
+                    _.bg_clr := _BGS[me];
                 end;
 
                 finalize
@@ -227,7 +201,7 @@ do
                 // re-arrange all:
                 // - loop entering
                 // - after every "e"
-                g1.go(null);
+                call/rec g1.go(null);
 
                 if fs_tmp == 0 then
                     await FOREVER;
@@ -236,26 +210,15 @@ do
                 // await until a "me" country => "c"
                 var int c;
                 loop do
-                    c = await map:ok_clicked;
-                    _lua_getglobal(_L, "STATES");   // [ SS ]
-                    _lua_rawgeti(_L, -1, state);    // [ SS | S ]
-                    _lua_rawgeti(_L, -1, me);       // [ SS | S | Sp ]
-                    _lua_rawgeti(_L, -1, c);        // [ SS | S | Sp | Spc ]
-                    var int v = _lua_tointeger(_L, -1);
-                    _lua_pop(_L, 4);
+                    c = await map.ok_clicked;
+                    var int v = [[ STATES[@state][@me][@c] ]];
                     if v then
                         break;  // a "me" country: ok!
                     end
                 end
 
                 // t <- c++
-                _lua_getglobal(_L, "SRV_move_inc"); // [ f ]
-                _lua_rawgeti(_L, _LUA_REGISTRYINDEX, ref);
-                                                    // [ f | t ]
-                _lua_pushnumber(_L, 1);             // [ f | t | 1 | c ];
-                _lua_pushnumber(_L, 0);             // [ f | t | 1 | 0 | c ];
-                _lua_pushnumber(_L, c);             // [ f | t | 1 | 0 | c ];
-                _lua_call(_L, 4, 0);                // [ ]
+                [[ SRV_move_inc(armies, 1, 0, @c) ]];
 
                 fs_tmp = fs_tmp - 1;
                 emit e => fs_tmp;
@@ -266,8 +229,8 @@ do
             await e;
 
             var UITexture ui with
-                this.ren = _REN;
-                this.tex = _TEX_NO;
+                _.ren := _REN;
+                _.tex := _TEX_NO;
             end;
 
             finalize
@@ -287,8 +250,8 @@ do
             end
 
             var UITexture ui with
-                this.ren = _REN;
-                this.tex = _TEX_OK;
+                _.ren := _REN;
+                _.tex := _TEX_OK;
             end;
 
             finalize
@@ -298,7 +261,7 @@ do
             end
 
             if fs > 0 then
-                g2.go(null);   // needed if entering w/o the await
+                call/rec g2.go(null);   // needed if entering w/o the await
             end
 
             // QUIT
@@ -308,11 +271,7 @@ do
     end
 
     // new state "fortifying"
-    _lua_getglobal(_L, "SRV_move");         // [ f ]
-    _lua_pushnumber(_L, this.me);           // [ f | p ]
-    _lua_rawgeti(_L, _LUA_REGISTRYINDEX, ref);
-                                            // [ f | p | t ]
-    _lua_call(_L, 2, 0);                    // [ ]
+    [[ SRV_move(@this.me, armies) ]];
 
     emit this.ok;
 end
@@ -334,12 +293,12 @@ with
 with
     loop do
         do
-            _assert(_luaL_dofile(_L, "g1.lua") == 0);
+            [[ dofile 'g1.lua' ]];
             var Map map;
 
             var GameFortify fort with
-                this.map = &map;
-                this.me  = 1;
+                _.map = map;
+                _.me  = 1;
             end;
 
             await fort.ok;

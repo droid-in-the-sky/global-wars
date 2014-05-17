@@ -12,11 +12,14 @@ class UITexture with
     var   _SDL_Renderer* ren       = null;
     var   int            align_x   = _UI_ALIGN_CENTER;
     var   int            align_y   = _UI_ALIGN_MIDDLE;
-    var   int            bg_redim? = 0;
+    var   bool           bg_redim? = false;
     var   _SDL_Color*    bg_clr    = null;
 
     var   _SDL_Texture*  tex     = null;
     var   int            w, h;  // original dimensions
+
+    function (_SDL_Rect* r)=>void go;
+    function (_SDL_Rect* bg)=>void go_bg;
 do
     /* METHODS */
 
@@ -32,7 +35,7 @@ do
 
     function (_SDL_Rect* bg)=>void go_bg do
         _assert(this.bg_redim_ == 0);
-        this.bg_rect := *bg;    // struct
+        this.bg_rect = *bg;
         this.rect.x = _UI_align_bg(bg:x, bg:w, this.w, this.align_x);
         this.rect.y = _UI_align_bg(bg:y, bg:h, this.h, this.align_y);
         this.rect.w = this.w;
@@ -161,21 +164,21 @@ with
     end
 
     var UITexture ui1 with
-        this.ren = ren;
-        this.tex = tex;
-        this.bg_clr = &_colors.blue;
+        _.ren := ren;
+        _.tex := tex;
+        _.bg_clr = &_colors.blue;
     end;
 
     var UITexture ui2 with
-        this.ren = ren;
-        this.tex = tex;
+        _.ren := ren;
+        _.tex := tex;
     end;
 
     var UITexture ui_txt with
-        this.ren = ren;
-        this.tex = tex_txt;
-        this.align_x = _UI_ALIGN_LEFT;
-        this.align_y = _UI_ALIGN_TOP;
+        _.ren := ren;
+        _.tex := tex_txt;
+        _.align_x = _UI_ALIGN_LEFT;
+        _.align_y = _UI_ALIGN_TOP;
     end;
 
     var _SDL_Rect r_txt;
@@ -197,7 +200,7 @@ with
 
         loop do
             native _rand();
-            loop i, 500 do
+            loop i in 500 do
                 r1.x = r1.x + 1;
                 r1.w = r1.w + _rand() % 3 - 1;
                 if r1.w < 5 then r1.w = 5; end
@@ -207,7 +210,7 @@ with
                 await 10ms;
             end
 
-            loop i, 300 do
+            loop i in 300 do
                 r1.y = r1.y + 1;
                 r1.w = r1.w + _rand() % 3 - 1;
                 if r1.w < 5 then r1.w = 5; end
@@ -217,7 +220,7 @@ with
                 await 10ms;
             end
 
-            loop i, 500 do
+            loop i in 500 do
                 r1.x = r1.x - 1;
                 r1.w = r1.w + _rand() % 3 - 1;
                 if r1.w < 5 then r1.w = 5; end
@@ -227,7 +230,7 @@ with
                 await 10ms;
             end
 
-            loop i, 300 do
+            loop i in 300 do
                 r1.y = r1.y - 1;
                 r1.w = r1.w + _rand() % 3 - 1;
                 if r1.w < 5 then r1.w = 5; end
@@ -239,8 +242,8 @@ with
         end
     with
         loop do
-            loop i, 3 do
-                loop j, 3 do
+            loop i in 3 do
+                loop j in 3 do
                     ui1.align_x = i;
                     ui1.align_y = j;
                     ui1.go_bg(&r1);

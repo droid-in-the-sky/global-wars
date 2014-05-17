@@ -67,11 +67,11 @@ interface UI with
     var   int            align_y;
 
     var   _SDL_Rect      bg_rect;
-    var   int            bg_redim?;
+    var   bool           bg_redim?;
     var   _SDL_Color*    bg_clr;
 
-    function (SDL_Rect* rect)=>void go;
-    function (SDL_Rect* bg  )=>void go_bg;
+    function recursive (SDL_Rect* rect)=>void go;
+    function recursive (SDL_Rect* bg  )=>void go_bg;
 end
 
 #endif
