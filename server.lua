@@ -203,7 +203,7 @@ function SRV_move_inc (T, A, FR, TO, set)
         end
     end
     T[#T+1] = { A, FR, TO }
-    return a
+    return A
 end
 
 function SRV_move_ins (p, MSp)

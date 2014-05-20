@@ -20,9 +20,7 @@ with
         _boxRGBA(_REN, 0,0, _REN_W,_REN_H, 0,0,0, 0xFF);
     end
 with
-    _lua_getglobal(_L, "GAMES");        // [ GG ]
-    var int n = _lua_objlen(_L, -1);
-    _lua_pop(_L, 1);                    // [ ]
+    var int n = [[ #GAMES ]];
 
     // choose game
     if n > 0 then
@@ -34,18 +32,15 @@ with
     if n == 0 then
         var MenuNew menu;
         await menu.ok;
-        _lua_getglobal(_L, "GAMES");    // [ GG ]
-        n = _lua_objlen(_L, -1);
+        n = [[ #GAMES ]];
     end
 
     do
-        _lua_getglobal(_L, "GAMES");    // [ GG ]
-        _lua_rawgeti(_L, -1, n);        // [ GG | file ]
+        var char[25] file = [[ GAMES[@n] ]];
         var Game game with
-            this.file := _lua_tostring(_L, -1);
+            _.file := file;
                         // not held
         end;
-        _lua_pop(_L, 2);                // [ ]
         await FOREVER;
     end
 with

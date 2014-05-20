@@ -25,7 +25,7 @@ end
 
 native _lua_State = 0;
 
-native constant _LUA_NOREF, _LUA_REGISTRYINDEX, _LUA_TSTRING;
+native const _LUA_NOREF, _LUA_REGISTRYINDEX, _LUA_TSTRING;
 
 native nohold _ceu_lua_atpanic();
 

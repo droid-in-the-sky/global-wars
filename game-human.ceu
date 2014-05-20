@@ -15,66 +15,55 @@ input _SDL_KeyboardEvent* SDL_KEYDOWN;
 input void SDL_MOUSEBUTTONDOWN;
 
 class GameHuman with
-    var Map* map   = null;
+    var Map& map;
     var int  me    = 0;
 
     event void ok;
 do
     _assert(_REN != null);
-    _assert(_L   != null);
 
-    _assert(this.map != null);
     _assert(this.me  != 0);
 
     // last "fortify" state
-    var int state;
-        _lua_getglobal(_L, "STATES");       // [ SS ]
-        state = _lua_objlen(_L, -1);
-        _lua_rawgeti(_L, -1, state);       // [ SS | S ]
-        _lua_getfield(_L, -1, "type");     // [ SS | S | type ]
-        _assert( _lua_type(_L,-1) == _LUA_TSTRING );
-        _assert( _strcmp("fortify", _lua_tostring(_L,-1)) == 0
-              or _strcmp("attack",  _lua_tostring(_L,-1)) == 0 );
-        _lua_pop(_L, 3);                    // [ ]
+    var int state = [[ #STATES ]];
+    [[
+        assert(STATES[#STATES].type == 'fortify' or
+               STATES[#STATES].type == 'attack')
+    ]]
 
     // show navigate => (fortify||attack)
 
     // avoid navigation for "0st" state
     if state > 1 then
         var GameNav nav with
-            this.map = map;
-            this.me  = me;
+            _.map = map;
+            _.me  = me;
         end;
         await nav.ok;
     end
 
     // current state type
-    _lua_getglobal(_L, "STATES");       // [ SS ]
-    _lua_rawgeti(_L, -1, state);        // [ SS | S ]
-    _lua_getfield(_L, -1, "type");      // [ SS | S | type ]
-    _assert(_lua_type(_L,-1) == _LUA_TSTRING);
+    var bool fortify? = [[ STATES[@state].type == 'fortify' ]];
+    var bool attack?  = [[ STATES[@state].type == 'attack'  ]];
 
     // state = FORTIFY
-    if _strcmp("fortify", _lua_tostring(_L,-1)) == 0 then
-        _lua_pop(_L, 3);                // [ ]
+    if fortify? then
         var GameFortify fort with
-            this.map = map;
-            this.me  = me;
+            _.map = map;
+            _.me  = me;
         end;
         await fort.ok;
 
     // state = ATTACK
-    else/if _strcmp("attack", _lua_tostring(_L,-1)) == 0 then
-        _lua_pop(_L, 3);                // [ ]
+    else/if attack? then
         var GameAttack att with
-            this.map = map;
-            this.me  = me;
+            _.map = map;
+            _.me  = me;
         end;
         await att.ok;
 
     // ERROR
     else
-        _lua_pop(_L, 3);                // [ ]
         _assert(0);
     end
 
@@ -97,38 +86,38 @@ with
     end
 with
     do
-        _assert(_luaL_dofile(_L, "g1.lua") == 0);
+        [[ dofile 'g1.lua' ]];
         var Map map;
         do
             var GameHuman human with
-                this.map = &map;
-                this.me  = 1;
+                _.map = map;
+                _.me  = 1;
             end;
             await human.ok;
         end
         do
             var GameHuman human with
-                this.map = &map;
-                this.me  = 2;
+                _.map = map;
+                _.me  = 2;
             end;
             await human.ok;
         end
     end
 
     do
-        _assert(_luaL_dofile(_L, "g4.lua") == 0);
+        [[ dofile 'g4.lua' ]];
         var Map map;
         do
             var GameHuman human with
-                this.map = &map;
-                this.me  = 1;
+                _.map = map;
+                _.me  = 1;
             end;
             await human.ok;
         end
         do
             var GameHuman human with
-                this.map = &map;
-                this.me  = 2;
+                _.map = map;
+                _.me  = 2;
             end;
             await human.ok;
         end

@@ -19,50 +19,39 @@ interface MenuGamesListener with
 end
 
 class MenuGamesOne with
-    var _char* file = null;
-    var UI*    ui   = null;
-    var int    n    = 0;
+    var char* file = null;
+    var UI*   ui   = null;
+    var int   n    = 0;
 
-    var MenuGamesListener* lst = null;
+    var MenuGamesListener& lst;
 do
     _assert(_REN != null);
-    _assert(_L   != null);
     _assert(_TEX_RM != null);
     _assert(_TEX_OK != null);
 
     _assert(this.n    != 0);
-    _assert(this.lst  != null);
     _assert(this.file != null);
-        _assert(_luaL_dofile(_L, this.file) == 0);
+    [[ dofile(@this.file) ]];
 
     // n players
     var int ps = 0;
-    _lua_getglobal(_L, "PLAYERS");      // [ PP ]
-    loop p, 6 do
-        _lua_rawgeti(_L, -1, p+1);      // [ PP | P ]
-        if _lua_toboolean(_L, -1) == 1 then
+    loop p in 6 do
+        var bool exists? = [[ PLAYERS[@p+1] ~= false ]];
+        if exists? then
             ps = ps + 1;
         end
-        _lua_pop(_L, 1);
     end
-    _lua_pop(_L, 1);                    // [ ]
 
-    var int state_n;
-        _lua_getglobal(_L, "STATES");   // [ SS ]
-        state_n = _lua_objlen(_L, -1);
-        _lua_rawgeti(_L, -1, state_n);  // [ SS | S ]
-    var _char[20] state_type;
-        _lua_getfield(_L, -1, "type");  // [ SS | S | type ]
-        _strcpy(state_type, _lua_tostring(_L,-1));
-        _lua_pop(_L, 3);                // [ ]
+    var int state_n = [[ #STATES ]];
+    var char[20] state_type = [[ STATES[@state_n].type ]];
 
     var UIGrid grid with
-        this.ren = _REN;
-        this.bg_redim? = 1;
-        this.lay_lins = 4;
-        this.lay_cols = 6;
-        this.lay = __MENU_GAMES_CEU_grid;
-        this.uis_n = 9;
+        _.ren := _REN;
+        _.bg_redim? = 1;
+        _.lay_lins = 4;
+        _.lay_cols = 6;
+        _.lay := __MENU_GAMES_CEU_grid;
+        _.uis_n = 9;
         native do
             int _MENU_GAMES_CEU_grid[] = {
                  0,  0,  1,  1,  2,  2,     // ps
@@ -72,9 +61,9 @@ do
             };
         end
 
-        this.spc_x  = 10;
-        this.spc_y  = 10;
-        this.clr_cell_bg = &_colors.gray;
+        _.spc_x  = 10;
+        _.spc_y  = 10;
+        _.clr_cell_bg := &_colors.gray;
     end;
 
     // PS
@@ -86,8 +75,8 @@ do
                 _SDL_DestroyTexture(tex1);
             end
         var UITexture ui1 with
-            this.ren = _REN;
-            this.tex = tex1;
+            _.ren := _REN;
+            _.tex := tex1;
         end;
     //
         var _char[5] str2;
@@ -100,8 +89,8 @@ do
                 _SDL_DestroyTexture(tex2);
             end
         var UITexture ui2 with
-            this.ren = _REN;
-            this.tex = tex2;
+            _.ren := _REN;
+            _.tex := tex2;
         end;
 
     // STATE_N
@@ -113,8 +102,8 @@ do
                 _SDL_DestroyTexture(tex3);
             end
         var UITexture ui3 with
-            this.ren = _REN;
-            this.tex = tex3;
+            _.ren := _REN;
+            _.tex := tex3;
         end;
     //
         var _char[5] str4;
@@ -127,8 +116,8 @@ do
                 _SDL_DestroyTexture(tex4);
             end
         var UITexture ui4 with
-            this.ren = _REN;
-            this.tex = tex4;
+            _.ren := _REN;
+            _.tex := tex4;
         end;
 
     // STATE_TYPE
@@ -140,8 +129,8 @@ do
                 _SDL_DestroyTexture(tex5);
             end
         var UITexture ui5 with
-            this.ren = _REN;
-            this.tex = tex5;
+            _.ren := _REN;
+            _.tex := tex5;
         end;
     //
         var _SDL_Texture* tex6;
@@ -152,21 +141,21 @@ do
                 _SDL_DestroyTexture(tex6);
             end
         var UITexture ui6 with
-            this.ren = _REN;
-            this.tex = tex6;
+            _.ren := _REN;
+            _.tex := tex6;
         end;
 
     // RM
         var UITexture ui7 with
-            this.ren = _REN;
-            this.tex = _TEX_RM;
-            this.align_x = _UI_ALIGN_LEFT;
+            _.ren := _REN;
+            _.tex := _TEX_RM;
+            _.align_x = _UI_ALIGN_LEFT;
         end;
     // OK
         var UITexture ui8 with
-            this.ren = _REN;
-            this.tex = _TEX_OK;
-            this.align_x = _UI_ALIGN_LEFT;
+            _.ren := _REN;
+            _.tex := _TEX_OK;
+            _.align_x = _UI_ALIGN_LEFT;
         end;
     // TODO: OK <=> HOURGLASS
 
@@ -183,10 +172,10 @@ do
 
     par do
         await ui7.ok_clicked;
-        emit this.lst:ok_rm => this.n;
+        emit this.lst.ok_rm => this.n;
     with
         await ui8.ok_clicked;
-        emit this.lst:ok_go => this.n;
+        emit this.lst.ok_go => this.n;
     end
 end
 
@@ -194,11 +183,9 @@ class MenuGames with
     interface MenuGamesListener;
 do
     _assert(_REN != null);
-    _assert(_L   != null);
 
     loop do
-        _lua_getglobal(_L, "GAMES");        // [ GG ]
-        var int n = _lua_objlen(_L, -1);
+        var int n = [[ #GAMES ]];
         if n == 0 then
             break;
         end
@@ -215,61 +202,59 @@ do
             with
                 _free(lay);
             end
-        loop i, n_ do
+        loop i in n_ do
             lay[i] = i;
         end
 
         var UIGrid grid1 with
-            this.ren = _REN;
-            this.lay_lins = n_/2;
-            this.lay_cols = 2;
-            this.lay = lay; // { 0, 1, ..., n-1 }
-            this.uis_n = n_;
+            _.ren := _REN;
+            _.lay_lins = n_/2;
+            _.lay_cols = 2;
+            _.lay := lay; // { 0, 1, ..., n-1 }
+            _.uis_n = n_;
 
-            this.rect.w = 5*_REN_W / 6 - 5;     // -5 avoids x-scroll
-            this.rect.h = n_*_REN_H / 6;
+            _.rect.w = 5*_REN_W / 6 - 5;     // -5 avoids x-scroll
+            _.rect.h = n_*_REN_H / 6;
         end;
 
         // GAMES: g1, g2, ...
 
         var MenuGamesOne* one;
-        var MenuGamesListener* lst = &this;
-        loop i, n do
-            _lua_rawgeti(_L, -1, i+1);      // [ GG | f ]
+        var MenuGamesListener& lst = this;
+        loop i in n do
             one = new MenuGamesOne with
-                this.file := _lua_tostring(_L, -1);
+                var char[25] file = [[ GAMES[@i+1] ]];
+                _.file := file;
                             // not held
-                this.n    = i + 1;
-                this.lst  = lst;
+                _.n    = i + 1;
+                _.lst  = lst;
             end;
             grid1.uis[i] = one:ui;
-            _lua_pop(_L, 1);                // [ GG ]
         end
-        _lua_pop(_L, 1);                    // [ ]
 
         // SCROLL [ g1 | g2 | ... ]
 
         var UIScroll scroll with
-            this.ren = _REN;
-            this.ui  = &grid1;
-            this.clr_scroll = &_colors.white;
+            _.ren := _REN;
+            _.ui  = grid1;
+            _.clr_scroll = &_colors.white;
         end;
 
         // NEW
 
         var UITexture ui_new with
-            this.ren = _REN;
-            this.tex = _TEX_OK;
+            _.ren := _REN;
+            _.tex := _TEX_OK;
         end;
 
         // GRID  [ scroll | new ]
 
         var UIGrid grid2 with
-            this.ren = _REN;
-            this.lay_lins = 1;
-            this.lay_cols = 6;
-            this.uis_n = 2;
-            this.lay = _MENUGAMES_lay2;
+            _.ren := _REN;
+            _.lay_lins = 1;
+            _.lay_cols = 6;
+            _.uis_n = 2;
+            _.lay := _MENUGAMES_lay2;
             native do
                 int MENUGAMES_lay2[] = { 0,0,0,0,0,1 };
             end
@@ -282,7 +267,7 @@ do
             r.y = _REN_H / 2;
             r.w = _REN_W;
             r.h = _REN_H;
-        grid2.go(&r);
+        call/rec grid2.go(&r);
 
         // AWAIT RM or NEW
 
@@ -292,29 +277,13 @@ do
         with
             var int rm = await this.ok_rm;
 
-            // os.remove(GAMES[rm])
-                _lua_getglobal(_L, "os");           // [ os ]
-                _lua_getfield(_L, -1, "remove");    // [ os | f ]
-                _lua_getglobal(_L, "GAMES");        // [ os | f | GG ]
-                _lua_rawgeti(_L, -1, rm);           // [ os | f | GG | file ]
-                _lua_remove(_L, -2);                // [ os | f | file ]
-                _lua_call(_L, 1, 0);                // [ os ]
-                _lua_pop(_L, 1);                    // [ ]
-
-            // table.remove(GAMES, rm)
-                _lua_getglobal(_L, "table");        // [ t ]
-                _lua_getfield(_L, -1, "remove");    // [ t | f ]
-                _lua_getglobal(_L, "GAMES");        // [ t | f | GG ]
-                _lua_pushnumber(_L, rm);            // [ t | f | GG | idx ]
-                _lua_call(_L, 2, 0);                // [ t ]
-                _lua_pop(_L, 1);                    // [ ]
-
-            // save main.lua
-                var _char* src =
-                    "local f = assert(io.open('main.lua', 'w'))     \
-                     f:write('GAMES = '..table2string(GAMES)..'\\n') \
-                     f:close()";
-                _assert( _luaL_dostring(_L, src) == 0 );
+            [[
+                os.remove(GAMES[@rm])
+                table.remove(GAMES, @rm)
+                local f = assert(io.open('main.lua', 'w'))
+                f:write('GAMES = '..table2string(GAMES)..'\n')
+                f:close()
+            ]];
         end
     end
 end
@@ -350,11 +319,11 @@ with
     do
         var MenuGamesListenerImpl lst;
         var MenuGamesOne one with
-            this.file = "g1.lua";
-            this.n    = 1;
-            this.lst  = &lst;
+            _.file := "g1.lua";
+            _.n    = 1;
+            _.lst  = lst;
         end;
-        one.ui:go(&r);
+        call/rec one.ui:go(&r);
         par/or do
             var int n = await lst.ok_rm;
             _printf("RM: %d\n", n);

@@ -66,9 +66,7 @@ do
 
             else
                 // t <- c++
-[[print'1']]
                 var int a = [[ SRV_move_inc(attacks, 1, @fr, @to) ]];
-[[print'2']]
                 if a == max then
                     emit this.ok => (1,0);      // no more armies from "fr"
                 else

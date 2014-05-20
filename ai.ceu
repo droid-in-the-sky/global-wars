@@ -22,73 +22,52 @@ with
         _boxRGBA(_REN, 0,0, _REN_W,_REN_H, 0,0,0, 0xFF);
     end
 with
-    native nohold _move();
-    native do
-        void move (int s) {
-            int p;
-            lua_getglobal(L, "PLAYERS");            // [ PP ]
-            for (p=1; p<=6; p++) {
-                lua_rawgeti(L, -1, p);              // [ PP | P ]
-                if (lua_toboolean(L,-1) == 0) {
-                    lua_getglobal(L, "SRV_move");   // [ PP | P | srv ]
-                    lua_pushnumber(L, p);           // [ PP | P | srv | p ]
-                    lua_newtable(L);                // [ PP | P | srv | p | {} ]
-                    lua_call(L, 2, 0);              // [ PP | P ]
-                } else {
-                    assert(lua_type(L,-1) == LUA_TSTRING);
-                    lua_getglobal(L, "SRV_move");   // [ PP | P | srv ]
-                    lua_pushnumber(L, p);           // [ PP | P | srv | p ]
-                    lua_getglobal(L, "AI_move");    // [ PP | P | srv | p | ai ]
-                    lua_pushnumber(L, s);           // [ PP | P | srv | p | ai | s ]
-                    lua_pushnumber(L, p);           // [ PP | P | srv | p | ai | s | p ]
-                    lua_call(L, 2, 1);              // [ PP | P | srv | p | MSp ]
-                    lua_call(L, 2, 0);              // [ PP | P ]
-                }
-                lua_pop(L, 1);                      // [ PP ]
-            }
-            lua_pop(L, 1);                          // [ ]
-        }
-    end
+    [[
+        function move (s)
+            for p=1, 6 do
+                if PLAYERS[p] == false then
+                    SRV_move(p, {})
+                else
+                    assert(type(PLAYERS[p])=='string')
+                    SRV_move(p, AI_move(s,p))
+                end
+            end
+        end
+    ]]
 
 // G2
-    _assert(_luaL_dofile(_L, "g2.lua") == 0);
+    [[ dofile 'g2.lua' ]];
 
     loop do
-        _lua_getglobal(_L, "STATES");       // [ SS ]
-        var int s = _lua_objlen(_L, -1);
-        _lua_pop(_L, 1);                    // [ ]
-
-        _move(s);
-        _lua_getglobal(_L, "SRV_go");       // [ f ]
-        _lua_call(_L, 0, 0);                // [ ]
+        [[
+            move(#STATES)
+            SRV_go()
+        ]]
 
         var Map map;
 
         var GameNav nav with
-            this.map = &map;
-            this.me  = 1;
+            _.map = map;
+            _.me  = 1;
         end;
 
         await nav.ok;
     end
 
 // G3
-    _assert(_luaL_dofile(_L, "g3.lua") == 0);
+    [[ dofile 'g3.lua' ]];
 
     loop do
-        _lua_getglobal(_L, "STATES");      // [ SS ]
-        var int s = _lua_objlen(_L, -1);
-        _lua_pop(_L, 1);                   // [ ]
-
-        _move(s);
-        _lua_getglobal(_L, "SRV_go");       // [ f ]
-        _lua_call(_L, 0, 0);                // [ ]
+        [[
+            move(#STATES)
+            SRV_go()
+        ]]
 
         var Map map;
 
         var GameNav nav with
-            this.map = &map;
-            this.me  = 1;
+            _.map = map;
+            _.me  = 1;
         end;
 
         await nav.ok;

@@ -13,17 +13,16 @@ input _SDL_KeyboardEvent* SDL_KEYDOWN;
 input void SDL_MOUSEBUTTONDOWN;
 
 class Game with
-    var _char* file = null;
+    var char* file = null;
 do
     _assert(_REN != null);
-    _assert(_L   != null);
 
     _assert(this.file != null);
-        _assert(_luaL_dofile(_L, this.file) == 0);
+    [[ dofile(@this.file) ]];
 
     var Map map;
     var MapFinger fgr with
-        this.map = &map;
+        _.map = map;
     end;
 
     // while not finished
@@ -31,51 +30,32 @@ do
     loop do
 
         // current #states
-        _lua_getglobal(_L, "STATES");       // [ SS ]
-        var int ns = _lua_objlen(_L, -1);
-        _lua_pop(_L, 1);                    // [ ]
+        var int ns = [[ #STATES ]];
 
         // foreach player
-        loop p_, 6 do
+        loop p_ in 6 do
             var int p = p_ + 1;     // C => Lua
 
             // none, AI or human?
-            _lua_getglobal(_L, "PLAYERS");  // [ PP ]
-            _lua_rawgeti(_L, -1, p);        // [ PP | tp ]
+            var bool player? = [[ PLAYERS[@p] ~= false ]];
 
             // NONE
-            if _lua_toboolean(_L, -1) == 0 then
-                _lua_pop(_L, 2);                    // [ ]
-
-                // SRV_move(p, {});
-                _lua_getglobal(_L, "SRV_move");     // [ srv ]
-                _lua_pushnumber(_L, p);             // [ srv | p ]
-                _lua_newtable(_L);                  // [ srv | {} ]
-                _lua_call(_L, 2, 0);
+            if not player? then
+                [[ SRV_move(@p, {}) ]];
 
             else
-                _assert(_lua_type(_L,-1) == _LUA_TSTRING);
+                [[ assert(type(PLAYERS[@p]) == 'string') ]];
+                var char[25] player = [[ PLAYERS[@p] ]];
 
                 // AI
-                if _strcmp("ai", _lua_tostring(_L,-1)) == 0 then
-                    _lua_pop(_L, 2);                // [ ]
-
-                    // MSp = AI_move(s,p);
-                    // SRV_move(p, MSp);
-                    _lua_getglobal(_L, "SRV_move"); // [ srv ]
-                    _lua_pushnumber(_L, p);         // [ srv | p ]
-                    _lua_getglobal(_L, "AI_move");  // [ srv | p | ai ]
-                    _lua_pushnumber(_L, ns);        // [ srv | p | ai | s ]
-                    _lua_pushnumber(_L, p);         // [ srv | p | ai | s | p ]
-                    _lua_call(_L, 2, 1);            // [ srv | p | MSp ]
-                    _lua_call(_L, 2, 0);            // [ ]
+                if _strcmp("ai", player) == 0 then
+                    [[ SRV_move(@p, AI_move(@ns,@p)) ]];
 
                 // HUMAN
                 else
-                    _lua_pop(_L, 2);                // [ ]
                     var GameHuman human with
-                        this.map = &map;
-                        this.me  = p;
+                        _.map = map;
+                        _.me  = p;
                     end;
                     await human.ok;
                 end
@@ -83,22 +63,17 @@ do
         end
 
         // next turn
-        _lua_getglobal(_L, "SRV_go");   // [ srv ]
-        _lua_call(_L, 0, 0);            // [ ]
-
-        _luaL_loadstring(_L, "                          \
-            local file = ...                            \
-            local f = assert(io.open(file, 'w'))        \
-            f:write([[                                  \
-                dofile 'map2.lua'                       \
-                PLAYERS = ]]..table2string(PLAYERS)..[[ \
-                STATES  = ]]..table2string(STATES)..[[  \
-                MOVES   = ]]..table2string(MOVES)..[[   \
-            ]])                                         \
-            f:close()                                   \
-        ");                                 // [ f ]
-        _lua_pushstring(_L, this.file);     // [ f | file ]
-        _lua_call(_L, 1, 0);                // [ ]
+        [=[
+            SRV_go()
+            local f = assert(io.open(@this.file, 'w'))
+            f:write([[
+                dofile 'map1.lua'
+                PLAYERS = ]]..table2string(PLAYERS)..[[
+                STATES  = ]]..table2string(STATES)..[[
+                MOVES   = ]]..table2string(MOVES)..[[
+            ]])
+            f:close()
+        ]=];
     end
 end
 
@@ -126,7 +101,7 @@ with
 #endif
 
     var Game game with
-        this.file = LUA_GAME;
+        _.file := LUA_GAME;
     end;
     await FOREVER;
 with
