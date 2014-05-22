@@ -20,7 +20,7 @@ end
 
 class MenuGamesOne with
     var char* file = null;
-    var UI*   ui   = null;
+    var UI&   ui;
     var int   n    = 0;
 
     var MenuGamesListener& lst;
@@ -159,16 +159,39 @@ do
         end;
     // TODO: OK <=> HOURGLASS
 
-    this.ui = &grid;
-    grid.uis[0] = null;
-    grid.uis[1] = &ui1;
-    grid.uis[2] = &ui2;
-    grid.uis[3] = &ui3;
-    grid.uis[4] = &ui4;
-    grid.uis[5] = &ui5;
-    grid.uis[6] = &ui6;
-    grid.uis[7] = &ui7;
-    grid.uis[8] = &ui8;
+    this.ui = grid;
+    spawn UIGridItem in grid.uis with
+        _.idx = 1;
+        _.ui = &ui1;
+    end;
+    spawn UIGridItem in grid.uis with
+        _.idx = 2;
+        _.ui = &ui2;
+    end;
+    spawn UIGridItem in grid.uis with
+        _.idx = 3;
+        _.ui = &ui3;
+    end;
+    spawn UIGridItem in grid.uis with
+        _.idx = 4;
+        _.ui = &ui4;
+    end;
+    spawn UIGridItem in grid.uis with
+        _.idx = 5;
+        _.ui = &ui5;
+    end;
+    spawn UIGridItem in grid.uis with
+        _.idx = 6;
+        _.ui = &ui6;
+    end;
+    spawn UIGridItem in grid.uis with
+        _.idx = 7;
+        _.ui = &ui7;
+    end;
+    spawn UIGridItem in grid.uis with
+        _.idx = 8;
+        _.ui = &ui8;
+    end;
 
     par do
         await ui7.ok_clicked;
@@ -220,16 +243,18 @@ do
         // GAMES: g1, g2, ...
 
         var MenuGamesOne* one;
-        var MenuGamesListener& lst = this;
         loop i in n do
             one = new MenuGamesOne with
                 var char[25] file = [[ GAMES[@i+1] ]];
-                _.file := file;
+                _.file = file;
                             // not held
                 _.n    = i + 1;
-                _.lst  = lst;
+                _.lst  = this;
             end;
-            grid1.uis[i] = one:ui;
+            spawn UIGridItem in grid1.uis with
+                _.idx = i;
+                _.ui = &one:ui;
+            end;
         end
 
         // SCROLL [ g1 | g2 | ... ]
@@ -237,7 +262,8 @@ do
         var UIScroll scroll with
             _.ren := _REN;
             _.ui  = grid1;
-            _.clr_scroll = &_colors.white;
+            _.clr_scroll := &_colors.white;
+                            // global
         end;
 
         // NEW
@@ -259,8 +285,14 @@ do
                 int MENUGAMES_lay2[] = { 0,0,0,0,0,1 };
             end
         end;
-        grid2.uis[0] = &scroll;
-        grid2.uis[1] = &ui_new;
+        spawn UIGridItem in grid2.uis with
+            _.idx = 0;
+            _.ui  = &scroll;
+        end;
+        spawn UIGridItem in grid2.uis with
+            _.idx = 1;
+            _.ui  = &ui_new;
+        end;
 
         var _SDL_Rect r;        // whole screen
             r.x = _REN_W / 2;
@@ -323,7 +355,7 @@ with
             _.n    = 1;
             _.lst  = lst;
         end;
-        call/rec one.ui:go(&r);
+        call/rec one.ui.go(&r);
         par/or do
             var int n = await lst.ok_rm;
             _printf("RM: %d\n", n);

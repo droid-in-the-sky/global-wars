@@ -14,8 +14,8 @@ input void SDL_REDRAW;
 
 class MenuNewPlayer with
     var int     n    = 0;
-    var UIGrid* grid = null;
-    var char*   type;
+    var UIGrid& grid;
+    var char[]  type;
 do
     _assert(_REN       != null);
     _assert(_BGS       != null);
@@ -24,7 +24,6 @@ do
     _assert(_TEX_NONE  != null);
 
     _assert(this.n    != 0);
-    _assert(this.grid != null);
 
     var bool first? = true;
 
@@ -32,28 +31,34 @@ do
         // human
         if (not first?) or (this.n == 1) then
             this.type := "human";
+                         // TODO: constant should not require :=
             do
                 var UITexture ui with
                     _.ren    := _REN;
                     _.tex    := _TEX_HUMAN;
                     _.bg_clr := _BGS[n];
                 end;
-                call/rec this.grid:go_ui(this.n-1, &ui)
-                    finalize with nothing; end; // grid > ui
+                spawn UIGridItem in this.grid.uis with
+                    _.idx = this.n - 1;
+                    _.ui  = &ui;
+                end;
                 await ui.ok_clicked;
             end
         end
 
         // ai
         this.type := "ai";
+                     // TODO: constant should not require :=
         do
             var UITexture ui with
                 _.ren    := _REN;
                 _.tex    := _TEX_AI;
                 _.bg_clr := _BGS[n];
             end;
-            call/rec this.grid:go_ui(this.n-1, &ui)
-                finalize with nothing; end; // grid > ui
+            spawn UIGridItem in this.grid.uis with
+                _.idx = this.n - 1;
+                _.ui  = &ui;
+            end;
             await ui.ok_clicked;
         end
 
@@ -65,8 +70,10 @@ do
                 _.tex    := _TEX_NONE;
                 _.bg_clr := _BGS[n];
             end;
-            call/rec this.grid:go_ui(this.n-1, &ui)
-                finalize with nothing; end; // grid > ui
+            spawn UIGridItem in this.grid.uis with
+                _.idx = this.n - 1;
+                _.ui  = &ui;
+            end;
             await ui.ok_clicked;
         end
 
@@ -125,14 +132,20 @@ do
         r.w = _REN_W;
         r.h = _REN_H;
 
-    grid.uis[0] = &grid_ps;
-    grid.uis[1] = &ui_ok;
+    spawn UIGridItem in grid.uis with
+        _.idx = 0;
+        _.ui  = &grid_ps;
+    end;
+    spawn UIGridItem in grid.uis with
+        _.idx = 1;
+        _.ui  = &ui_ok;
+    end;
     call/rec grid.go(&r);
 
     var int i = 1;
     var MenuNewPlayer [6] ps with
         _.n    = i;
-        _.grid = &grid_ps;
+        _.grid = grid_ps;
         i = i + 1;
     end;
 

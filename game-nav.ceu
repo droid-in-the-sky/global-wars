@@ -65,6 +65,7 @@ do
         r.y = _REN_H / 2;
         r.w = _REN_W;
         r.h = _REN_H;
+
     var UIGrid g1 with
         _.ren := _REN;
         _.lay_lins = 4;
@@ -112,10 +113,23 @@ do
             _.tex := _TEX_OK;
         end;
 
-    g1.uis[0] = &g2;    // include "menu"
-        g2.uis[0] = &ui_l;  // <
-        g2.uis[1] = &ui_r;  // >
-        g2.uis[2] = &ui_ok; // ok
+    spawn UIGridItem in g1.uis with
+        _.idx = 0;
+        _.ui  = &g2;
+    end;
+
+    spawn UIGridItem in g2.uis with
+        _.idx = 0;
+        _.ui  = &ui_l;
+    end;
+    spawn UIGridItem in g2.uis with
+        _.idx = 1;
+        _.ui  = &ui_r;
+    end;
+    spawn UIGridItem in g2.uis with
+        _.idx = 2;
+        _.ui  = &ui_ok;
+    end;
 
     call/rec g1.go(&r);
 

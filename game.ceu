@@ -13,7 +13,7 @@ input _SDL_KeyboardEvent* SDL_KEYDOWN;
 input void SDL_MOUSEBUTTONDOWN;
 
 class Game with
-    var char* file = null;
+    var char[] file = null;
 do
     _assert(_REN != null);
 

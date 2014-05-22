@@ -21,7 +21,7 @@ class GameAttackOne with
     var int  state = 0;
     var int  fr    = 0;
 
-    event (int,int) ok;
+    event (bool,int) ok;
 do
     _assert(this.me    != 0);
     _assert(this.state != 0);
@@ -31,8 +31,13 @@ do
     var int max;    // holds the maximum transferable armies (#t-1)
     loop do
         if this.fr == 0 then
+//[[print'before']]
             this.fr = await map.ok_clicked;
+//[[print('after',@fr)]]
         end
+//[[
+//print(@state, STATES[@state+1], @me, @fr)
+//]]
         max = [[ STATES[@state+1][@me][@fr] - 1 ]];
         if max > 0 then
             break;          // my country, a>1:   ok!
@@ -54,7 +59,7 @@ do
 
         // same: deselect
         if this.fr == to then
-            emit this.ok => (0,0);
+            emit this.ok => (false,0);
 
         // other: attack/move
         else
@@ -62,15 +67,17 @@ do
             var bool border? = [[ MAP.borders[@fr][@to] ]];
 
             if not border? then
-                emit this.ok => (0,fr);
+                emit this.ok => (false,fr);
 
             else
                 // t <- c++
                 var int a = [[ SRV_move_inc(attacks, 1, @fr, @to) ]];
                 if a == max then
-                    emit this.ok => (1,0);      // no more armies from "fr"
+                    emit this.ok => (true,0);      // no more armies from "fr"
                 else
-                    emit this.ok => (1,fr);     // "fr" can still move
+//[[print('emit',@fr)]]
+                    emit this.ok => (true,fr);     // "fr" can still move
+//[[print('back',@fr)]]
                 end
             end
         end
@@ -99,6 +106,7 @@ do
         r.y = _REN_H / 2;
         r.w = _REN_W;
         r.h = _REN_H;
+
     var UIGrid g1 with
         _.ren := _REN;
         _.lay_lins = 4;
@@ -140,12 +148,11 @@ do
             _.bg_clr := _BGS[me];
         end;
 
-        finalize
-            g1.uis[0] = &ui_fs; // fs
-        with
-            g1.uis[0] = null;
-        end
-        g1.uis[1] = null;       // menu
+        spawn UIGridItem in g1.uis with
+            _.idx = 0;
+            _.ui  = &ui_fs;
+        end;
+        //[1] = null;       // menu
         call/rec g1.go(&r);
 
         await 2s;
@@ -173,10 +180,16 @@ do
         _.tex := _TEX_OK;
     end;
 
-    g1.uis[0] = null;   // remove "fs"
-    g1.uis[1] = &g2;    // include "menu"
-        g2.uis[0] = null;   // no
-        g2.uis[1] = &ui_ok; // ok
+    spawn UIGridItem in g1.uis with
+        _.idx = 1;
+        _.ui  = &g2;
+    end;
+
+    spawn UIGridItem in g2.uis with
+        _.idx = 1;
+        _.ui  = &ui_ok;
+        //g2.uis[0] = null;   // no
+    end;
     call/rec g1.go(null);
 
     finalize with
@@ -202,11 +215,10 @@ do
                     _.ren := _REN;
                     _.tex := _TEX_NO;
                 end;
-                finalize
-                    g2.uis[0] = &ui;
-                with
-                    g2.uis[0] = null;
-                end
+                spawn UIGridItem in g2.uis with
+                    _.idx = 0;
+                    _.ui  = &ui;
+                end;
                 call/rec g1.go(null);
                 await ui.ok_clicked;
             with
@@ -236,6 +248,7 @@ do
                         _.idx = (state+1)/2; // tmp move
                     end;
 
+//[[print('att', @fr)]]
                     var GameAttackOne one with
                         _.map   = map;
                         _.me    = me;
@@ -245,6 +258,8 @@ do
 
                     var bool any?;
                     (any?, fr) = await one.ok; // keep "fr" as selected
+_printf("awk %d\n", fr);
+//[[print('awk', @fr)]]
                     if any? then
                         emit e;     // show "X" if any army was moved
                     end

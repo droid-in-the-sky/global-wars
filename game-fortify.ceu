@@ -41,6 +41,7 @@ do
         r.y = _REN_H / 2;
         r.w = _REN_W;
         r.h = _REN_H;
+
     var UIGrid g1 with
         _.ren := _REN;
         _.lay_lins = 4;
@@ -81,12 +82,10 @@ do
             _.bg_clr := _BGS[me];
         end;
 
-        finalize
-            g1.uis[0] = &ui1; // fs
-        with
-            g1.uis[0] = null;
-        end
-        g1.uis[1] = null;       // menu
+        spawn UIGridItem in g1.uis with
+            _.idx = 0;
+            _.ui  = &ui1;
+        end;
 
         // N
         var _char[5] str;
@@ -104,13 +103,11 @@ do
             _.bg_clr := _BGS[me];
         end;
 
-        finalize
-            g1.uis[1] = &ui2; // fs
-        with
-            g1.uis[1] = null;
-        end
+        spawn UIGridItem in g1.uis with
+            _.idx = 1;
+            _.ui  = &ui2;
+        end;
 
-        g1.uis[2] = null;       // menu
         call/rec g1.go(&r);
         await 2s;
     end
@@ -131,10 +128,13 @@ do
         end
     end;
     // menu
-    g1.uis[2] = &g2;
-        g2.uis[0] = null; // fs, changes every click
-        g2.uis[1] = null; // no, after 1 click
-        g2.uis[2] = null; // ok, when fs==0
+    spawn UIGridItem in g1.uis with
+        _.idx = 2;
+        _.ui  = &g2;
+        // g2.uis[0] = null; // fs, changes every click
+        // g2.uis[1] = null; // no, after 1 click
+        // g2.uis[2] = null; // ok, when fs==0
+    end;
 
 
     // loop until all "fs" are chosen
@@ -192,11 +192,10 @@ do
                     _.bg_clr := _BGS[me];
                 end;
 
-                finalize
-                    g2.uis[0] = &ui_fs;
-                with
-                    g2.uis[0] = null;
-                end
+                spawn UIGridItem in g2.uis with
+                    _.idx = 0;
+                    _.ui  = &ui_fs;
+                end;
 
                 // re-arrange all:
                 // - loop entering
@@ -233,11 +232,10 @@ do
                 _.tex := _TEX_NO;
             end;
 
-            finalize
-                g2.uis[1] = &ui;
-            with
-                g2.uis[1] = null;
-            end
+            spawn UIGridItem in g2.uis with
+                _.idx = 1;
+                _.ui  = &ui;
+            end;
 
             // RESTART
             await ui.ok_clicked;
@@ -254,11 +252,10 @@ do
                 _.tex := _TEX_OK;
             end;
 
-            finalize
-                g2.uis[2] = &ui;
-            with
-                g2.uis[2] = null;
-            end
+            spawn UIGridItem in g2.uis with
+                _.idx = 2;
+                _.ui  = &ui;
+            end;
 
             if fs > 0 then
                 call/rec g2.go(null);   // needed if entering w/o the await

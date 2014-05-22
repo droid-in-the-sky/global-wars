@@ -131,6 +131,7 @@ end
 
 
 // BGS
+    #include "colors.ceu"
     native do
         SDL_Color* BGS[] = {
             NULL,

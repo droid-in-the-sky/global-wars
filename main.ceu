@@ -38,8 +38,7 @@ with
     do
         var char[25] file = [[ GAMES[@n] ]];
         var Game game with
-            _.file := file;
-                        // not held
+            _.file = file;
         end;
         await FOREVER;
     end
