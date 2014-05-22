@@ -31,13 +31,8 @@ do
     var int max;    // holds the maximum transferable armies (#t-1)
     loop do
         if this.fr == 0 then
-//[[print'before']]
             this.fr = await map.ok_clicked;
-//[[print('after',@fr)]]
         end
-//[[
-//print(@state, STATES[@state+1], @me, @fr)
-//]]
         max = [[ STATES[@state+1][@me][@fr] - 1 ]];
         if max > 0 then
             break;          // my country, a>1:   ok!
@@ -75,9 +70,7 @@ do
                 if a == max then
                     emit this.ok => (true,0);      // no more armies from "fr"
                 else
-//[[print('emit',@fr)]]
                     emit this.ok => (true,fr);     // "fr" can still move
-//[[print('back',@fr)]]
                 end
             end
         end
@@ -248,7 +241,6 @@ do
                         _.idx = (state+1)/2; // tmp move
                     end;
 
-//[[print('att', @fr)]]
                     var GameAttackOne one with
                         _.map   = map;
                         _.me    = me;
@@ -258,8 +250,6 @@ do
 
                     var bool any?;
                     (any?, fr) = await one.ok; // keep "fr" as selected
-_printf("awk %d\n", fr);
-//[[print('awk', @fr)]]
                     if any? then
                         emit e;     // show "X" if any army was moved
                     end

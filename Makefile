@@ -36,7 +36,7 @@ human:
 
 attack:
 	ceu --cpp-args "-D __GAME_ATTACK_CEU" game-attack.ceu
-	gcc -Os main.c $(CFLAGS) -lSDL2 -lSDL2_gfx -lSDL2_image -lSDL2_ttf -llua5.1 \
+	gcc -g -Os main.c $(CFLAGS) -lSDL2 -lSDL2_gfx -lSDL2_image -lSDL2_ttf -llua5.1 \
 		-o global-wars.exe
 
 fortify:
