@@ -5,7 +5,7 @@
 #include "sdl.ceu"
 #include "sdl-gfx.ceu"
 
-#include "colors.ceu"
+#include "sdl-colors.ceu"
 #include "ui.ceu"
 #include "ui-grid.ceu"
 #include "ui-texture.ceu"
@@ -34,13 +34,13 @@ do
                          // TODO: constant should not require :=
             do
                 var UITexture ui with
-                    _.ren    := _REN;
-                    _.tex    := _TEX_HUMAN;
-                    _.bg_clr := _BGS[n];
+                    this.ren    := _REN;
+                    this.tex    := _TEX_HUMAN;
+                    this.bg_clr := _BGS[n];
                 end;
                 spawn UIGridItem in this.grid.uis with
-                    _.idx = this.n - 1;
-                    _.ui  = &ui;
+                    this.idx = outer.n - 1;
+                    this.ui  = &ui;
                 end;
                 await ui.ok_clicked;
             end
@@ -51,13 +51,13 @@ do
                      // TODO: constant should not require :=
         do
             var UITexture ui with
-                _.ren    := _REN;
-                _.tex    := _TEX_AI;
-                _.bg_clr := _BGS[n];
+                this.ren    := _REN;
+                this.tex    := _TEX_AI;
+                this.bg_clr := _BGS[n];
             end;
             spawn UIGridItem in this.grid.uis with
-                _.idx = this.n - 1;
-                _.ui  = &ui;
+                this.idx = outer.n - 1;
+                this.ui  = &ui;
             end;
             await ui.ok_clicked;
         end
@@ -66,13 +66,13 @@ do
         this.type = null;
         do
             var UITexture ui with
-                _.ren    := _REN;
-                _.tex    := _TEX_NONE;
-                _.bg_clr := _BGS[n];
+                this.ren    := _REN;
+                this.tex    := _TEX_NONE;
+                this.bg_clr := _BGS[n];
             end;
             spawn UIGridItem in this.grid.uis with
-                _.idx = this.n - 1;
-                _.ui  = &ui;
+                this.idx = outer.n - 1;
+                this.ui  = &ui;
             end;
             await ui.ok_clicked;
         end
@@ -87,11 +87,11 @@ do
     _assert(_REN != null);
 
     var UIGrid grid with
-        _.ren := _REN;
-        _.lay_lins = 6;
-        _.lay_cols = 7;
-        _.lay := _MenuNew_grid;
-        _.uis_n = 2;
+        this.ren := _REN;
+        this.lay_lins = 6;
+        this.lay_cols = 7;
+        this.lay := _MenuNew_grid;
+        this.uis_n = 2;
         native do
             int MenuNew_grid[] = {
                 0, 0, 0, 0, 0, 0, -1,
@@ -105,14 +105,13 @@ do
     end;
 
     var UIGrid grid_ps with
-        _.ren       := _REN;
-        _.bg_redim? = true;
-        _.lay_lins  = 2;
-        _.lay_cols  = 3;
-        _.lay       := _MenuNew_grid_ps;
-        _.uis_n     = 6;
-        _.spc_x     = 20;
-        _.spc_y     = 20;
+        this.ren       := _REN;
+        this.lay_lins  = 2;
+        this.lay_cols  = 3;
+        this.lay       := _MenuNew_grid_ps;
+        this.uis_n     = 6;
+        this.spc_x     = 20;
+        this.spc_y     = 20;
         native do
             int MenuNew_grid_ps[] = {
                 0, 1, 2,
@@ -122,8 +121,8 @@ do
     end;
 
     var UITexture ui_ok with
-        _.ren := _REN;
-        _.tex := _TEX_OK;
+        this.ren := _REN;
+        this.tex := _TEX_OK;
     end;
 
     var _SDL_Rect r;        // whole screen
@@ -133,22 +132,22 @@ do
         r.h = _REN_H;
 
     spawn UIGridItem in grid.uis with
-        _.idx = 0;
-        _.ui  = &grid_ps;
+        this.idx = 0;
+        this.ui  = &grid_ps;
     end;
     spawn UIGridItem in grid.uis with
-        _.idx = 1;
-        _.ui  = &ui_ok;
+        this.idx = 1;
+        this.ui  = &ui_ok;
     end;
-    call/rec grid.go(&r);
 
     var int i = 1;
     var MenuNewPlayer [6] ps with
-        _.n    = i;
-        _.grid = grid_ps;
+        this.n    = i;
+        this.grid = grid_ps;
         i = i + 1;
     end;
 
+    call/rec grid.go(&r);
     await ui_ok.ok_clicked;
 
     [[ PLAYERS = {} ]];

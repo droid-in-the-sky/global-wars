@@ -101,11 +101,11 @@ do
         r.h = _REN_H;
 
     var UIGrid g1 with
-        _.ren := _REN;
-        _.lay_lins = 4;
-        _.lay_cols = 4;
-        _.lay := _GA_g1;
-        _.uis_n = 2;
+        this.ren := _REN;
+        this.lay_lins = 4;
+        this.lay_cols = 4;
+        this.lay := _GA_g1;
+        this.uis_n = 2;
         native do
             int GA_g1[16] = {
                 -1, -1, -1, -1,
@@ -120,8 +120,8 @@ do
     do
         // show current state
         var GameState st with
-            _.map = map;
-            _.idx = state;    // start from last
+            this.map = map;
+            this.idx = state;    // start from last
         end;
 
         // text texture
@@ -136,14 +136,14 @@ do
                 _SDL_DestroyTexture(tex);
             end
         var UITexture ui_fs with
-            _.ren := _REN;
-            _.tex := tex;
-            _.bg_clr := _BGS[me];
+            this.ren := _REN;
+            this.tex := tex;
+            this.bg_clr := _BGS[me];
         end;
 
         spawn UIGridItem in g1.uis with
-            _.idx = 0;
-            _.ui  = &ui_fs;
+            this.idx = 0;
+            this.ui  = &ui_fs;
         end;
         //[1] = null;       // menu
         call/rec g1.go(&r);
@@ -153,12 +153,11 @@ do
 
     // GRID "menu"
     var UIGrid g2 with
-        _.ren := _REN;
-        _.bg_redim? = true;
-        _.lay_lins = 2;
-        _.lay_cols = 3;
-        _.lay := _GA_g2;
-        _.uis_n = 2;
+        this.ren := _REN;
+        this.lay_lins = 2;
+        this.lay_cols = 3;
+        this.lay := _GA_g2;
+        this.uis_n = 2;
         native do
             int GA_g2[] = {
                 -1, -1, -1,
@@ -169,18 +168,18 @@ do
 
     // ui_ok
     var UITexture ui_ok with
-        _.ren := _REN;
-        _.tex := _TEX_OK;
+        this.ren := _REN;
+        this.tex := _TEX_OK;
     end;
 
     spawn UIGridItem in g1.uis with
-        _.idx = 1;
-        _.ui  = &g2;
+        this.idx = 1;
+        this.ui  = &g2;
     end;
 
     spawn UIGridItem in g2.uis with
-        _.idx = 1;
-        _.ui  = &ui_ok;
+        this.idx = 1;
+        this.ui  = &ui_ok;
         //g2.uis[0] = null;   // no
     end;
     call/rec g1.go(null);
@@ -205,12 +204,12 @@ do
                 // button "NO": restart
                 await e;
                 var UITexture ui with
-                    _.ren := _REN;
-                    _.tex := _TEX_NO;
+                    this.ren := _REN;
+                    this.tex := _TEX_NO;
                 end;
                 spawn UIGridItem in g2.uis with
-                    _.idx = 0;
-                    _.ui  = &ui;
+                    this.idx = 0;
+                    this.ui  = &ui;
                 end;
                 call/rec g1.go(null);
                 await ui.ok_clicked;
@@ -231,21 +230,21 @@ do
 
                     // show next state
                     var GameState st with
-                        _.map = map;
-                        _.idx = state+1;     // tmp state
+                        this.map = map;
+                        this.idx = state+1;     // tmp state
                     end;
 
                     // show next move
                     var GameMove mv with
-                        _.map = map;
-                        _.idx = (state+1)/2; // tmp move
+                        this.map = map;
+                        this.idx = (state+1)/2; // tmp move
                     end;
 
                     var GameAttackOne one with
-                        _.map   = map;
-                        _.me    = me;
-                        _.state = state;
-                        _.fr    = fr;
+                        this.map   = map;
+                        this.me    = me;
+                        this.state = state;
+                        this.fr    = fr;
                     end;
 
                     var bool any?;
@@ -286,8 +285,8 @@ with
             var Map map;
 
             var GameAttack att with
-                _.map = map;
-                _.me  = 1;
+                this.map = map;
+                this.me  = 1;
             end;
 
             await att.ok;

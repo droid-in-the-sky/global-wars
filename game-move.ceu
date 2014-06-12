@@ -115,8 +115,8 @@ with
     loop do
         loop i in len do
             var GameMove m with
-                _.map = map;
-                _.idx = i+1;
+                this.map = map;
+                this.idx = i+1;
             end;
             await SDL_KEYDOWN;
         end

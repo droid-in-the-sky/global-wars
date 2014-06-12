@@ -47,8 +47,8 @@ with
         var Map map;
 
         var GameNav nav with
-            _.map = map;
-            _.me  = 1;
+            this.map = map;
+            this.me  = 1;
         end;
 
         await nav.ok;
@@ -66,8 +66,8 @@ with
         var Map map;
 
         var GameNav nav with
-            _.map = map;
-            _.me  = 1;
+            this.map = map;
+            this.me  = 1;
         end;
 
         await nav.ok;

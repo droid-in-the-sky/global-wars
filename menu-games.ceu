@@ -5,7 +5,7 @@
 #include "sdl.ceu"
 #include "sdl-gfx.ceu"
 
-#include "colors.ceu"
+#include "sdl-colors.ceu"
 #include "ui.ceu"
 #include "ui-scroll.ceu"
 #include "ui-grid.ceu"
@@ -46,12 +46,11 @@ do
     var char[20] state_type = [[ STATES[@state_n].type ]];
 
     var UIGrid grid with
-        _.ren := _REN;
-        _.bg_redim? = 1;
-        _.lay_lins = 4;
-        _.lay_cols = 6;
-        _.lay := __MENU_GAMES_CEU_grid;
-        _.uis_n = 9;
+        this.ren := _REN;
+        this.lay_lins = 4;
+        this.lay_cols = 6;
+        this.lay := __MENU_GAMES_CEU_grid;
+        this.uis_n = 9;
         native do
             int _MENU_GAMES_CEU_grid[] = {
                  0,  0,  1,  1,  2,  2,     // ps
@@ -61,9 +60,9 @@ do
             };
         end
 
-        _.spc_x  = 10;
-        _.spc_y  = 10;
-        _.clr_cell_bg := &_colors.gray;
+        this.spc_x  = 10;
+        this.spc_y  = 10;
+        this.clr_cell_bg := &_colors.gray;
     end;
 
     // PS
@@ -75,8 +74,8 @@ do
                 _SDL_DestroyTexture(tex1);
             end
         var UITexture ui1 with
-            _.ren := _REN;
-            _.tex := tex1;
+            this.ren := _REN;
+            this.tex := tex1;
         end;
     //
         var _char[5] str2;
@@ -89,8 +88,8 @@ do
                 _SDL_DestroyTexture(tex2);
             end
         var UITexture ui2 with
-            _.ren := _REN;
-            _.tex := tex2;
+            this.ren := _REN;
+            this.tex := tex2;
         end;
 
     // STATE_N
@@ -102,8 +101,8 @@ do
                 _SDL_DestroyTexture(tex3);
             end
         var UITexture ui3 with
-            _.ren := _REN;
-            _.tex := tex3;
+            this.ren := _REN;
+            this.tex := tex3;
         end;
     //
         var _char[5] str4;
@@ -116,8 +115,8 @@ do
                 _SDL_DestroyTexture(tex4);
             end
         var UITexture ui4 with
-            _.ren := _REN;
-            _.tex := tex4;
+            this.ren := _REN;
+            this.tex := tex4;
         end;
 
     // STATE_TYPE
@@ -129,8 +128,8 @@ do
                 _SDL_DestroyTexture(tex5);
             end
         var UITexture ui5 with
-            _.ren := _REN;
-            _.tex := tex5;
+            this.ren := _REN;
+            this.tex := tex5;
         end;
     //
         var _SDL_Texture* tex6;
@@ -141,59 +140,59 @@ do
                 _SDL_DestroyTexture(tex6);
             end
         var UITexture ui6 with
-            _.ren := _REN;
-            _.tex := tex6;
+            this.ren := _REN;
+            this.tex := tex6;
         end;
 
     // RM
         var UITexture ui7 with
-            _.ren := _REN;
-            _.tex := _TEX_RM;
-            _.align_x = _UI_ALIGN_LEFT;
+            this.ren := _REN;
+            this.tex := _TEX_RM;
+            this.align_x = _UI_ALIGN_LEFT;
         end;
     // OK
         var UITexture ui8 with
-            _.ren := _REN;
-            _.tex := _TEX_OK;
-            _.align_x = _UI_ALIGN_LEFT;
+            this.ren := _REN;
+            this.tex := _TEX_OK;
+            this.align_x = _UI_ALIGN_LEFT;
         end;
     // TODO: OK <=> HOURGLASS
 
     this.ui = grid;
     spawn UIGridItem in grid.uis with
-        _.idx = 1;
-        _.ui = &ui1;
+        this.idx = 1;
+        this.ui = &ui1;
     end;
     spawn UIGridItem in grid.uis with
-        _.idx = 2;
-        _.ui = &ui2;
+        this.idx = 2;
+        this.ui = &ui2;
     end;
     spawn UIGridItem in grid.uis with
-        _.idx = 3;
-        _.ui = &ui3;
+        this.idx = 3;
+        this.ui = &ui3;
     end;
     spawn UIGridItem in grid.uis with
-        _.idx = 4;
-        _.ui = &ui4;
+        this.idx = 4;
+        this.ui = &ui4;
     end;
     spawn UIGridItem in grid.uis with
-        _.idx = 5;
-        _.ui = &ui5;
+        this.idx = 5;
+        this.ui = &ui5;
     end;
     spawn UIGridItem in grid.uis with
-        _.idx = 6;
-        _.ui = &ui6;
+        this.idx = 6;
+        this.ui = &ui6;
     end;
     spawn UIGridItem in grid.uis with
-        _.idx = 7;
-        _.ui = &ui7;
+        this.idx = 7;
+        this.ui = &ui7;
     end;
     spawn UIGridItem in grid.uis with
-        _.idx = 8;
-        _.ui = &ui8;
+        this.idx = 8;
+        this.ui = &ui8;
     end;
 
-    par do
+    par/or do
         await ui7.ok_clicked;
         emit this.lst.ok_rm => this.n;
     with
@@ -230,68 +229,68 @@ do
         end
 
         var UIGrid grid1 with
-            _.ren := _REN;
-            _.lay_lins = n_/2;
-            _.lay_cols = 2;
-            _.lay := lay; // { 0, 1, ..., n-1 }
-            _.uis_n = n_;
+            this.ren := _REN;
+            this.lay_lins = n_/2;
+            this.lay_cols = 2;
+            this.lay := lay; // { 0, 1, ..., n-1 }
+            this.uis_n = n_;
 
-            _.rect.w = 5*_REN_W / 6 - 5;     // -5 avoids x-scroll
-            _.rect.h = n_*_REN_H / 6;
+            this.rect.w = 5*_REN_W / 6 - 5;     // -5 avoids x-scroll
+            this.rect.h = n_*_REN_H / 6;
         end;
 
         // GAMES: g1, g2, ...
 
-        var MenuGamesOne* one;
+        pool MenuGamesOne[] ones;
         loop i in n do
-            one = new MenuGamesOne with
+            var MenuGamesOne* one = new MenuGamesOne in ones with
                 var char[25] file = [[ GAMES[@i+1] ]];
-                _.file = file;
+                this.file = file;
                             // not held
-                _.n    = i + 1;
-                _.lst  = this;
+                this.n    = i + 1;
+                this.lst  = outer;
             end;
             spawn UIGridItem in grid1.uis with
-                _.idx = i;
-                _.ui = &one:ui;
+                this.idx = i;
+                this.ui = &one:ui;
             end;
         end
 
         // SCROLL [ g1 | g2 | ... ]
 
         var UIScroll scroll with
-            _.ren := _REN;
-            _.ui  = grid1;
-            _.clr_scroll := &_colors.white;
+            this.ren := _REN;
+            this.ui  = grid1;
+            this.clr_scroll := &_colors.white;
                             // global
         end;
 
         // NEW
 
         var UITexture ui_new with
-            _.ren := _REN;
-            _.tex := _TEX_OK;
+            this.ren := _REN;
+            this.tex := _TEX_OK;
         end;
 
         // GRID  [ scroll | new ]
 
         var UIGrid grid2 with
-            _.ren := _REN;
-            _.lay_lins = 1;
-            _.lay_cols = 6;
-            _.uis_n = 2;
-            _.lay := _MENUGAMES_lay2;
+            this.ren := _REN;
+            this.lay_lins = 1;
+            this.lay_cols = 6;
+            this.uis_n = 2;
+            this.lay := _MENUGAMES_lay2;
             native do
                 int MENUGAMES_lay2[] = { 0,0,0,0,0,1 };
             end
         end;
         spawn UIGridItem in grid2.uis with
-            _.idx = 0;
-            _.ui  = &scroll;
+            this.idx = 0;
+            this.ui  = &scroll;
         end;
         spawn UIGridItem in grid2.uis with
-            _.idx = 1;
-            _.ui  = &ui_new;
+            this.idx = 1;
+            this.ui  = &ui_new;
         end;
 
         var _SDL_Rect r;        // whole screen
@@ -351,9 +350,9 @@ with
     do
         var MenuGamesListenerImpl lst;
         var MenuGamesOne one with
-            _.file := "g1.lua";
-            _.n    = 1;
-            _.lst  = lst;
+            this.file := "g1.lua";
+            this.n    = 1;
+            this.lst  = lst;
         end;
         call/rec one.ui.go(&r);
         par/or do

@@ -42,19 +42,19 @@ do
     if this.state>1 and (this.state%2 == 1) then
         do
             var GameState st with
-                _.map = map;
-                _.idx = state-1;
+                this.map = map;
+                this.idx = state-1;
             end;
             var GameMove mv with
-                _.map = map;
-                _.idx = (state-1)/2;
+                this.map = map;
+                this.idx = (state-1)/2;
             end;
             await 2s;
         end
         do
             var GameState st with
-                _.map = map;
-                _.idx = state;
+                this.map = map;
+                this.idx = state;
             end;
         end
     end
@@ -67,11 +67,11 @@ do
         r.h = _REN_H;
 
     var UIGrid g1 with
-        _.ren := _REN;
-        _.lay_lins = 4;
-        _.lay_cols = 4;
-        _.lay := _GN_g1;
-        _.uis_n = 1;
+        this.ren := _REN;
+        this.lay_lins = 4;
+        this.lay_cols = 4;
+        this.lay := _GN_g1;
+        this.uis_n = 1;
         native do
             int GN_g1[16] = {
                 -1, -1, -1, -1,
@@ -84,12 +84,11 @@ do
 
     // GRID "menu"
     var UIGrid g2 with
-        _.ren := _REN;
-        _.bg_redim? = 1;
-        _.lay_lins = 2;
-        _.lay_cols = 3;
-        _.lay := _GN_g2;
-        _.uis_n = 3;
+        this.ren := _REN;
+        this.lay_lins = 2;
+        this.lay_cols = 3;
+        this.lay := _GN_g2;
+        this.uis_n = 3;
         native do
             int GN_g2[] = {
                 -1, -1, -1,
@@ -99,44 +98,44 @@ do
     end;
     // ui_l
         var UITexture ui_l with
-            _.ren := _REN;
-            _.tex := _TEX_L;
+            this.ren := _REN;
+            this.tex := _TEX_L;
         end;
     // ui_r
         var UITexture ui_r with
-            _.ren := _REN;
-            _.tex := _TEX_R;
+            this.ren := _REN;
+            this.tex := _TEX_R;
         end;
     // ui_ok
         var UITexture ui_ok with
-            _.ren := _REN;
-            _.tex := _TEX_OK;
+            this.ren := _REN;
+            this.tex := _TEX_OK;
         end;
 
     spawn UIGridItem in g1.uis with
-        _.idx = 0;
-        _.ui  = &g2;
+        this.idx = 0;
+        this.ui  = &g2;
     end;
 
     spawn UIGridItem in g2.uis with
-        _.idx = 0;
-        _.ui  = &ui_l;
+        this.idx = 0;
+        this.ui  = &ui_l;
     end;
     spawn UIGridItem in g2.uis with
-        _.idx = 1;
-        _.ui  = &ui_r;
+        this.idx = 1;
+        this.ui  = &ui_r;
     end;
     spawn UIGridItem in g2.uis with
-        _.idx = 2;
-        _.ui  = &ui_ok;
+        this.idx = 2;
+        this.ui  = &ui_ok;
     end;
 
     call/rec g1.go(&r);
 
     loop do
         var GameState st with
-            _.map = map;
-            _.idx = state;
+            this.map = map;
+            this.idx = state;
         end;
 
         var int dir;
@@ -145,8 +144,8 @@ do
             // only even states have moves
             if this.state % 2 == 0 then
                 var GameMove mv with
-                    _.map = map;
-                    _.idx = state/2;     // 2 states for 1 move
+                    this.map = map;
+                    this.idx = state/2;     // 2 states for 1 move
                 end;
                 await FOREVER;
             end
@@ -207,9 +206,9 @@ with
             [[ dofile 'g1.lua' ]];
             var Map map;
             var GameNav nav with
-                _.map   = map;
-                _.me    = 1;
-                _.state = 1;
+                this.map   = map;
+                this.me    = 1;
+                this.state = 1;
             end;
             await nav.ok;
         end
@@ -217,8 +216,8 @@ with
             [[ dofile 'g1.lua' ]];
             var Map map;
             var GameNav nav with
-                _.map   = map;
-                _.me    = 1;
+                this.map   = map;
+                this.me    = 1;
             end;
             await nav.ok;
         end
@@ -226,9 +225,9 @@ with
             [[ dofile 'g2.lua' ]];
             var Map map;
             var GameNav nav with
-                _.map   = map;
-                _.me    = 1;
-                _.state = 1;
+                this.map   = map;
+                this.me    = 1;
+                this.state = 1;
             end;
             await nav.ok;
         end
@@ -236,9 +235,9 @@ with
             [[ dofile 'g3.lua' ]];
             var Map map;
             var GameNav nav with
-                _.map   = map;
-                _.me    = 1;
-                _.state = 1;
+                this.map   = map;
+                this.me    = 1;
+                this.state = 1;
             end;
             await nav.ok;
         end

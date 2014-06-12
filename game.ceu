@@ -22,7 +22,7 @@ do
 
     var Map map;
     var MapFinger fgr with
-        _.map = map;
+        this.map = map;
     end;
 
     // while not finished
@@ -54,8 +54,8 @@ do
                 // HUMAN
                 else
                     var GameHuman human with
-                        _.map = map;
-                        _.me  = p;
+                        this.map = map;
+                        this.me  = p;
                     end;
                     await human.ok;
                 end
@@ -101,7 +101,7 @@ with
 #endif
 
     var Game game with
-        _.file := LUA_GAME;
+        this.file := LUA_GAME;
     end;
     await FOREVER;
 with

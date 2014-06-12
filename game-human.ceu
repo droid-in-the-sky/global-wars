@@ -36,8 +36,8 @@ do
     // avoid navigation for "0st" state
     if state > 1 then
         var GameNav nav with
-            _.map = map;
-            _.me  = me;
+            this.map = map;
+            this.me  = me;
         end;
         await nav.ok;
     end
@@ -49,16 +49,16 @@ do
     // state = FORTIFY
     if fortify? then
         var GameFortify fort with
-            _.map = map;
-            _.me  = me;
+            this.map = map;
+            this.me  = me;
         end;
         await fort.ok;
 
     // state = ATTACK
     else/if attack? then
         var GameAttack att with
-            _.map = map;
-            _.me  = me;
+            this.map = map;
+            this.me  = me;
         end;
         await att.ok;
 
@@ -90,15 +90,15 @@ with
         var Map map;
         do
             var GameHuman human with
-                _.map = map;
-                _.me  = 1;
+                this.map = map;
+                this.me  = 1;
             end;
             await human.ok;
         end
         do
             var GameHuman human with
-                _.map = map;
-                _.me  = 2;
+                this.map = map;
+                this.me  = 2;
             end;
             await human.ok;
         end
@@ -109,15 +109,15 @@ with
         var Map map;
         do
             var GameHuman human with
-                _.map = map;
-                _.me  = 1;
+                this.map = map;
+                this.me  = 1;
             end;
             await human.ok;
         end
         do
             var GameHuman human with
-                _.map = map;
-                _.me  = 2;
+                this.map = map;
+                this.me  = 2;
             end;
             await human.ok;
         end

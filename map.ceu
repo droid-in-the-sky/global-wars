@@ -7,13 +7,13 @@
 #include "sdl-gfx.ceu"
 
 #include "ui.ceu"
-#include "colors.ceu"
+#include "sdl-colors.ceu"
 
 input void SDL_QUIT;
 input void SDL_REDRAW;
 input _SDL_MouseButtonEvent* SDL_MOUSEBUTTONDOWN;
 
-native pure _P(), _I();
+native @pure _P(), _I();
 native do
     int P (int p, int c, int dp, int zoom) {
         return (dp + p - c) * zoom / 100 + c;
@@ -283,7 +283,7 @@ with
         ]]
         var Map map;
         var MapFinger fgr with
-            _.map = map;
+            this.map = map;
         end;
         await 3s;
     end
