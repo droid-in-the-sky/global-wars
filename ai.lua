@@ -34,13 +34,12 @@ function AI_move (s, p)
                 local mov = {}  -- hold "moving"    possibilites from "c"
 
                 -- for each "c2" in "c1" border
-                for c2, isN in ipairs(MAP.borders[c1]) do
-                    if isN == 1 then        -- is neighbour
-                        if Sp[c2] == 0 then -- not mine: attack
-                            att[#att+1] = c2
-                        else                --  is mine: move
-                            mov[#mov+1] = c2
-                        end
+                for _,name2 in ipairs(MAP[c1].borders) do
+                    local c2 = MAP[name2].idx
+                    if Sp[c2] == 0 then -- not mine: attack
+                        att[#att+1] = c2
+                    else                --  is mine: move
+                        mov[#mov+1] = c2
                     end
                 end
 

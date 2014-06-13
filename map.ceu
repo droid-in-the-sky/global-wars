@@ -56,16 +56,16 @@ do
     var int xc = _REN_W / 2;
     var int yc = _REN_H / 2;
 
-    do
-        [[
-            xmin, xmax = xs_min_max()
-            ymin, ymax = ys_min_max()
-        ]]
-        var int xmin = [[xmin]];
-        var int xmax = [[xmax]];
-        var int ymin = [[ymin]];
-        var int ymax = [[ymax]];
+    [[
+        xmin, xmax = xs_min_max()
+        ymin, ymax = ys_min_max()
+    ]]
+    var int xmin = [[xmin]];
+    var int xmax = [[xmax]];
+    var int ymin = [[ymin]];
+    var int ymax = [[ymax]];
 
+    do
         var int  w = xmax - xmin;
         var int  h = ymax - ymin;
         var int dx = _REN_W - w;
@@ -120,10 +120,18 @@ do
         every SDL_REDRAW do
             var int n_ = 1;      // traverses xs/ys continuously
 
+            // sea
+            _boxColor(_REN,
+                _P(0,xc,this.x,zoom),
+                _P(0,yc,this.y,zoom),
+                _P(xmax,xc,this.x,zoom),
+                _P(ymax,yc,this.y,zoom),
+                _colors.blue);
+
             // for each country [0, #MAP)
             loop i_ in this.n do
                 var int i = i_ + 1;     // C => Lua indexing
-                var u16[10] xs, ys;     // TODO: negative values?
+                var u16[15] xs, ys;     // TODO: negative values?
 
                 var int pts = [[ TMAP.ns[@i] ]];
 
@@ -146,8 +154,26 @@ do
                 _polygonColor(_REN, xs, ys, pts, _colors.black);
 
                 // draw center
-                //_boxColor(_REN, cx[i]-1,cy[i]-1, cx[i]+1,cy[i]+1, 
-                //_colors.black);
+                var int cx = [[ MAP[@i].center[1] ]];
+                        cx = _P(cx, xc, this.x, zoom);
+                var int cy = [[ MAP[@i].center[2] ]];
+                        cy = _P(cy, yc, this.y, zoom);
+                _boxColor(_REN, cx-1,cy-1, cx+1,cy+1, _colors.black);
+            end
+
+            // for each border dotted line
+            var int ls = [[ #MAP.lines ]];
+            loop l in ls do
+                var int x1 = [[ MAP.lines[@l+1][1] ]];
+                var int y1 = [[ MAP.lines[@l+1][2] ]];
+                var int x2 = [[ MAP.lines[@l+1][3] ]];
+                var int y2 = [[ MAP.lines[@l+1][4] ]];
+                _lineRGBA(_REN,
+                    _P(x1, xc, this.x, zoom),
+                    _P(y1, yc, this.y, zoom),
+                    _P(x2, xc, this.x, zoom),
+                    _P(y2, yc, this.y, zoom),
+                    0,0,0,0xFF);
             end
 
             // for each border { {p1,p2}, {p3,p4}, ... }
@@ -278,7 +304,7 @@ with
             if __ANDROID__ then
                 dofile '/data/data/org.droid_in_the_sky.global_wars/lib/lib_lua_map1.so'
             else
-                dofile 'map1.lua'
+                dofile 'map4.lua'
             end
         ]]
         var Map map;
@@ -288,7 +314,7 @@ with
         await 3s;
     end
 
-    [[ dofile "map2.lua" ]]
+    [[ dofile "map4.lua" ]]
     var Map map;
     await 2s;
 

@@ -149,6 +149,7 @@ do
         call/rec g1.go(&r);
 
         await 2s;
+        //await SDL_MOUSEBUTTONDOWN;
     end
 
     // GRID "menu"

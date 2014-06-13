@@ -31,6 +31,32 @@ do
                STATES[#STATES].type == 'attack')
     ]]
 
+    // show next turn
+    do
+        var _char[15] str;
+        _sprintf(str, "%s", " NEXT TURN ");
+        var _SDL_Texture* tex;
+            finalize
+                tex = _SDL_text2texture(_REN, _FONT, str,
+                                        &_colors.black, _BGS[this.me]);
+            with
+                _SDL_DestroyTexture(tex);
+            end
+        var UITexture nxt with
+            this.ren := _REN;
+            this.tex := tex;
+            this.bg_clr := _BGS[me];
+
+        end;
+        var _SDL_Rect r;
+            r.x = _REN_W / 2;
+            r.y = _REN_H / 2;
+            r.w = _REN_W;
+            r.h = _REN_H;
+        call nxt.go(&r);
+        await nxt.ok_clicked;
+    end
+
     // show navigate => (fortify||attack)
 
     // avoid navigation for "0st" state

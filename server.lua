@@ -199,7 +199,7 @@ function SRV_move_inc (T, A, FR, TO, set)
             else
                 t[1] = a + A
             end
-            return t[1]
+            return A --t[1]
         end
     end
     T[#T+1] = { A, FR, TO }

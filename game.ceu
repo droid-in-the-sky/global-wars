@@ -37,28 +37,26 @@ do
             var int p = p_ + 1;     // C => Lua
 
             // none, AI or human?
-            var bool player? = [[ PLAYERS[@p] ~= false ]];
+            var bool none? = [[ PLAYERS[@p] == false   ]];
+            var bool ai?   = [[ PLAYERS[@p] == 'ai'    ]];
+            var bool human?= [[ PLAYERS[@p] == 'human' ]];
 
             // NONE
-            if not player? then
+            if none? then
                 [[ SRV_move(@p, {}) ]];
 
+            // AI
+            else/if ai? then
+                [[ SRV_move(@p, AI_move(@ns,@p)) ]];
+
+            // HUMAN
             else
-                [[ assert(type(PLAYERS[@p]) == 'string') ]];
-                var char[25] player = [[ PLAYERS[@p] ]];
-
-                // AI
-                if _strcmp("ai", player) == 0 then
-                    [[ SRV_move(@p, AI_move(@ns,@p)) ]];
-
-                // HUMAN
-                else
-                    var GameHuman human with
-                        this.map = map;
-                        this.me  = p;
-                    end;
-                    await human.ok;
-                end
+                _assert(human?);
+                var GameHuman human with
+                    this.map = map;
+                    this.me  = p;
+                end;
+                await human.ok;
             end
         end
 
@@ -67,7 +65,7 @@ do
             SRV_go()
             local f = assert(io.open(@this.file, 'w'))
             f:write([[
-                dofile 'map1.lua'
+                dofile 'map4.lua'
                 PLAYERS = ]]..table2string(PLAYERS)..[[
                 STATES  = ]]..table2string(STATES)..[[
                 MOVES   = ]]..table2string(MOVES)..[[
