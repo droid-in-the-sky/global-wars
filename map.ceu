@@ -301,7 +301,7 @@ with
 with
     do
         [[
-            if __ANDROID__ then
+            if __ANDROID then
                 dofile '/data/data/org.droid_in_the_sky.global_wars/lib/lib_lua_map4.so'
             else
                 dofile 'map4.lua'

@@ -1,4 +1,4 @@
-dofile 'map4.lua'
+dofile(__LUA_MAP)
 
 local STATE = {
     type = 'fortify',
@@ -15,7 +15,6 @@ end
 local got = {}
 local n = 0
 local p = -1
-print(n, #MAP)
 while n < #MAP do
     p = (p + 1) % 6
     if PLAYERS[p+1] then
@@ -30,13 +29,17 @@ while n < #MAP do
         end
     end
 end
-print(n, #MAP)
 
-local file = 'games/'..os.time()..'.lua'
+local file = os.time()..'.lua'
+if __ANDROID then
+    file = '/sdcard/_global_wars_'..file
+else
+    file = 'games/'..file
+end
 
 local f = assert(io.open(file,'w'))
 f:write([[
-    dofile 'map4.lua'
+    dofile(']]..__LUA_MAP..[[')
     PLAYERS = ]]..table2string(PLAYERS)..[[
     STATES  = {
         [1]  = ]]..table2string(STATE)..[[,

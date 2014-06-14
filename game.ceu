@@ -65,7 +65,7 @@ do
             SRV_go()
             local f = assert(io.open(@this.file, 'w'))
             f:write([[
-                dofile 'map4.lua'
+                dofile(LUA_MAP)
                 PLAYERS = ]]..table2string(PLAYERS)..[[
                 STATES  = ]]..table2string(STATES)..[[
                 MOVES   = ]]..table2string(MOVES)..[[

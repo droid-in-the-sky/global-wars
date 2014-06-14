@@ -315,4 +315,4 @@ MAP = {
     },
 }
 
-dofile 'map.lua'
+dofile(__LUA__MAP)

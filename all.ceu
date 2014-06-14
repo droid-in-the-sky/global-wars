@@ -24,24 +24,42 @@ end
 
 // LUA
 #ifdef __ANDROID__
-    [[ __ANDROID__ = true ]]
+    [[ __ANDROID = true ]]
 #else
-    [[ __ANDROID__ = false ]]
+    [[ __ANDROID = false ]]
 #endif
 
 #ifdef __ANDROID__
 #define LUA_MAIN \
-    "/data/data/org.droid_in_the_sky.global_wars/lib/lib_lua_main.so"
+    "/sdcard/main.lua"
 #define LUA_SERVER \
     "/data/data/org.droid_in_the_sky.global_wars/lib/lib_lua_server.so"
 #define LUA_AI \
     "/data/data/org.droid_in_the_sky.global_wars/lib/lib_lua_ai.so"
+#define LUA_NEW \
+    "/data/data/org.droid_in_the_sky.global_wars/lib/lib_lua_new.so"
+#define LUA_MAP \
+    "/data/data/org.droid_in_the_sky.global_wars/lib/lib_lua_map.so"
+#define LUA__MAP \
+    "/data/data/org.droid_in_the_sky.global_wars/lib/lib_lua__map.so"
 #else
 #define LUA_MAIN   "main.lua"
 #define LUA_SERVER "server.lua"
 #define LUA_AI     "ai.lua"
+#define LUA_NEW    "new.lua"
+#define LUA_MAP    "map4.lua"
+#define LUA__MAP   "map.lua"
 #endif
     [[
+        __LUA_MAIN  = LUA_MAIN
+        if __ANDROID then
+            local f = assert(io.open(__LUA_MAIN, 'w'))
+            f:write('GAMES = {}')
+            f:close()
+        end
+        __LUA_NEW   = LUA_NEW
+        __LUA_MAP   = LUA_MAP
+        __LUA__MAP  = LUA__MAP
         dofile(LUA_MAIN)
         dofile(LUA_SERVER)
         dofile(LUA_AI)

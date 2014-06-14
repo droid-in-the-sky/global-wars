@@ -36,7 +36,7 @@ with
     end
 
     do
-        var char[25] file = [[ GAMES[@n] ]];
+        var char[50] file = [[ GAMES[@n] ]];
         var Game game with
             this.file = file;
         end;

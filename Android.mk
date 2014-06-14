@@ -35,4 +35,4 @@ endif
 
 include $(BUILD_SHARED_LIBRARY)
 
-$(shell (cd $(LOCAL_PATH) ; ceu main.ceu))
+$(shell (cd $(LOCAL_PATH) ; ceu --cpp-args "$(LOCAL_C_FLAGS)" main.ceu))

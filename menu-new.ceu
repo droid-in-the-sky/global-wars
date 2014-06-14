@@ -162,11 +162,11 @@ do
 
     // GAMES[#GAMES+1] = file
     // save in "games/XXXXXX.lua"
-    [[ GAMES[#GAMES+1] = dofile'scripts/menu-new-1.lua' ]];
+    [[ GAMES[#GAMES+1] = dofile(__LUA_NEW) ]];
 
     // save main.lua
     [[
-        local f = assert(io.open('main.lua', 'w'))
+        local f = assert(io.open(__LUA_MAIN, 'w'))
         f:write('GAMES = '..table2string(GAMES)..'\n')
         f:close()
     ]]

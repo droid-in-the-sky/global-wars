@@ -311,7 +311,7 @@ do
             [[
                 os.remove(GAMES[@rm])
                 table.remove(GAMES, @rm)
-                local f = assert(io.open('main.lua', 'w'))
+                local f = assert(io.open(LUA_MAIN, 'w'))
                 f:write('GAMES = '..table2string(GAMES)..'\n')
                 f:close()
             ]];
