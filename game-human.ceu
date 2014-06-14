@@ -46,14 +46,13 @@ do
             this.ren := _REN;
             this.tex := tex;
             this.bg_clr := _BGS[me];
-
         end;
         var _SDL_Rect r;
-            r.x = _REN_W / 2;
-            r.y = _REN_H / 2;
-            r.w = _REN_W;
-            r.h = _REN_H;
-        call nxt.go(&r);
+            r.x = _REN_W/2 - _REN_W/8;
+            r.y = _REN_H/2 - _REN_H/8;
+            r.w = _REN_W / 4;
+            r.h = _REN_H / 4;
+        call nxt.go_bg(&r);
         await nxt.ok_clicked;
     end
 

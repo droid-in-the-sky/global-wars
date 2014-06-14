@@ -131,7 +131,7 @@ do
             // for each country [0, #MAP)
             loop i_ in this.n do
                 var int i = i_ + 1;     // C => Lua indexing
-                var u16[15] xs, ys;     // TODO: negative values?
+                var u16[25] xs, ys;     // TODO: negative values?
 
                 var int pts = [[ TMAP.ns[@i] ]];
 
@@ -302,7 +302,7 @@ with
     do
         [[
             if __ANDROID__ then
-                dofile '/data/data/org.droid_in_the_sky.global_wars/lib/lib_lua_map1.so'
+                dofile '/data/data/org.droid_in_the_sky.global_wars/lib/lib_lua_map4.so'
             else
                 dofile 'map4.lua'
             end

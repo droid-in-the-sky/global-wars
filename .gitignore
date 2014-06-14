@@ -8,6 +8,10 @@ android-project/assets/
 android-project/bin/
 android-project/files/
 android-project/gen/
-android-project/jni/
+android-project/jni/SDL*
+android-project/jni/lib*
+android-project/jni/lua*
+android-project/jni/smpeg*
+android-project/jni/src
 android-project/libs/
 android-project/obj/

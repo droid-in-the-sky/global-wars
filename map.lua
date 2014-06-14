@@ -18,7 +18,7 @@ TMAP = {
 }
 for c, C in ipairs(MAP) do
     TMAP.ns[c] = #C.points / 2
-    assert(TMAP.ns[c] <= 15)        -- Ceu: "var u16[15] xs, ys";
+    assert(TMAP.ns[c] <= 25)        -- Ceu: "var u16[25] xs, ys";
 --print('#', TMAP.ns[c])
     for j, v in ipairs(C.points) do
         if j%2 == 1 then
