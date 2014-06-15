@@ -52,7 +52,7 @@ end
 #endif
     [[
         __LUA_MAIN  = LUA_MAIN
-        if __ANDROID then
+        if not io.open(__LUA_MAIN) then
             local f = assert(io.open(__LUA_MAIN, 'w'))
             f:write('GAMES = {}')
             f:close()
@@ -67,18 +67,25 @@ end
 
 // FONT
     native do
-        TTF_Font* FONT;
+        TTF_Font* FONT_30;
+        TTF_Font* FONT_20;
     end
     _TTF_Init();
         finalize with
             _TTF_Quit();
         end
     finalize
-        _FONT = _TTF_OpenFont("fnts/Deutsch.ttf", 20);
+        _FONT_30 = _TTF_OpenFont("fnts/Deutsch.ttf", 30);
     with
-        _TTF_CloseFont(_FONT);
+        _TTF_CloseFont(_FONT_30);
     end
-    _assert(_FONT != null);
+    finalize
+        _FONT_20 = _TTF_OpenFont("fnts/Deutsch.ttf", 20);
+    with
+        _TTF_CloseFont(_FONT_20);
+    end
+    _assert(_FONT_30 != null);
+    _assert(_FONT_20 != null);
 
 // TEXS
     native do

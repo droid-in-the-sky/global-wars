@@ -294,7 +294,7 @@ MAP = {
 
     continents = {
         [1] = { 'Alaska', 'Northern', 'Alberta', 'Ontario', 'California', 'Mexico', 'New York', 'Quebec', 'Greenland',
-            color = { 0xCC, 0x00, 0x00 },
+            color = { 0xFF, 0x80, 0x00 },
         },
         [2] = { 'Venezuela', 'Peru', 'Argentina', 'Brazil',
             color = { 0x00, 0xCC, 0x00 },
@@ -303,7 +303,7 @@ MAP = {
             color = { 0xCC, 0x00, 0xCC },
         },
         [4] = { 'Italy', 'Spain', 'England', 'Germany', 'Iceland', 'Scandinavia', 'Ukraine',
-            color = { 0x00, 0x00, 0xCC },
+            color = { 0x00, 0x00, 0x77 },
         },
         [5] = { 'Saudi Arabia', 'Afghanistan', 'Ural', 'Siberia', 'India', 'China', 'Vietnam', 'Mongolia', 'Tchita', 'XXXX', 'Vladivostok', 
 'Japan',

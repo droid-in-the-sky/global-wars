@@ -26,8 +26,9 @@ class MenuGamesOne with
     var MenuGamesListener& lst;
 do
     _assert(_REN != null);
-    _assert(_TEX_RM != null);
-    _assert(_TEX_OK != null);
+    _assert(_TEX_RM  != null);
+    _assert(_TEX_OK  != null);
+    _assert(_TEX_NEW != null);
 
     _assert(this.n    != 0);
     _assert(this.file != null);
@@ -68,7 +69,7 @@ do
     // PS
         var _SDL_Texture* tex1;
             finalize
-                tex1 = _SDL_text2texture(_REN, _FONT, "Players",
+                tex1 = _SDL_text2texture(_REN, _FONT_20, "Players",
                                         &_colors.black, null);
             with
                 _SDL_DestroyTexture(tex1);
@@ -82,7 +83,7 @@ do
         _sprintf(str2, "%d", ps);
         var _SDL_Texture* tex2;
             finalize
-                tex2 = _SDL_text2texture(_REN, _FONT, str2,
+                tex2 = _SDL_text2texture(_REN, _FONT_20, str2,
                                         &_colors.black, null);
             with
                 _SDL_DestroyTexture(tex2);
@@ -95,7 +96,7 @@ do
     // STATE_N
         var _SDL_Texture* tex3;
             finalize
-                tex3 = _SDL_text2texture(_REN, _FONT, "Week",
+                tex3 = _SDL_text2texture(_REN, _FONT_20, "Week",
                                         &_colors.black, null);
             with
                 _SDL_DestroyTexture(tex3);
@@ -106,10 +107,10 @@ do
         end;
     //
         var _char[5] str4;
-        _sprintf(str4, "%d", state_n);
+        _sprintf(str4, "%d", (state_n+1)/2);
         var _SDL_Texture* tex4;
             finalize
-                tex4 = _SDL_text2texture(_REN, _FONT, str4,
+                tex4 = _SDL_text2texture(_REN, _FONT_20, str4,
                                         &_colors.black, null);
             with
                 _SDL_DestroyTexture(tex4);
@@ -122,7 +123,7 @@ do
     // STATE_TYPE
         var _SDL_Texture* tex5;
             finalize
-                tex5 = _SDL_text2texture(_REN, _FONT, "Action",
+                tex5 = _SDL_text2texture(_REN, _FONT_20, "Action",
                                         &_colors.black, null);
             with
                 _SDL_DestroyTexture(tex5);
@@ -134,7 +135,7 @@ do
     //
         var _SDL_Texture* tex6;
             finalize
-                tex6 = _SDL_text2texture(_REN, _FONT, state_type,
+                tex6 = _SDL_text2texture(_REN, _FONT_20, state_type,
                                         &_colors.black, null);
             with
                 _SDL_DestroyTexture(tex6);
@@ -149,12 +150,14 @@ do
             this.ren := _REN;
             this.tex := _TEX_RM;
             this.align_x = _UI_ALIGN_LEFT;
+            this.rect_mul = 1.5;
         end;
     // OK
         var UITexture ui8 with
             this.ren := _REN;
             this.tex := _TEX_OK;
             this.align_x = _UI_ALIGN_LEFT;
+            this.rect_mul = 1.5;
         end;
     // TODO: OK <=> HOURGLASS
 
@@ -209,6 +212,7 @@ do
     loop do
         var int n = [[ #GAMES ]];
         if n == 0 then
+            emit this.ok_go => 0;       // new game
             break;
         end
 
@@ -244,7 +248,7 @@ do
         pool MenuGamesOne[] ones;
         loop i in n do
             var MenuGamesOne* one = new MenuGamesOne in ones with
-                var char[25] file = [[ GAMES[@i+1] ]];
+                var char[50] file = [[ GAMES[@i+1] ]];
                 this.file = file;
                             // not held
                 this.n    = i + 1;
@@ -269,19 +273,27 @@ do
 
         var UITexture ui_new with
             this.ren := _REN;
-            this.tex := _TEX_OK;
+            this.tex := _TEX_NEW;
+            this.rect_mul = 1.5;
         end;
 
         // GRID  [ scroll | new ]
 
         var UIGrid grid2 with
             this.ren := _REN;
-            this.lay_lins = 1;
-            this.lay_cols = 6;
+            this.lay_lins = 6;
+            this.lay_cols = 7;
             this.uis_n = 2;
             this.lay := _MENUGAMES_lay2;
             native do
-                int MENUGAMES_lay2[] = { 0,0,0,0,0,1 };
+                int MENUGAMES_lay2[] = {
+                    0, 0, 0, 0, 0, 0, -1,
+                    0, 0, 0, 0, 0, 0, -1,
+                    0, 0, 0, 0, 0, 0, -1,
+                    0, 0, 0, 0, 0, 0, -1,
+                    0, 0, 0, 0, 0, 0, -1,
+                    0, 0, 0, 0, 0, 0,  1
+                };
             end
         end;
         spawn UIGridItem in grid2.uis with
@@ -311,7 +323,7 @@ do
             [[
                 os.remove(GAMES[@rm])
                 table.remove(GAMES, @rm)
-                local f = assert(io.open(LUA_MAIN, 'w'))
+                local f = assert(io.open(__LUA_MAIN, 'w'))
                 f:write('GAMES = '..table2string(GAMES)..'\n')
                 f:close()
             ]];

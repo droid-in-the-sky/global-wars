@@ -34,10 +34,10 @@ do
     // show next turn
     do
         var _char[15] str;
-        _sprintf(str, "%s", " NEXT TURN ");
+        _sprintf(str, " WEEK %d ", (state+1)/2);
         var _SDL_Texture* tex;
             finalize
-                tex = _SDL_text2texture(_REN, _FONT, str,
+                tex = _SDL_text2texture(_REN, _FONT_30, str,
                                         &_colors.black, _BGS[this.me]);
             with
                 _SDL_DestroyTexture(tex);

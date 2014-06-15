@@ -37,6 +37,7 @@ do
                     this.ren    := _REN;
                     this.tex    := _TEX_HUMAN;
                     this.bg_clr := _BGS[n];
+                    this.rect_mul = 2;
                 end;
                 spawn UIGridItem in this.grid.uis with
                     this.idx = outer.n - 1;
@@ -54,6 +55,7 @@ do
                 this.ren    := _REN;
                 this.tex    := _TEX_AI;
                 this.bg_clr := _BGS[n];
+                this.rect_mul = 2;
             end;
             spawn UIGridItem in this.grid.uis with
                 this.idx = outer.n - 1;
@@ -69,6 +71,7 @@ do
                 this.ren    := _REN;
                 this.tex    := _TEX_NONE;
                 this.bg_clr := _BGS[n];
+                this.rect_mul = 2;
             end;
             spawn UIGridItem in this.grid.uis with
                 this.idx = outer.n - 1;
@@ -92,6 +95,7 @@ do
         this.lay_cols = 7;
         this.lay := _MenuNew_grid;
         this.uis_n = 2;
+        this.clr_bg := &_colors.brown;
         native do
             int MenuNew_grid[] = {
                 0, 0, 0, 0, 0, 0, -1,
@@ -123,6 +127,8 @@ do
     var UITexture ui_ok with
         this.ren := _REN;
         this.tex := _TEX_OK;
+        //this.bg_clr := &_colors.white;
+        this.rect_mul = 1.5;
     end;
 
     var _SDL_Rect r;        // whole screen

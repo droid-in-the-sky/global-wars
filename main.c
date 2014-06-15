@@ -1,11 +1,15 @@
 #include <stdio.h>
 
+#ifndef DEBUG
+#define DEBUG
+#endif
+
 // definitely lost: 2,478 bytes in 17 blocks
 
 #ifdef __ANDROID__
 #include "SDL.h"
 #include "SDL_image.h"
-#include "SDL_mixer.h"
+//#include "SDL_mixer.h"
 #include "SDL_ttf.h"
 //#include "SDL_net.h"
 //#include "SDL_opengles.h"
@@ -39,7 +43,7 @@ int ASYNC_nxt = 0;
 #endif
 
 #ifdef __ANDROID__
-#define SDL_MOTION_FLOOD_AVOID
+//#define SDL_MOTION_FLOOD_AVOID
 #endif
 #ifdef SDL_MOTION_FLOOD_AVOID
 int FLOOD_FILTER (SDL_Event* evt, void* fingerId) {
@@ -131,6 +135,8 @@ int main (int argc, char *argv[])
 #endif
 #endif  // CEU_IN_SDL_DT
 
+        //SDL_EventState(SDL_FINGERMOTION, SDL_IGNORE);
+
         int has;
 #ifdef __ANDROID__
         if (isPaused) {
@@ -145,12 +151,13 @@ int main (int argc, char *argv[])
 
 #if defined(CEU_WCLOCKS) || defined(CEU_IN_SDL_DT)
         u32 now = SDL_GetTicks();
+        if (old == now) now++;      // force a minimum change
         s32 dt = now - old;
         old = now;
 #endif
 
         // redraw on wclock|handled|DT
-        // (avoids redrawing for undefined events)
+        // (avoids redrawing for undefined events or with pending events)
         int redraw = 0;
 
 #ifdef CEU_THREADS
@@ -161,7 +168,7 @@ int main (int argc, char *argv[])
 #ifdef __ANDROID__
         if (!isPaused)
 #endif
-        {
+        if (!SDL_PollEvent(NULL)) {     /* skip if pending events */
 #ifdef CEU_WCLOCKS
 #ifndef CEU_IN_SDL_DT
             if (WCLOCK_nxt != CEU_WCLOCK_INACTIVE)
@@ -302,7 +309,7 @@ int main (int argc, char *argv[])
         }
 
 #ifdef CEU_IN_SDL_REDRAW
-        if (redraw) {
+        if (redraw && !SDL_PollEvent(NULL)) {
             ceu_sys_go(&app, CEU_IN_SDL_REDRAW, (tceu_evtp)NULL);
 #ifdef CEU_RET
             if (! app.isAlive)

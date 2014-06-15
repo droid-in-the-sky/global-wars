@@ -60,7 +60,7 @@ do
                         map.cy[to] - 40,    // TODO: hardcoded
                         map.cx[to],
                         map.cy[to],
-                        1, 0,0,0, 0xAA);
+                        1, 0,0,0, 0xBB);
 
                 // move arrow
                 else
@@ -77,17 +77,15 @@ do
                         ys[0] = map.cy[to];
                         ys[1] = y;
                         ys[2] = map.cy[fr];
-                    _bezierRGBA(_REN, xs,ys, 3, 2, 0,0,0, 0xAA);
+                    _bezierRGBA(_REN, xs,ys, 3, 2, 0,0,0, 0xBB);
                 end
 
                 // army
                 var _SDL_Color bg = *_BGS[p];
-                bg.a = 0xAA;
-                _boxColor(_REN,
-                         x-10, y-10,    // TODO: hardcoded
-                         x+10, y+10,    // TODO: hardcoded
-                         bg);
-                _stringRGBA(_REN, x, y, str, 0,0,0, 0xAA);
+                bg.a = 0xBB;
+                _filledCircleColor(_REN, x, y, 10, bg);
+                _stringRGBA(_REN, x-3, y-3, str, 0,0,0, 0xBB);
+                                    // TODO: hardcoded
             end
         end
     end

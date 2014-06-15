@@ -1,6 +1,10 @@
 for idx, C in ipairs(MAP) do
-    MAP[C.name] = C     -- ['Brazil'] = C
+    MAP[C.name] = C     -- MAP.Brazil = C
     C.idx = idx
+
+    for _, name in ipairs(C.borders) do
+        C.borders[name] = true      -- MAP.Brazil.borders.Peru = true
+    end
 end
 
 -- fill all countries colors from continents
@@ -56,7 +60,7 @@ function ys_min_max ()
     return ymin,ymax
 end
 
-local _R = 10
+local _R = 20
 
 function MAP_vspoint (x, y)
     for c, C in ipairs(MAP) do
@@ -68,11 +72,3 @@ function MAP_vspoint (x, y)
     end
     return 0
 end
-
-BORDERS = {}
-    -- { {p1,p2}, {p3,p4}, ... }
-    for _, C in ipairs(MAP) do
-        for _, name in ipairs(C.borders) do
-            BORDERS[#BORDERS+1] = { C.center, MAP[name].center }
-        end
-    end

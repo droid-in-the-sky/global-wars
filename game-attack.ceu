@@ -43,10 +43,7 @@ do
 
     par/or do
         every SDL_REDRAW do
-            _boxColor(_REN,
-                     map.cx[fr]-20, map.cy[fr]-20,
-                     map.cx[fr]+20, map.cy[fr]+20,
-                     _colors.white);
+            _circleColor(_REN, map.cx[fr], map.cy[fr], 15, *_BGS[this.me]);
         end
     with
         // await click at "to" country
@@ -59,7 +56,7 @@ do
         // other: attack/move
         else
             // check borders
-            var bool border? = [[ MAP.borders[@fr][@to] ]];
+            var bool border? = [[ MAP[@fr].borders[ MAP[@to].name ] ~= nil ]];
 
             if not border? then
                 emit this.ok => (false,fr);
@@ -83,7 +80,7 @@ class GameAttack with
     event void ok;
 do
     _assert(_REN  != null);
-    _assert(_FONT != null);
+    _assert(_FONT_30 != null);
     _assert(_BGS  != null);
 
     _assert(this.me  != 0);
@@ -129,7 +126,7 @@ do
         _sprintf(str, "%s", "Move & Attack");
         var _SDL_Texture* tex;
             finalize
-                tex = _SDL_text2texture(_REN, _FONT, str,
+                tex = _SDL_text2texture(_REN, _FONT_30, str,
                                         &_colors.black, _BGS[this.me]);
 
             with
@@ -156,13 +153,14 @@ do
     var UIGrid g2 with
         this.ren := _REN;
         this.lay_lins = 2;
-        this.lay_cols = 3;
+        this.lay_cols = 2;
         this.lay := _GA_g2;
         this.uis_n = 2;
+        this.clr_bg := &_colors.gray_75;
         native do
             int GA_g2[] = {
-                -1, -1, -1,
-                -1,  0,  1  // ok
+                -1, -1,
+                 0,  1  // ok
             };
         end
     end;
@@ -171,6 +169,7 @@ do
     var UITexture ui_ok with
         this.ren := _REN;
         this.tex := _TEX_OK;
+        //this.rect_mul = 2;
     end;
 
     spawn UIGridItem in g1.uis with
@@ -207,6 +206,7 @@ do
                 var UITexture ui with
                     this.ren := _REN;
                     this.tex := _TEX_NO;
+                    //this.rect_mul = 2;
                 end;
                 spawn UIGridItem in g2.uis with
                     this.idx = 0;

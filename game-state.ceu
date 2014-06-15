@@ -21,7 +21,7 @@ do
     every SDL_REDRAW do
         var _char[20] title;
         var char[20] title_ = [[ STATES[@this.idx].type ]];
-        _sprintf(title, "[%d] %s", this.idx, title_);
+        _sprintf(title, "[%d] %s", (this.idx+1)/2, title_);
         _stringColor(_REN, 10, 10, title, _colors.white);
 
         // foreach player p
@@ -44,12 +44,9 @@ do
                 if n > 0 then
                     var _char[10] str;
                     _sprintf(str, "%d", n);
-                    _boxColor(_REN,
-                             map.cx[c]-10, map.cy[c]-10,
-                             map.cx[c]+10, map.cy[c]+10,
-                             *_BGS[p]);
-                    _stringColor(_REN, map.cx[c], map.cy[c], str,
-                                _colors.black);
+                    _filledCircleColor(_REN, map.cx[c], map.cy[c], 10, *_BGS[p]);
+                    _stringColor(_REN, map.cx[c]-3, map.cy[c]-3, str, _colors.black);
+                                    // TODO: hardcoded
                 end
             end
         end

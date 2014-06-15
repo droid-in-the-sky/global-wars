@@ -15,6 +15,8 @@ class UITexture with
     var   bool            bg_redim? = false;
     var   _SDL_Color[]    bg_clr    = null;
 
+    var   float           rect_mul  = 1;     // for ok_clicked
+
     var   _SDL_Texture[]  tex     = null;
     var   int             w, h;  // original dimensions
 
@@ -53,16 +55,28 @@ do
         // OK_CLICKED
         loop do
             var _SDL_MouseButtonEvent* but = await SDL_MOUSEBUTTONUP;
-            if _SDL_Rect_vs_Mouse(&this.rect, but) then
+            var _SDL_Rect r = this.rect;
+            if this.rect_mul != 1 then
+                r.w = rect.w * this.rect_mul;
+                r.h = rect.h * this.rect_mul;
+                r.x = rect.x - (r.w-rect.w)/2;
+                r.y = rect.y - (r.h-rect.h)/2;
+            end
+            if _SDL_Rect_vs_Mouse(&r, but) then
                 emit ok_clicked;
             end
         end
     with
         every SDL_REDRAW do
             if bg_clr != null then
+/*
                 _SDL_SetRenderDrawColor(ren,
                     bg_clr:r,bg_clr:g,bg_clr:b,bg_clr:a);
                 _SDL_RenderFillRect(ren, &this.bg_rect);
+*/
+                _boxColor(ren, bg_rect.x,bg_rect.y,
+                               bg_rect.x+bg_rect.w,bg_rect.y+bg_rect.h,
+                               *bg_clr);
             end
             //emit ok_redraw_pre;
 

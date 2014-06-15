@@ -89,6 +89,7 @@ do
         this.lay_cols = 3;
         this.lay := _GN_g2;
         this.uis_n = 3;
+        this.clr_bg := &_colors.gray_75;
         native do
             int GN_g2[] = {
                 -1, -1, -1,
@@ -100,16 +101,19 @@ do
         var UITexture ui_l with
             this.ren := _REN;
             this.tex := _TEX_L;
+            this.rect_mul = 1.5;
         end;
     // ui_r
         var UITexture ui_r with
             this.ren := _REN;
             this.tex := _TEX_R;
+            this.rect_mul = 1.5;
         end;
     // ui_ok
         var UITexture ui_ok with
             this.ren := _REN;
             this.tex := _TEX_OK;
+            this.rect_mul = 1.5;
         end;
 
     spawn UIGridItem in g1.uis with

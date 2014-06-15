@@ -21,7 +21,8 @@ class GameFortify with
     event void ok;
 do
     _assert(_REN  != null);
-    _assert(_FONT != null);
+    _assert(_FONT_30 != null);
+    _assert(_FONT_20 != null);
     _assert(_TEX_NO != null);
     _assert(_TEX_OK != null);
 
@@ -71,7 +72,7 @@ do
         _sprintf(str, "%s", "Fortify");
         var _SDL_Texture* tex;
             finalize
-                tex = _SDL_text2texture(_REN, _FONT, str,
+                tex = _SDL_text2texture(_REN, _FONT_30, str,
                                         &_colors.black, _BGS[this.me]);
             with
                 _SDL_DestroyTexture(tex);
@@ -92,7 +93,7 @@ do
         _sprintf(str, "%d", fs);
         var _SDL_Texture* tex;
             finalize
-                tex = _SDL_text2texture(_REN, _FONT, str,
+                tex = _SDL_text2texture(_REN, _FONT_30, str,
                                         &_colors.black, _BGS[this.me]);
             with
                 _SDL_DestroyTexture(tex);
@@ -117,13 +118,14 @@ do
     var UIGrid g2 with
         this.ren := _REN;
         this.lay_lins = 2;
-        this.lay_cols = 3;
+        this.lay_cols = 2;
         this.lay := _GF_g2;
         this.uis_n = 3;
+        this.clr_bg := &_colors.gray_75;
         native do
             int GF_g2[] = {
-                -1,  0,  0,  // fs
-                -1,  1,  2   // no, ok
+                0,  0,  // fs
+                1,  2   // no, ok
             };
         end
     end;
@@ -175,13 +177,16 @@ do
                     this.idx = (state+1)/2; // tmp move
                 end;
 
+                var _SDL_Color bg = *_BGS[me];
+                    bg.a = 0xBB;
+
                 // text texture
                 var _char[5] str;
                 _sprintf(str, "%d", fs_tmp);
                 var _SDL_Texture* tex;
                     finalize
-                        tex = _SDL_text2texture(_REN, _FONT, str,
-                                                &_colors.black, _BGS[this.me]);
+                        tex = _SDL_text2texture(_REN, _FONT_20, str,
+                                                &_colors.black, &bg);
                     with
                         _SDL_DestroyTexture(tex);
                     end
@@ -189,7 +194,7 @@ do
                 var UITexture ui_fs with
                     this.ren := _REN;
                     this.tex := tex;
-                    this.bg_clr := _BGS[me];
+                    this.bg_clr = &bg;
                 end;
 
                 spawn UIGridItem in g2.uis with
@@ -230,6 +235,7 @@ do
             var UITexture ui with
                 this.ren := _REN;
                 this.tex := _TEX_NO;
+                //this.rect_mul = 2;
             end;
 
             spawn UIGridItem in g2.uis with
@@ -250,6 +256,7 @@ do
             var UITexture ui with
                 this.ren := _REN;
                 this.tex := _TEX_OK;
+                //this.rect_mul = 2;
             end;
 
             spawn UIGridItem in g2.uis with

@@ -25,8 +25,8 @@ end
 
 class Map with
     var int  n;   // number of countries
-    var u16* cx;  // all country centers
-    var u16* cy;  // all country centers
+    var s16* cx;  // all country centers
+    var s16* cy;  // all country centers
 
     event int       go_zoom;
     event (int,int) go_xy;
@@ -121,17 +121,12 @@ do
             var int n_ = 1;      // traverses xs/ys continuously
 
             // sea
-            _boxColor(_REN,
-                _P(0,xc,this.x,zoom),
-                _P(0,yc,this.y,zoom),
-                _P(xmax,xc,this.x,zoom),
-                _P(ymax,yc,this.y,zoom),
-                _colors.blue);
+            _boxColor(_REN, 0,0, _REN_W, _REN_H, _colors.light_blue);
 
             // for each country [0, #MAP)
             loop i_ in this.n do
                 var int i = i_ + 1;     // C => Lua indexing
-                var u16[25] xs, ys;     // TODO: negative values?
+                var s16[25] xs, ys;
 
                 var int pts = [[ TMAP.ns[@i] ]];
 
@@ -154,11 +149,13 @@ do
                 _polygonColor(_REN, xs, ys, pts, _colors.black);
 
                 // draw center
+/*
                 var int cx = [[ MAP[@i].center[1] ]];
                         cx = _P(cx, xc, this.x, zoom);
                 var int cy = [[ MAP[@i].center[2] ]];
                         cy = _P(cy, yc, this.y, zoom);
                 _boxColor(_REN, cx-1,cy-1, cx+1,cy+1, _colors.black);
+*/
             end
 
             // for each border dotted line
@@ -175,29 +172,6 @@ do
                     _P(y2, yc, this.y, zoom),
                     0,0,0,0xFF);
             end
-
-            // for each border { {p1,p2}, {p3,p4}, ... }
-/**
-            _lua_getglobal(_L, "BORDERS"); // [ B ]
-            loop i_, _lua_objlen(_L,1) do
-                var int i = i_ + 1;     // C => Lua indexing
-                _lua_rawgeti(_L, -1, i);   // [ B | t ]
-                _lua_rawgeti(_L, -1, 1);   // [ B | t | p1 ]
-                _lua_rawgeti(_L, -2, 2);   // [ B | t | p1 | p2 ]
-                _lua_rawgeti(_L, -2, 1);   // [ B | t | p1 | p2 | x1 ]
-                _lua_rawgeti(_L, -3, 2);   // [ B | t | p1 | p2 | x1 | y1 ]
-                _lua_rawgeti(_L, -3, 1);   // [ B | t | p1 | p2 | x1 | y1 | x2 ]
-                _lua_rawgeti(_L, -4, 2);   // [ B | t | p1 | p2 | x1 | y1 | x2 | y2 ]
-                _lineRGBA(_REN,
-                    _P(_lua_tointeger(_L,-4), xc, this.x, zoom),
-                    _P(_lua_tointeger(_L,-3), yc, this.y, zoom),
-                    _P(_lua_tointeger(_L,-2), xc, this.x, zoom),
-                    _P(_lua_tointeger(_L,-1), yc, this.y, zoom),
-                    0,0,0, 0xFF);
-                _lua_pop(_L, 7);           // [ B ]
-            end
-            _lua_pop(_L, 1);               // [ ]
-**/
         end
     end
 end
@@ -226,7 +200,7 @@ do
                 var _SDL_TouchFingerEvent* e2_ :=
                     await SDL_FINGERDOWN  // go to zoom when pressing "f2"
                         until e2_:fingerId != e1.fingerId;
-                e2 = *e2_; // struct
+                e2 = *e2_;
             with
                 var int x = map.x;
                 var int y = map.y;
@@ -260,13 +234,13 @@ do
                             continue;  // unexpected zoom gesture
                         end
 
-                        var int z;
+                        var int z = map.zoom * 3 / 100;
                         if (e3_:x > e1.x) and (e3_:x > e2.x)
                         or
                            (e3_:x < e1.x) and (e3_:x < e2.x) then
-                            z =  3;
+                            z =  z;
                         else
-                            z = -3;
+                            z = -z;
                         end
 
                         emit map.go_zoom => map.zoom + z;
