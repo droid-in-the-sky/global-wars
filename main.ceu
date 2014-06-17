@@ -1,7 +1,7 @@
 #include "sdl.ceu"
 #include "sdl-gfx.ceu"
-#include "menu-games.ceu"
 #include "menu-new.ceu"
+#include "menu-load.ceu"
 #include "game.ceu"
 
 input void SDL_REDRAW;
@@ -24,8 +24,8 @@ with
 
     // choose game
     if n > 0 then
-        var MenuGames menu;
-        n = await menu.ok_go;
+        var MenuLoad load;
+        n = await load.ok_go;
     end
 
     // new game

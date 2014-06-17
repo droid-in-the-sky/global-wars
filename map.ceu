@@ -24,6 +24,8 @@ native do
 end
 
 class Map with
+    var _SDL_Renderer[] ren = null;
+
     var int  n;   // number of countries
     var s16* cx;  // all country centers
     var s16* cy;  // all country centers
@@ -37,7 +39,9 @@ class Map with
     var int y = 0;
     var int zoom = 100;
 do
-    _assert(_REN != null);
+    _assert(this.ren != null);
+    var int ren_w, ren_h;
+    _assert(_SDL_GetRendererOutputSize(ren, &ren_w, &ren_h) == 0);
 
     this.n = [[#MAP]];
 
@@ -53,8 +57,8 @@ do
         _free(this.cy);
     end
 
-    var int xc = _REN_W / 2;
-    var int yc = _REN_H / 2;
+    var int xc = ren_w / 2;
+    var int yc = ren_h / 2;
 
     [[
         xmin, xmax = xs_min_max()
@@ -68,14 +72,14 @@ do
     do
         var int  w = xmax - xmin;
         var int  h = ymax - ymin;
-        var int dx = _REN_W - w;
-        var int dy = _REN_H - h;
+        var int dx = ren_w - w;
+        var int dy = ren_h - h;
 
         // best fit
         if dx < dy then
-            zoom = 100*_REN_W / w;
+            zoom = 100*ren_w / w;
         else
-            zoom = 100*_REN_H / h;
+            zoom = 100*ren_h / h;
         end
 
         // center on x / y
@@ -121,7 +125,7 @@ do
             var int n_ = 1;      // traverses xs/ys continuously
 
             // sea
-            _boxColor(_REN, 0,0, _REN_W, _REN_H, _colors.light_blue);
+            _boxColor(ren, 0,0, ren_w, ren_h, _colors.light_blue);
 
             // for each country [0, #MAP)
             loop i_ in this.n do
@@ -143,10 +147,10 @@ do
                 var int r = [[ MAP[@i].color[1] ]];
                 var int g = [[ MAP[@i].color[2] ]];
                 var int b = [[ MAP[@i].color[3] ]];
-                _filledPolygonRGBA(_REN, xs, ys, pts, r,g,b, 0xFF);
+                _filledPolygonRGBA(ren, xs, ys, pts, r,g,b, 0xFF);
 
                 // draw country border
-                _polygonColor(_REN, xs, ys, pts, _colors.black);
+                _polygonColor(ren, xs, ys, pts, _colors.black);
 
                 // draw center
 /*
@@ -154,7 +158,7 @@ do
                         cx = _P(cx, xc, this.x, zoom);
                 var int cy = [[ MAP[@i].center[2] ]];
                         cy = _P(cy, yc, this.y, zoom);
-                _boxColor(_REN, cx-1,cy-1, cx+1,cy+1, _colors.black);
+                _boxColor(ren, cx-1,cy-1, cx+1,cy+1, _colors.black);
 */
             end
 
@@ -165,7 +169,7 @@ do
                 var int y1 = [[ MAP.lines[@l+1][2] ]];
                 var int x2 = [[ MAP.lines[@l+1][3] ]];
                 var int y2 = [[ MAP.lines[@l+1][4] ]];
-                _lineRGBA(_REN,
+                _lineRGBA(ren,
                     _P(x1, xc, this.x, zoom),
                     _P(y1, yc, this.y, zoom),
                     _P(x2, xc, this.x, zoom),
@@ -281,7 +285,9 @@ with
                 dofile 'map4.lua'
             end
         ]]
-        var Map map;
+        var Map map with
+            this.ren := _REN;
+        end;
         var MapFinger fgr with
             this.map = map;
         end;
@@ -289,7 +295,9 @@ with
     end
 
     [[ dofile "map4.lua" ]]
-    var Map map;
+    var Map map with
+        this.ren := _REN;
+    end;
     await 2s;
 
     loop i in 200 do

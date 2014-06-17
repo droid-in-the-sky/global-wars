@@ -36,33 +36,26 @@ do
     // # of armies to fortify
     var int fs = [[ SRV_fs(STATES[@state], @this.me) ]];
 
-    // GRID "all"
-    var _SDL_Rect r;        // whole screen
-        r.x = _REN_W / 2;
-        r.y = _REN_H / 2;
-        r.w = _REN_W;
-        r.h = _REN_H;
-
-    var UIGrid g1 with
-        this.ren := _REN;
-        this.lay_lins = 4;
-        this.lay_cols = 4;
-        this.lay := _GF_g1;
-        this.uis_n = 3;
-        native do
-            int GF_g1[16] = {
-                -1, -1, -1, -1,
-                -1,  0,  0, -1,     // fs
-                -1,  1,  1, -1,
-                -1, -1, -1,  2      // menu
-            };
-        end
-    end;
-
     // AWAIT center click
     do
+        // header: "FORTIFY: N"
+        var UIGrid header with
+            this.ren := _REN;
+            this.lay_lins = 2;
+            this.lay_cols = 2;
+            this.lay := _GF_g1;
+            this.uis_n = 2;
+            native do
+                int GF_g1[] = {
+                    0,  0,
+                    1,  1
+                };
+            end
+        end;
+
         // show current state
         var GameState st with
+            this.ren := _REN;
             this.map = map;
             this.idx = state;    // start from last
         end;
@@ -83,7 +76,7 @@ do
             this.bg_clr := _BGS[me];
         end;
 
-        spawn UIGridItem in g1.uis with
+        spawn UIGridItem in header.uis with
             this.idx = 0;
             this.ui  = &ui1;
         end;
@@ -104,18 +97,23 @@ do
             this.bg_clr := _BGS[me];
         end;
 
-        spawn UIGridItem in g1.uis with
+        spawn UIGridItem in header.uis with
             this.idx = 1;
             this.ui  = &ui2;
         end;
 
-        call/rec g1.go(&r);
+        var _SDL_Rect r;
+            r.x = _REN_W / 4;
+            r.y = _REN_H / 3;
+            r.w = _REN_W / 2;
+            r.h = _REN_H / 3;
+        call/rec header.go_bg(&r, true);
         await 2s;
         //await SDL_MOUSEBUTTONDOWN;
     end
 
     // GRID "menu"
-    var UIGrid g2 with
+    var UIGrid menu with
         this.ren := _REN;
         this.lay_lins = 2;
         this.lay_cols = 2;
@@ -129,15 +127,14 @@ do
             };
         end
     end;
-    // menu
-    spawn UIGridItem in g1.uis with
-        this.idx = 2;
-        this.ui  = &g2;
-        // g2.uis[0] = null; // fs, changes every click
-        // g2.uis[1] = null; // no, after 1 click
-        // g2.uis[2] = null; // ok, when fs==0
-    end;
-
+    var _SDL_Rect r;
+        r.x = _REN_W;
+        r.y = _REN_H;
+        r.w = _REN_W/4;
+        r.h = _REN_H/4;
+    menu.align_x = _UI_ALIGN_RIGHT;
+    menu.align_y = _UI_ALIGN_BOTTOM;
+    call/rec menu.go(&r);
 
     // loop until all "fs" are chosen
     //  - restart on "no"   (only when fs<tot)
@@ -167,6 +164,7 @@ do
 
                 // show next state
                 var GameState st with
+                    this.ren := _REN;
                     this.map = map;
                     this.idx = state+1;     // tmp state
                 end;
@@ -197,7 +195,7 @@ do
                     this.bg_clr = &bg;
                 end;
 
-                spawn UIGridItem in g2.uis with
+                spawn UIGridItem in menu.uis with
                     this.idx = 0;
                     this.ui  = &ui_fs;
                 end;
@@ -205,7 +203,7 @@ do
                 // re-arrange all:
                 // - loop entering
                 // - after every "e"
-                call/rec g1.go(null);
+                call/rec menu.go(null);
 
                 if fs_tmp == 0 then
                     await FOREVER;
@@ -238,7 +236,7 @@ do
                 //this.rect_mul = 2;
             end;
 
-            spawn UIGridItem in g2.uis with
+            spawn UIGridItem in menu.uis with
                 this.idx = 1;
                 this.ui  = &ui;
             end;
@@ -259,13 +257,13 @@ do
                 //this.rect_mul = 2;
             end;
 
-            spawn UIGridItem in g2.uis with
+            spawn UIGridItem in menu.uis with
                 this.idx = 2;
                 this.ui  = &ui;
             end;
 
             if fs > 0 then
-                call/rec g2.go(null);   // needed if entering w/o the await
+                call/rec menu.go(null);   // needed if entering w/o the await
             end
 
             // QUIT
@@ -297,8 +295,10 @@ with
 with
     loop do
         do
-            [[ dofile 'g1.lua' ]];
-            var Map map;
+            [[ dofile 'g_fortify.lua' ]];
+            var Map map with
+                this.ren := _REN;
+            end;
 
             var GameFortify fort with
                 this.map = map;

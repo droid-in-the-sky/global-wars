@@ -42,6 +42,7 @@ do
     if this.state>1 and (this.state%2 == 1) then
         do
             var GameState st with
+                this.ren := _REN;
                 this.map = map;
                 this.idx = state-1;
             end;
@@ -53,46 +54,22 @@ do
         end
         do
             var GameState st with
+                this.ren := _REN;
                 this.map = map;
                 this.idx = state;
             end;
         end
     end
 
-    // GRID "all"
-    var _SDL_Rect r;        // whole screen
-        r.x = _REN_W / 2;
-        r.y = _REN_H / 2;
-        r.w = _REN_W;
-        r.h = _REN_H;
-
-    var UIGrid g1 with
+    var UIGrid menu with
         this.ren := _REN;
-        this.lay_lins = 4;
-        this.lay_cols = 4;
-        this.lay := _GN_g1;
-        this.uis_n = 1;
-        native do
-            int GN_g1[16] = {
-                -1, -1, -1, -1,
-                -1, -1, -1, -1,
-                -1, -1, -1, -1,
-                -1, -1, -1,  0      // menu
-            };
-        end
-    end;
-
-    // GRID "menu"
-    var UIGrid g2 with
-        this.ren := _REN;
-        this.lay_lins = 2;
+        this.lay_lins = 1;
         this.lay_cols = 3;
         this.lay := _GN_g2;
         this.uis_n = 3;
         this.clr_bg := &_colors.gray_75;
         native do
             int GN_g2[] = {
-                -1, -1, -1,
                  0,  1,  2,  // < , > , ok
             };
         end
@@ -103,11 +80,19 @@ do
             this.tex := _TEX_L;
             this.rect_mul = 1.5;
         end;
+        spawn UIGridItem in menu.uis with
+            this.idx = 0;
+            this.ui  = &ui_l;
+        end;
     // ui_r
         var UITexture ui_r with
             this.ren := _REN;
             this.tex := _TEX_R;
             this.rect_mul = 1.5;
+        end;
+        spawn UIGridItem in menu.uis with
+            this.idx = 1;
+            this.ui  = &ui_r;
         end;
     // ui_ok
         var UITexture ui_ok with
@@ -115,29 +100,23 @@ do
             this.tex := _TEX_OK;
             this.rect_mul = 1.5;
         end;
+        spawn UIGridItem in menu.uis with
+            this.idx = 2;
+            this.ui  = &ui_ok;
+        end;
 
-    spawn UIGridItem in g1.uis with
-        this.idx = 0;
-        this.ui  = &g2;
-    end;
-
-    spawn UIGridItem in g2.uis with
-        this.idx = 0;
-        this.ui  = &ui_l;
-    end;
-    spawn UIGridItem in g2.uis with
-        this.idx = 1;
-        this.ui  = &ui_r;
-    end;
-    spawn UIGridItem in g2.uis with
-        this.idx = 2;
-        this.ui  = &ui_ok;
-    end;
-
-    call/rec g1.go(&r);
+    var _SDL_Rect r;
+        r.x = _REN_W;
+        r.y = _REN_H;
+        r.w = _REN_W/4;
+        r.h = _REN_H/8;
+    menu.align_x = _UI_ALIGN_RIGHT;
+    menu.align_y = _UI_ALIGN_BOTTOM;
+    call/rec menu.go(&r);
 
     loop do
         var GameState st with
+            this.ren := _REN;
             this.map = map;
             this.idx = state;
         end;
@@ -208,7 +187,9 @@ with
     loop do
         do
             [[ dofile 'g1.lua' ]];
-            var Map map;
+            var Map map with
+                this.ren := _REN;
+            end;
             var GameNav nav with
                 this.map   = map;
                 this.me    = 1;
@@ -218,7 +199,9 @@ with
         end
         do
             [[ dofile 'g1.lua' ]];
-            var Map map;
+            var Map map with
+                this.ren := _REN;
+            end;
             var GameNav nav with
                 this.map   = map;
                 this.me    = 1;
@@ -227,7 +210,9 @@ with
         end
         do
             [[ dofile 'g2.lua' ]];
-            var Map map;
+            var Map map with
+                this.ren := _REN;
+            end;
             var GameNav nav with
                 this.map   = map;
                 this.me    = 1;
@@ -237,7 +222,9 @@ with
         end
         do
             [[ dofile 'g3.lua' ]];
-            var Map map;
+            var Map map with
+                this.ren := _REN;
+            end;
             var GameNav nav with
                 this.map   = map;
                 this.me    = 1;

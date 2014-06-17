@@ -12,18 +12,18 @@ input void SDL_REDRAW;
 input _SDL_KeyboardEvent* SDL_KEYDOWN;
 
 class GameState with
+    var _SDL_Renderer[] ren = null;
     var Map& map;
     var int  idx = 0;       // TODO: change to "go"
 do
-    _assert(_REN != null);
+    _assert(this.ren != null);
     _assert(this.idx != 0);
 
-    every SDL_REDRAW do
-        var _char[20] title;
-        var char[20] title_ = [[ STATES[@this.idx].type ]];
-        _sprintf(title, "[%d] %s", (this.idx+1)/2, title_);
-        _stringColor(_REN, 10, 10, title, _colors.white);
+    var _char[20] title;
+    var char[20] title_ = [[ STATES[@this.idx].type ]];
+    _sprintf(title, "[%d] %s", (this.idx+1)/2, title_);
 
+    every SDL_REDRAW do
         // foreach player p
         var int n_players = [[ #PLAYERS ]];
         loop p_ in n_players do
@@ -44,12 +44,14 @@ do
                 if n > 0 then
                     var _char[10] str;
                     _sprintf(str, "%d", n);
-                    _filledCircleColor(_REN, map.cx[c], map.cy[c], 10, *_BGS[p]);
-                    _stringColor(_REN, map.cx[c]-3, map.cy[c]-3, str, _colors.black);
+//_printf("%s (%d,%d) (%d,%d,%d)\n", str, map.cx[c], map.cy[c], _colors.black.r,_colors.black.g,_colors.black.b);
+                    _filledCircleColor(ren, map.cx[c], map.cy[c], 10, *_BGS[p]);
+                    _stringColor(ren, map.cx[c], map.cy[c], str, _colors.black);
                                     // TODO: hardcoded
                 end
             end
         end
+        _stringColor(ren, 10, 10, title, _colors.white);
     end
 end
 
@@ -71,11 +73,14 @@ with
     [[ dofile 'g1.lua' ]]
     var int len = [[ #STATES ]];
 
-    var Map map;
+    var Map map with
+        this.ren := _REN;
+    end;
 
     loop do
         loop i in len do
             var GameState s with
+                this.ren := _REN;
                 this.map = map;
                 this.idx = i+1;
             end;

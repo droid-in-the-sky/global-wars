@@ -20,7 +20,9 @@ do
     _assert(this.file != null);
     [[ dofile(@this.file) ]];
 
-    var Map map;
+    var Map map with
+        this.ren := _REN;
+    end;
     var MapFinger fgr with
         this.map = map;
     end;

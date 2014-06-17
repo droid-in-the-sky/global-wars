@@ -24,8 +24,8 @@ menu-new:
 	gcc -Os main.c $(CFLAGS) -lSDL2 -lSDL2_gfx -lSDL2_ttf -lSDL2_image -llua5.1 \
 		-o global-wars.exe
 
-menu-games:
-	ceu --cpp-args "-D __MENU_GAMES_CEU" menu-games.ceu
+menu-load:
+	ceu --cpp-args "-D __MENU_LOAD_CEU" menu-load.ceu
 	gcc -g -Os main.c $(CFLAGS) -lSDL2 -lSDL2_gfx -lSDL2_ttf -lSDL2_image -llua5.1 \
 		-o global-wars.exe
 

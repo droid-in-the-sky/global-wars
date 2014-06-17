@@ -4,6 +4,8 @@
 #define DEBUG
 #endif
 
+#define CEU_SDL_FPS 30
+
 // definitely lost: 2,478 bytes in 17 blocks
 
 #ifdef __ANDROID__
@@ -39,17 +41,7 @@ s32 WCLOCK_nxt;
 
 #ifdef CEU_ASYNCS
 int ASYNC_nxt = 0;
-#define ceu_out_async(v) ASYNC_nxt = v;
-#endif
-
-#ifdef __ANDROID__
-//#define SDL_MOTION_FLOOD_AVOID
-#endif
-#ifdef SDL_MOTION_FLOOD_AVOID
-int FLOOD_FILTER (SDL_Event* evt, void* fingerId) {
-    return evt->type == SDL_FINGERMOTION &&
-           ((SDL_TouchFingerEvent*)evt)->fingerId == (int)fingerId;
-}
+#define ceu_out_async(v) ASYNC_nxt = 1;
 #endif
 
 #include "_ceu_app.c"
@@ -67,9 +59,8 @@ int main (int argc, char *argv[])
     }
 
     WCLOCK_nxt = CEU_WCLOCK_INACTIVE;
-#if defined(CEU_WCLOCKS) || defined(CEU_IN_SDL_DT)
     u32 old = SDL_GetTicks();
-#endif
+    u32 fps_old = old;
 
 #ifdef CEU_THREADS
     // just before executing CEU code
@@ -130,8 +121,9 @@ int main (int argc, char *argv[])
             tm = WCLOCK_nxt / 1000;
 #endif
 #ifdef CEU_ASYNCS
-        if (ASYNC_nxt)
+        if (ASYNC_nxt) {
             tm = 0;
+        }
 #endif
 #endif  // CEU_IN_SDL_DT
 
@@ -149,16 +141,20 @@ int main (int argc, char *argv[])
 //if (has)
     //printf("EVENT %x\n", evt.type);
 
-#if defined(CEU_WCLOCKS) || defined(CEU_IN_SDL_DT)
         u32 now = SDL_GetTicks();
         if (old == now) now++;      // force a minimum change
         s32 dt = now - old;
         old = now;
-#endif
 
-        // redraw on wclock|handled|DT
-        // (avoids redrawing for undefined events or with pending events)
-        int redraw = 0;
+        // DT/WCLOCK/REDRAW respecting FPS (at most)
+        int fps_ok = !SDL_PollEvent(NULL);
+//printf("%d >= %d\n", old, fps_old+1000/CEU_SDL_FPS);
+        if (! fps_ok) {
+            if (old >= fps_old+1000/CEU_SDL_FPS) {
+                fps_old = old;
+                fps_ok = 1;
+            }
+        }
 
 #ifdef CEU_THREADS
         // just before executing CEU code
@@ -168,12 +164,12 @@ int main (int argc, char *argv[])
 #ifdef __ANDROID__
         if (!isPaused)
 #endif
-        if (!SDL_PollEvent(NULL)) {     /* skip if pending events */
+        if (fps_ok) {
 #ifdef CEU_WCLOCKS
 #ifndef CEU_IN_SDL_DT
             if (WCLOCK_nxt != CEU_WCLOCK_INACTIVE)
             {
-                redraw = WCLOCK_nxt <= 1000*dt;
+                //redraw = WCLOCK_nxt <= 1000*dt;
 #endif
                 ceu_sys_go(&app, CEU_IN__WCLOCK, (tceu_evtp)(1000*dt));
 #ifdef CEU_RET
@@ -193,12 +189,14 @@ int main (int argc, char *argv[])
 #endif
 #endif
 #ifdef CEU_IN_SDL_DT
-            ceu_sys_go(&app, CEU_IN_SDL_DT, (tceu_evtp)dt);
+            if (fps_ok) {
+                ceu_sys_go(&app, CEU_IN_SDL_DT, (tceu_evtp)dt);
+            }
 #ifdef CEU_RET
             if (! app.isAlive)
                 goto END;
 #endif
-            redraw = 1;
+            //redraw = 1;
 #endif
         }
 
@@ -291,12 +289,6 @@ int main (int argc, char *argv[])
 #ifdef CEU_IN_SDL_FINGERMOTION
                 case SDL_FINGERMOTION:
                     ceu_sys_go(&app, CEU_IN_SDL_FINGERMOTION, evtp);
-#ifdef SDL_MOTION_FLOOD_AVOID
-                    // handle MOTION floods
-                    SDL_FlushEventsFilter(FLOOD_FILTER,
-                        (void*)((SDL_TouchFingerEvent*)&evt)->fingerId);
-                    SDL_FlushEvents(SDL_DOLLARGESTURE, SDL_MULTIGESTURE);
-#endif
                     break;
 #endif
                 default:
@@ -305,11 +297,13 @@ int main (int argc, char *argv[])
 #ifdef CEU_RET
             if (! app.isAlive) goto END;
 #endif
-            redraw = redraw || handled;
+            //redraw = redraw || handled;
         }
 
 #ifdef CEU_IN_SDL_REDRAW
-        if (redraw && !SDL_PollEvent(NULL)) {
+        //if (redraw && !SDL_PollEvent(NULL)) {
+        if (fps_ok) {
+//printf("okok\n");
             ceu_sys_go(&app, CEU_IN_SDL_REDRAW, (tceu_evtp)NULL);
 #ifdef CEU_RET
             if (! app.isAlive)
@@ -322,6 +316,7 @@ int main (int argc, char *argv[])
 
 #ifdef CEU_ASYNCS
         if (ASYNC_nxt) {
+            ASYNC_nxt = 0;
             ceu_sys_go(&app, CEU_IN__ASYNC, (tceu_evtp)NULL);
 #ifdef CEU_RET
             if (! app.isAlive)

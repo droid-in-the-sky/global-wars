@@ -46,13 +46,15 @@ do
             this.ren := _REN;
             this.tex := tex;
             this.bg_clr := _BGS[me];
+            this.align_x = _UI_ALIGN_CENTER;
+            this.align_y = _UI_ALIGN_MIDDLE;
         end;
         var _SDL_Rect r;
-            r.x = _REN_W/2 - _REN_W/8;
-            r.y = _REN_H/2 - _REN_H/8;
+            r.x = _REN_W/2;
+            r.y = _REN_H/2;
             r.w = _REN_W / 4;
             r.h = _REN_H / 4;
-        call nxt.go_bg(&r);
+        call nxt.go(&r);
         await nxt.ok_clicked;
     end
 
@@ -112,7 +114,9 @@ with
 with
     do
         [[ dofile 'g1.lua' ]];
-        var Map map;
+        var Map map with
+            this.ren := _REN;
+        end;
         do
             var GameHuman human with
                 this.map = map;
@@ -131,7 +135,9 @@ with
 
     do
         [[ dofile 'g4.lua' ]];
-        var Map map;
+        var Map map with
+            this.ren := _REN;
+        end;
         do
             var GameHuman human with
                 this.map = map;

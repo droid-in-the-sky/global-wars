@@ -90,33 +90,11 @@ do
     var char[25] type = [[ STATES[@state].type ]];
     _assert( _strcmp("attack", type) == 0 );
 
-    // GRID "all"
-    var _SDL_Rect r;        // whole screen
-        r.x = _REN_W / 2;
-        r.y = _REN_H / 2;
-        r.w = _REN_W;
-        r.h = _REN_H;
-
-    var UIGrid g1 with
-        this.ren := _REN;
-        this.lay_lins = 4;
-        this.lay_cols = 4;
-        this.lay := _GA_g1;
-        this.uis_n = 2;
-        native do
-            int GA_g1[16] = {
-                -1, -1, -1, -1,
-                -1,  0,  0, -1,     // fs
-                -1,  0,  0, -1,
-                -1, -1, -1,  1      // menu
-            };
-        end
-    end;
-
     // AWAIT center click
     do
         // show current state
         var GameState st with
+            this.ren := _REN;
             this.map = map;
             this.idx = state;    // start from last
         end;
@@ -138,28 +116,27 @@ do
             this.bg_clr := _BGS[me];
         end;
 
-        spawn UIGridItem in g1.uis with
-            this.idx = 0;
-            this.ui  = &ui_fs;
-        end;
-        //[1] = null;       // menu
-        call/rec g1.go(&r);
+        var _SDL_Rect r;
+            r.x = _REN_W / 4;
+            r.y = _REN_H / 3;
+            r.w = _REN_W / 2;
+            r.h = _REN_H / 3;
+        ui_fs.go_bg(&r, false);
 
         await 2s;
         //await SDL_MOUSEBUTTONDOWN;
     end
 
     // GRID "menu"
-    var UIGrid g2 with
+    var UIGrid menu with
         this.ren := _REN;
-        this.lay_lins = 2;
+        this.lay_lins = 1;
         this.lay_cols = 2;
         this.lay := _GA_g2;
         this.uis_n = 2;
         this.clr_bg := &_colors.gray_75;
         native do
             int GA_g2[] = {
-                -1, -1,
                  0,  1  // ok
             };
         end
@@ -171,18 +148,20 @@ do
         this.tex := _TEX_OK;
         //this.rect_mul = 2;
     end;
+        spawn UIGridItem in menu.uis with
+            this.idx = 1;
+            this.ui  = &ui_ok;
+            //menu.uis[0] = null;   // no
+        end;
 
-    spawn UIGridItem in g1.uis with
-        this.idx = 1;
-        this.ui  = &g2;
-    end;
-
-    spawn UIGridItem in g2.uis with
-        this.idx = 1;
-        this.ui  = &ui_ok;
-        //g2.uis[0] = null;   // no
-    end;
-    call/rec g1.go(null);
+    var _SDL_Rect r;
+        r.x = _REN_W;
+        r.y = _REN_H;
+        r.w = _REN_W/4;
+        r.h = _REN_H/8;
+    menu.align_x = _UI_ALIGN_RIGHT;
+    menu.align_y = _UI_ALIGN_BOTTOM;
+    call/rec menu.go(&r);
 
     finalize with
         [[ attacks = nil ]];
@@ -208,11 +187,11 @@ do
                     this.tex := _TEX_NO;
                     //this.rect_mul = 2;
                 end;
-                spawn UIGridItem in g2.uis with
+                spawn UIGridItem in menu.uis with
                     this.idx = 0;
                     this.ui  = &ui;
                 end;
-                call/rec g1.go(null);
+                call/rec menu.go(null);
                 await ui.ok_clicked;
             with
 
@@ -231,6 +210,7 @@ do
 
                     // show next state
                     var GameState st with
+                        this.ren := _REN;
                         this.map = map;
                         this.idx = state+1;     // tmp state
                     end;
@@ -281,9 +261,11 @@ with
 with
     loop do
         do
-            [[ dofile 'g4.lua' ]];
+            [[ dofile 'g_attack.lua' ]];
 
-            var Map map;
+            var Map map with
+                this.ren := _REN;
+            end;
 
             var GameAttack att with
                 this.map = map;

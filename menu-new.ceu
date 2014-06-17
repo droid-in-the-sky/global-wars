@@ -37,6 +37,8 @@ do
                     this.ren    := _REN;
                     this.tex    := _TEX_HUMAN;
                     this.bg_clr := _BGS[n];
+                    this.pad_x  = _REN_W / 5;
+                    this.pad_y  = _REN_H / 3;
                     this.rect_mul = 2;
                 end;
                 spawn UIGridItem in this.grid.uis with
@@ -55,6 +57,8 @@ do
                 this.ren    := _REN;
                 this.tex    := _TEX_AI;
                 this.bg_clr := _BGS[n];
+                this.pad_x  = _REN_W / 5;
+                this.pad_y  = _REN_H / 3;
                 this.rect_mul = 2;
             end;
             spawn UIGridItem in this.grid.uis with
@@ -71,6 +75,8 @@ do
                 this.ren    := _REN;
                 this.tex    := _TEX_NONE;
                 this.bg_clr := _BGS[n];
+                this.pad_x  = _REN_W / 5;
+                this.pad_y  = _REN_H / 3;
                 this.rect_mul = 2;
             end;
             spawn UIGridItem in this.grid.uis with
@@ -132,8 +138,8 @@ do
     end;
 
     var _SDL_Rect r;        // whole screen
-        r.x = _REN_W / 2;
-        r.y = _REN_H / 2;
+        r.x = 0;
+        r.y = 0;
         r.w = _REN_W;
         r.h = _REN_H;
 
@@ -153,7 +159,7 @@ do
         i = i + 1;
     end;
 
-    call/rec grid.go(&r);
+    call/rec grid.go_bg(&r, true);
     await ui_ok.ok_clicked;
 
     [[ PLAYERS = {} ]];

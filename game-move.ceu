@@ -84,6 +84,7 @@ do
                 var _SDL_Color bg = *_BGS[p];
                 bg.a = 0xBB;
                 _filledCircleColor(_REN, x, y, 10, bg);
+                _circleColor(_REN, x, y, 15, bg);
                 _stringRGBA(_REN, x-3, y-3, str, 0,0,0, 0xBB);
                                     // TODO: hardcoded
             end
@@ -108,7 +109,9 @@ with
 with
     [[ dofile 'g1.lua' ]]
     var int len = [[ #MOVES ]];
-    var Map map;
+    var Map map with
+        this.ren := _REN;
+    end;
 
     loop do
         loop i in len do

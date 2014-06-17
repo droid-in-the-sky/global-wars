@@ -1,0 +1,359 @@
+#ifndef _MENU_LOAD_CEU
+#define _MENU_LOAD_CEU
+
+#include "lua.ceu"
+#include "sdl.ceu"
+#include "sdl-gfx.ceu"
+
+#include "sdl-colors.ceu"
+#include "ui.ceu"
+#include "ui-scroll.ceu"
+#include "ui-grid.ceu"
+#include "ui-texture.ceu"
+
+#include "map.ceu"
+#include "game-state.ceu"
+
+input void SDL_REDRAW;
+
+interface MenuLoadListener with
+    event int ok_rm;
+    event int ok_go;
+end
+
+class MenuLoadOne with
+    var char* file = null;
+    var UI&   ui;
+    var int   n    = 0;
+
+    var MenuLoadListener& lst;
+do
+    _assert(_REN != null);
+    _assert(_TEX_RM  != null);
+    _assert(_TEX_OK  != null);
+    _assert(_TEX_NEW != null);
+
+    _assert(this.n    != 0);
+    _assert(this.file != null);
+    [[ dofile(@this.file) ]];
+
+    var int len = [[ #STATES ]];
+
+    var _SDL_Surface* sfc;
+        finalize
+            sfc = _SDL_CreateRGBSurface(0,_REN_W*2/5,_REN_H*2/5,32,0,0,0,0);
+        with
+            _SDL_FreeSurface(sfc);
+        end
+        _assert(sfc != null);
+
+    var _SDL_Renderer* ren;
+        finalize
+            ren = _SDL_CreateSoftwareRenderer(sfc);
+        with
+            _SDL_DestroyRenderer(ren);
+        end
+        _assert(ren != null);
+
+/*
+    var _SDL_Texture* tex1;
+        finalize
+            tex1 = _SDL_CreateTextureFromSurface(_REN, sfc);
+        with
+            _SDL_DestroyTexture(tex1);
+        end
+        _assert(tex1 != null);
+
+    var _SDL_Texture* tex;
+        finalize
+            tex = _SDL_CreateTexture(ren, _SDL_PIXELFORMAT_ARGB8888, 
+                                     _SDL_TEXTUREACCESS_TARGET,
+                                     _REN_W*2/5, _REN_H*2/5);
+        with
+            _SDL_DestroyTexture(tex);
+        end
+        _assert(tex != null);
+    _assert(_SDL_SetRenderTarget(ren, tex) == 0);
+*/
+
+    var Map map with
+        this.ren := ren;
+    end;
+/*
+    var GameState s with
+        this.ren := ren;
+        this.map = map;
+        this.idx = len;
+    end;
+*/
+
+    var UIGrid g with
+        this.ren := _REN;
+        this.lay_lins = 3;
+        this.lay_cols = 4;
+        this.lay := _ML_g;
+        this.uis_n = 2;
+        native do
+            int ML_g[16] = {
+                -1, -1, -1, -1,
+                -1,  0,  1, -1,
+                -1, -1, -1, -1
+            };
+        end
+    end;
+    this.ui = g;
+
+    async do
+        emit SDL_REDRAW;
+    end
+    _SDL_RenderPresent(ren);
+
+    var _SDL_Texture* tex;
+        finalize
+            tex = _SDL_CreateTextureFromSurface(_REN, sfc);
+        with
+            _SDL_DestroyTexture(tex);
+        end
+        _assert(tex != null);
+
+    var UITexture ui_map with
+        this.ren := _REN;
+        this.tex := tex;
+    end;
+        spawn UIGridItem in g.uis with
+            this.idx = -1;
+            this.ui  = &ui_map;
+        end;
+
+    var UITexture ui_rm with
+        this.ren := _REN;
+        this.tex := _TEX_RM;
+        this.bg_clr := &_colors.gray_50;
+    end;
+        spawn UIGridItem in g.uis with
+            this.idx = 0;
+            this.ui  = &ui_rm;
+        end;
+
+    var UITexture ui_ok with
+        this.ren := _REN;
+        this.tex := _TEX_OK;
+        this.bg_clr := &_colors.gray_50;
+    end;
+        spawn UIGridItem in g.uis with
+            this.idx = 1;
+            this.ui  = &ui_ok;
+        end;
+
+    call/rec g.go(null);
+
+    par/or do
+        await ui_rm.ok_clicked;
+        emit this.lst.ok_rm => this.n;
+    with
+        await ui_ok.ok_clicked;
+        emit this.lst.ok_go => this.n;
+    end
+end
+
+class MenuLoad with
+    interface MenuLoadListener;
+do
+    _assert(_REN != null);
+
+    loop do
+        var int n = [[ #GAMES ]];
+        if n == 0 then
+            emit this.ok_go => 0;       // new game
+            break;
+        end
+
+        // GRID [ g1 | g2 | ... ]
+
+        var int n_ = n;
+        if n_ % 2 == 1 then
+            n_ = n_ + 1;        // fill to even number
+        end
+        var int* lay;
+            finalize
+                lay = _malloc(n_ * sizeof(int));
+            with
+                _free(lay);
+            end
+        loop i in n_ do
+            lay[i] = i;
+        end
+
+        var UIGrid grid1 with
+            this.ren := _REN;
+            this.lay_lins = n_/2;
+            this.lay_cols = 2;
+            this.lay := lay; // { 0, 1, ..., n-1 }
+            this.uis_n = n_;
+// TODO
+            this.spc_x = 30;
+            this.spc_y = 30;
+            this.clr_ui_bg := &_colors.black;
+        end;
+
+        // GAMES: g1, g2, ...
+
+        pool MenuLoadOne[] ones;
+        loop i in n do
+            var MenuLoadOne* one = new MenuLoadOne in ones with
+                var char[50] file = [[ GAMES[@i+1] ]];
+                this.file = file;
+                            // not held
+                this.n    = i + 1;
+                this.lst  = outer;
+            end;
+            spawn UIGridItem in grid1.uis with
+                this.idx = i;
+                this.ui = &one:ui;
+            end;
+        end
+        var _SDL_Rect r;
+            r.x = 0;
+            r.y = 0;
+            r.w = _REN_W*4/5;
+            r.h = n_*_REN_H*2/5 / 2;
+        call/rec grid1.go(&r);
+
+        // SCROLL [ g1 | g2 | ... ]
+
+        var UIScroll scroll with
+            this.ren := _REN;
+            this.ui  = grid1;
+            this.clr_scroll := &_colors.white;
+                            // global
+        end;
+
+        // NEW
+
+        var UITexture ui_new with
+            this.ren := _REN;
+            this.tex := _TEX_NEW;
+            this.rect_mul = 1.5;
+        end;
+
+        // GRID  [ scroll | new ]
+
+        var UIGrid grid2 with
+            this.ren := _REN;
+            this.redim? = false;
+            this.lay_lins = 6;
+            this.lay_cols = 7;
+            this.uis_n = 2;
+            this.lay := _MENUGAMES_lay2;
+            native do
+                int MENUGAMES_lay2[] = {
+                    0, 0, 0, 0, 0, 0, -1,
+                    0, 0, 0, 0, 0, 0, -1,
+                    0, 0, 0, 0, 0, 0, -1,
+                    0, 0, 0, 0, 0, 0, -1,
+                    0, 0, 0, 0, 0, 0, -1,
+                    0, 0, 0, 0, 0, 0,  1
+                };
+            end
+        end;
+        spawn UIGridItem in grid2.uis with
+            this.idx = 0;
+            this.ui  = &scroll;
+        end;
+        spawn UIGridItem in grid2.uis with
+            this.idx = 1;
+            this.ui  = &ui_new;
+        end;
+
+        var _SDL_Rect r;        // whole screen
+            r.x = 0;
+            r.y = 0;
+            r.w = _REN_W;
+            r.h = _REN_H;
+        call/rec grid2.go_bg(&r, true);
+
+        // TODO
+        async do
+            emit SDL_REDRAW;
+            emit SDL_REDRAW;
+        end
+
+        // AWAIT RM or NEW
+
+        par/or do
+            await ui_new.ok_clicked;
+            emit this.ok_go => 0;       // new game
+        with
+            var int rm = await this.ok_rm;
+
+            [[
+                os.remove(GAMES[@rm])
+                table.remove(GAMES, @rm)
+                local f = assert(io.open(__LUA_MAIN, 'w'))
+                f:write('GAMES = '..table2string(GAMES)..'\n')
+                f:close()
+            ]];
+        end
+    end
+end
+
+#ifdef __MENU_LOAD_CEU
+
+input void SDL_QUIT;
+
+#include "all.ceu"
+
+class MenuLoadListenerImpl with
+    interface MenuLoadListener;
+do
+end
+
+par/or do
+    await SDL_QUIT;
+/*** SIMUL
+with
+    @include(simul.ceu)
+***/
+with
+    every SDL_REDRAW do
+        _boxRGBA(_REN, 0,0, _REN_W,_REN_H, 0,0,0, 0xFF);
+    end
+with
+    var _SDL_Rect r;        // whole screen
+        r.x = 0;
+        r.y = 0;
+        r.w = _REN_W;
+        r.h = _REN_H;
+
+/*
+*/
+    do
+        var MenuLoadListenerImpl lst;
+        var MenuLoadOne one with
+            this.file := "g1.lua";
+            this.n    = 1;
+            this.lst  = lst;
+        end;
+        call/rec one.ui.go_bg(&r, true);
+        par/or do
+            var int n = await lst.ok_rm;
+            _printf("RM: %d\n", n);
+        with
+            var int n = await lst.ok_go;
+            _printf("GO: %d\n", n);
+        end
+    end
+
+    var MenuLoad menu;
+    var int n = await menu.ok_go;
+    _printf("GO: %d\n", n);
+with
+    every SDL_REDRAW do
+        _SDL_RenderPresent(_REN);
+    end
+end
+
+escape 0;
+
+#endif
+#endif
