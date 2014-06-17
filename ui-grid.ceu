@@ -220,14 +220,11 @@ do
                 _boxColor(ren, rect.x,rect.y,rect.x+rect.w,rect.y+rect.h, *clr_bg);
             end
 /*
-clr_cell_fr? = true;
-clr_cell_fr.r = 0xFF;
-clr_cell_fr.g = 0x00;
-clr_cell_fr.b = 0x00;
-clr_ui_fr? = true;
-clr_ui_fr.r = 0xFF;
-clr_ui_fr.g = 0xFF;
-clr_ui_fr.b = 0x00;
+//clr_cell_bg := &_colors.white;
+//clr_ui_bg := &_colors.white;
+clr_cell_fr := &_colors.white;
+clr_ui_fr := &_colors.black;
+clr_fr := &_colors.red;
 */
             loop i in uis_n do
                 if clr_cell_bg != null then

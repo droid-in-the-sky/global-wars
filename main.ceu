@@ -42,6 +42,14 @@ with
         end;
         await FOREVER;
     end
+/*
+with
+    var int n = 0;
+    every 100ms do
+        n = n + 1;
+        _printf("%d\n", n);
+    end
+*/
 with
     every SDL_REDRAW do
         _SDL_RenderPresent(_REN);

@@ -4,7 +4,7 @@
 #define DEBUG
 #endif
 
-#define CEU_SDL_FPS 30
+#define CEU_SDL_FPS 10
 
 // definitely lost: 2,478 bytes in 17 blocks
 

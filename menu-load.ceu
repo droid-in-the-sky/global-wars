@@ -41,7 +41,7 @@ do
 
     var _SDL_Surface* sfc;
         finalize
-            sfc = _SDL_CreateRGBSurface(0,_REN_W*2/5,_REN_H*2/5,32,0,0,0,0);
+            sfc = _SDL_CreateRGBSurface(0,_REN_W*2/6,_REN_H*2/6,32,0,0,0,0);
         with
             _SDL_FreeSurface(sfc);
         end
@@ -190,9 +190,6 @@ do
             this.lay_cols = 2;
             this.lay := lay; // { 0, 1, ..., n-1 }
             this.uis_n = n_;
-// TODO
-            this.spc_x = 30;
-            this.spc_y = 30;
             this.clr_ui_bg := &_colors.black;
         end;
 
