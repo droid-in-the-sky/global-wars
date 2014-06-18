@@ -210,7 +210,7 @@ MAP = {
         name    = 'Vietnam',
         center  = { 1150,490 },
         points  = { 1120,450, 1200,470, 1170,480, 1200,530, 1190,550, 1160,520, 1150,540, 1140,500, 1100,470 },
-        borders = { 'India', 'China' },
+        borders = { 'India', 'China', 'Sumatra', 'Borneo' },
     },
     {
         name    = 'Mongolia',

@@ -34,6 +34,43 @@ do
         // current #states
         var int ns = [[ #STATES ]];
 
+        // show current state
+        do
+            var Map map with
+                this.ren := _REN;
+            end;
+            var GameState s with
+                this.ren := _REN;
+                this.map = map;
+                this.idx = ns;
+            end;
+
+            var _char[15] str;
+            _sprintf(str, " WEEK %d ", (ns+1)/2);
+            var _SDL_Texture* tex;
+                finalize
+                    tex = _SDL_text2texture(_REN, _FONT_30, str,
+                                            &_colors.black, &_colors.white);
+                with
+                    _SDL_DestroyTexture(tex);
+                end
+            var UITexture nxt with
+                this.ren := _REN;
+                this.tex := tex;
+                this.bg_clr := &_colors.white;
+                this.align_x = _UI_ALIGN_CENTER;
+                this.align_y = _UI_ALIGN_MIDDLE;
+            end;
+            var _SDL_Rect r;
+                r.x = _REN_W/2;
+                r.y = _REN_H/2;
+                r.w = _REN_W / 4;
+                r.h = _REN_H / 4;
+            call nxt.go(&r);
+
+            await 200ms;
+        end
+
         // foreach player
         loop p_ in 6 do
             var int p = p_ + 1;     // C => Lua
