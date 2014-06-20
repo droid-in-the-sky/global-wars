@@ -10,7 +10,6 @@
 
 input void SDL_REDRAW;
 input _SDL_KeyboardEvent* SDL_KEYDOWN;
-input void SDL_MOUSEBUTTONDOWN;
 
 class Game with
     var char[] file = null;
@@ -36,9 +35,6 @@ do
 
         // show current state
         do
-            var Map map with
-                this.ren := _REN;
-            end;
             var GameState s with
                 this.ren := _REN;
                 this.map = map;
@@ -68,7 +64,7 @@ do
                 r.h = _REN_H / 4;
             call nxt.go(&r);
 
-            await 200ms;
+            await 2s;
         end
 
         // foreach player
@@ -76,26 +72,42 @@ do
             var int p = p_ + 1;     // C => Lua
 
             // none, AI or human?
-            var bool none? = [[ PLAYERS[@p] == false   ]];
-            var bool ai?   = [[ PLAYERS[@p] == 'ai'    ]];
-            var bool human?= [[ PLAYERS[@p] == 'human' ]];
+            var bool none?  = [[ PLAYERS[@p] == false   ]];
+            var bool human? = [[ PLAYERS[@p] == 'human' ]];
+            var bool ai?    = [[ PLAYERS[@p] == 'ai'    ]];
+            var bool net?   = [[ PLAYERS[@p] == 'net' ]];
 
             // NONE
             if none? then
                 [[ SRV_move(@p, {}) ]];
 
-            // AI
-            else/if ai? then
-                [[ SRV_move(@p, AI_move(@ns,@p)) ]];
-
             // HUMAN
-            else
+            else/if human? then
                 _assert(human?);
                 var GameHuman human with
                     this.map = map;
                     this.me  = p;
                 end;
                 await human.ok;
+
+            // AI
+            else/if ai? then
+                [[ SRV_move(@p, AI_move(@ns,@p)) ]];
+
+            // NET
+/*
+            else/if net? then
+                par/or do
+                    [[ SRV_move(@p, SRV_get(@ns,@p)) ]];
+                with
+                    // network blink
+                    await FOREVER;
+                end
+*/
+
+            // ERROR
+            else
+                _assert(0);
             end
         end
 

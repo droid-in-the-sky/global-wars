@@ -138,8 +138,6 @@ int main (int argc, char *argv[])
         {
             has = SDL_WaitEventTimeout(&evt, tm);
         }
-//if (has)
-    //printf("EVENT %x\n", evt.type);
 
         u32 now = SDL_GetTicks();
         if (old == now) now++;      // force a minimum change

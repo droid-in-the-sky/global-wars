@@ -1,6 +1,10 @@
 #ifndef _MAP_CEU
 #define _MAP_CEU
 
+#define MAP_MAX_COUNTRIES  100
+#define MAP_MAX_POINTS      25
+#define MAP_MAX_BORDERS    100
+
 #include "c.ceu"
 #include "lua.ceu"
 #include "sdl.ceu"
@@ -90,7 +94,7 @@ do
     par do
         loop do
             // center
-            loop i_ in this.n do
+            loop/MAP_MAX_COUNTRIES i_ in this.n do
                 var int i = i_ + 1;     // C => Lua indexing
                 this.cx[i] = [[ MAP[@i].center[1] ]];
                 this.cy[i] = [[ MAP[@i].center[2] ]];
@@ -128,14 +132,14 @@ do
             _boxColor(ren, 0,0, ren_w, ren_h, _colors.light_blue);
 
             // for each country [0, #MAP)
-            loop i_ in this.n do
+            loop/MAP_MAX_COUNTRIES i_ in this.n do
                 var int i = i_ + 1;     // C => Lua indexing
-                var s16[25] xs, ys;
+                var s16[MAP_MAX_POINTS] xs, ys;
 
                 var int pts = [[ TMAP.ns[@i] ]];
 
                 // for each point [0, ns[i])
-                loop j in pts do
+                loop/MAP_MAX_POINTS j in pts do
                     xs[j] = [[ TMAP.xs[@n_] ]];
                     ys[j] = [[ TMAP.ys[@n_] ]];
                     xs[j] = _P(xs[j], xc, this.x, zoom);
@@ -164,7 +168,7 @@ do
 
             // for each border dotted line
             var int ls = [[ #MAP.lines ]];
-            loop l in ls do
+            loop/MAP_MAX_BORDERS l in ls do
                 var int x1 = [[ MAP.lines[@l+1][1] ]];
                 var int y1 = [[ MAP.lines[@l+1][2] ]];
                 var int x2 = [[ MAP.lines[@l+1][3] ]];

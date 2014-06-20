@@ -27,64 +27,41 @@ do
 
     var bool first? = true;
 
+    var UITexture ui with
+        this.ren    := _REN;
+        this.tex    := _TEX_HUMAN;
+        this.bg_clr := _BGS[n];
+        this.pad_x  = _REN_W / 5;
+        this.pad_y  = _REN_H / 3;
+        this.rect_mul = 2;
+    end;
+    spawn UIGridItem in this.grid.uis with
+        this.idx = outer.n - 1;
+        this.ui  = &ui;
+    end;
+
     loop do
         // human
         if (not first?) or (this.n == 1) then
-            this.type := "human";
-                         // TODO: constant should not require :=
-            do
-                var UITexture ui with
-                    this.ren    := _REN;
-                    this.tex    := _TEX_HUMAN;
-                    this.bg_clr := _BGS[n];
-                    this.pad_x  = _REN_W / 5;
-                    this.pad_y  = _REN_H / 3;
-                    this.rect_mul = 2;
-                end;
-                spawn UIGridItem in this.grid.uis with
-                    this.idx = outer.n - 1;
-                    this.ui  = &ui;
-                end;
-                await ui.ok_clicked;
-            end
+            this.type := "human"; // TODO: constant should not require :=
+            ui.tex := _TEX_HUMAN;
+            await ui.ok_clicked;
         end
 
         // ai
-        this.type := "ai";
-                     // TODO: constant should not require :=
-        do
-            var UITexture ui with
-                this.ren    := _REN;
-                this.tex    := _TEX_AI;
-                this.bg_clr := _BGS[n];
-                this.pad_x  = _REN_W / 5;
-                this.pad_y  = _REN_H / 3;
-                this.rect_mul = 2;
-            end;
-            spawn UIGridItem in this.grid.uis with
-                this.idx = outer.n - 1;
-                this.ui  = &ui;
-            end;
-            await ui.ok_clicked;
-        end
+        this.type := "ai"; // TODO: constant should not require :=
+        ui.tex := _TEX_AI;
+        await ui.ok_clicked;
+
+        // net
+        this.type := "net"; // TODO: constant should not require :=
+        ui.tex := _TEX_NET;
+        await ui.ok_clicked;
 
         // none
         this.type = null;
-        do
-            var UITexture ui with
-                this.ren    := _REN;
-                this.tex    := _TEX_NONE;
-                this.bg_clr := _BGS[n];
-                this.pad_x  = _REN_W / 5;
-                this.pad_y  = _REN_H / 3;
-                this.rect_mul = 2;
-            end;
-            spawn UIGridItem in this.grid.uis with
-                this.idx = outer.n - 1;
-                this.ui  = &ui;
-            end;
-            await ui.ok_clicked;
-        end
+        ui.tex := _TEX_NONE;
+        await ui.ok_clicked;
 
         first? = false;
     end

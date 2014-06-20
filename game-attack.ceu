@@ -13,7 +13,6 @@
 
 input void SDL_REDRAW;
 input _SDL_KeyboardEvent* SDL_KEYDOWN;
-input void SDL_MOUSEBUTTONDOWN;
 
 class GameAttackOne with
     var Map& map;
@@ -31,13 +30,14 @@ do
     var int max;    // holds the maximum transferable armies (#t-1)
     loop do
         if this.fr == 0 then
-            this.fr = await map.ok_clicked;
+            max = 0;
+        else
+            max = [[ STATES[@state+1][@me][@fr] - 1 ]];
         end
-        max = [[ STATES[@state+1][@me][@fr] - 1 ]];
         if max > 0 then
             break;          // my country, a>1:   ok!
         else
-            this.fr = 0;    // not enough armies: try again!
+            this.fr = await map.ok_clicked;
         end
     end
 

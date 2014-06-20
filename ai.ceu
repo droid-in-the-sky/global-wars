@@ -7,7 +7,6 @@
 #include "game-nav.ceu"
 
 input void SDL_REDRAW;
-input void SDL_MOUSEBUTTONDOWN;
 
 #include "all.ceu"
 

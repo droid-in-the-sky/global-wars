@@ -26,7 +26,7 @@ do
     every SDL_REDRAW do
         // foreach player p
         var int n_players = [[ #PLAYERS ]];
-        loop p_ in n_players do
+        loop/6 p_ in n_players do
             var int p = p_ + 1;
 
             var bool empty = [[ PLAYERS[@p]==false ]];
@@ -38,7 +38,7 @@ do
 
             // foreach country c
             var int n_countries = [[ #P ]];
-            loop c_ in n_countries do
+            loop/MAP_MAX_COUNTRIES c_ in n_countries do
                 var int c = c_ + 1;
                 var int n = [[ P[@c] ]];    // number of armies in country @c
                 if n > 0 then

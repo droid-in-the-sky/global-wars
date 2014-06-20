@@ -21,7 +21,7 @@ do
     every SDL_REDRAW do
         // foreach player p
         var int n_players = [[ #PLAYERS ]];
-        loop p_ in n_players do
+        loop/6 p_ in n_players do
             var int p = p_ + 1;
 
             var bool empty = [[ PLAYERS[@p]==false ]];
@@ -33,7 +33,7 @@ do
 
             // foreach move "i" in "Mm" from player "p"
             var int n_moves = [[ P and #P or 0 ]];
-            loop i_ in n_moves do
+            loop i_ in n_moves do       // number of moves is unbounded
                 var int i = i_ + 1;
 
                 // get a=#armies, fr=from, to=to

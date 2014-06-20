@@ -13,8 +13,6 @@
 #include "game-move.ceu"
 
 input void SDL_REDRAW;
-input void SDL_MOUSEBUTTONDOWN;
-
 input _SDL_KeyboardEvent* SDL_KEYDOWN;
 
 class GameNav with

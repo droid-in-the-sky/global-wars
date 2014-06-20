@@ -12,7 +12,6 @@
 
 input void SDL_REDRAW;
 input _SDL_KeyboardEvent* SDL_KEYDOWN;
-input void SDL_MOUSEBUTTONDOWN;
 
 class GameHuman with
     var Map& map;

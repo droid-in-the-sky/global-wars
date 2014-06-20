@@ -13,7 +13,6 @@
 
 input void SDL_REDRAW;
 input _SDL_KeyboardEvent* SDL_KEYDOWN;
-input void SDL_MOUSEBUTTONDOWN;
 
 class GameFortify with
     var Map& map;
@@ -30,8 +29,10 @@ do
 
     // last "fortify" state
     var int state = [[ #STATES ]];
-    var char[25] str = [[ STATES[@state].type ]];
-    _assert( _strcmp("fortify", str) == 0 );
+    do
+        var char[25] str = [[ STATES[@state].type ]];
+        _assert( _strcmp("fortify", str) == 0 );
+    end
 
     // # of armies to fortify
     var int fs = [[ SRV_fs(STATES[@state], @this.me) ]];
@@ -61,18 +62,18 @@ do
         end;
 
         // "Fortify"
-        var _char[15] str;
-        _sprintf(str, "%s", "Fortify");
-        var _SDL_Texture* tex;
+        var _char[15] str1;
+        _sprintf(str1, "%s", "Fortify");
+        var _SDL_Texture* tex1;
             finalize
-                tex = _SDL_text2texture(_REN, _FONT_30, str,
+                tex1 = _SDL_text2texture(_REN, _FONT_30, str1,
                                         &_colors.black, _BGS[this.me]);
             with
-                _SDL_DestroyTexture(tex);
+                _SDL_DestroyTexture(tex1);
             end
         var UITexture ui1 with
             this.ren := _REN;
-            this.tex := tex;
+            this.tex := tex1;
             this.bg_clr := _BGS[me];
         end;
 
@@ -82,18 +83,18 @@ do
         end;
 
         // N
-        var _char[5] str;
-        _sprintf(str, "%d", fs);
-        var _SDL_Texture* tex;
+        var _char[5] str2;
+        _sprintf(str2, "%d", fs);
+        var _SDL_Texture* tex2;
             finalize
-                tex = _SDL_text2texture(_REN, _FONT_30, str,
+                tex2 = _SDL_text2texture(_REN, _FONT_30, str2,
                                         &_colors.black, _BGS[this.me]);
             with
-                _SDL_DestroyTexture(tex);
+                _SDL_DestroyTexture(tex2);
             end
         var UITexture ui2 with
             this.ren := _REN;
-            this.tex := tex;
+            this.tex := tex2;
             this.bg_clr := _BGS[me];
         end;
 

@@ -91,6 +91,7 @@ end
     native do
         SDL_Texture* TEX_HUMAN = NULL;
         SDL_Texture* TEX_AI    = NULL;
+        SDL_Texture* TEX_NET   = NULL;
         SDL_Texture* TEX_NONE  = NULL;
         SDL_Texture* TEX_L     = NULL;
         SDL_Texture* TEX_R     = NULL;
@@ -108,6 +109,11 @@ end
         _TEX_AI = _IMG_LoadTexture(_REN, "imgs/ai.png");
     with
         _SDL_DestroyTexture(_TEX_AI);
+    end
+    finalize
+        _TEX_NET = _IMG_LoadTexture(_REN, "imgs/net.png");
+    with
+        _SDL_DestroyTexture(_TEX_NET);
     end
     finalize
         _TEX_NONE = _IMG_LoadTexture(_REN, "imgs/none.png");

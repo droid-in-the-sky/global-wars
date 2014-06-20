@@ -180,7 +180,7 @@ do
             with
                 _free(lay);
             end
-        loop i in n_ do
+        loop i in n_ do     // number of #GAMES is unbounded
             lay[i] = i;
         end
 
@@ -196,7 +196,7 @@ do
         // GAMES: g1, g2, ...
 
         pool MenuLoadOne[] ones;
-        loop i in n do
+        loop i in n do      // number of #GAMES is unbounded
             var MenuLoadOne* one = new MenuLoadOne in ones with
                 var char[50] file = [[ GAMES[@i+1] ]];
                 this.file = file;
@@ -209,12 +209,14 @@ do
                 this.ui = &one:ui;
             end;
         end
-        var _SDL_Rect r;
-            r.x = 0;
-            r.y = 0;
-            r.w = _REN_W*4/5;
-            r.h = n_*_REN_H*2/5 / 2;
-        call/rec grid1.go(&r);
+        do
+            var _SDL_Rect r;
+                r.x = 0;
+                r.y = 0;
+                r.w = _REN_W*4/5;
+                r.h = n_*_REN_H*2/5 / 2;
+            call/rec grid1.go(&r);
+        end
 
         // SCROLL [ g1 | g2 | ... ]
 
@@ -262,12 +264,14 @@ do
             this.ui  = &ui_new;
         end;
 
-        var _SDL_Rect r;        // whole screen
-            r.x = 0;
-            r.y = 0;
-            r.w = _REN_W;
-            r.h = _REN_H;
-        call/rec grid2.go_bg(&r, true);
+        do
+            var _SDL_Rect r;        // whole screen
+                r.x = 0;
+                r.y = 0;
+                r.w = _REN_W;
+                r.h = _REN_H;
+            call/rec grid2.go_bg(&r, true);
+        end
 
         // TODO
         async do
