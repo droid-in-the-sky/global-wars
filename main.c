@@ -39,11 +39,6 @@ s32 WCLOCK_nxt;
 #define ceu_out_wclock_set(us) WCLOCK_nxt = us;
 #endif
 
-#ifdef CEU_ASYNCS
-int ASYNC_nxt = 0;
-#define ceu_out_async(v) ASYNC_nxt = 1;
-#endif
-
 #include "_ceu_app.c"
 
 #ifdef __ANDROID__
@@ -121,7 +116,7 @@ int main (int argc, char *argv[])
             tm = WCLOCK_nxt / 1000;
 #endif
 #ifdef CEU_ASYNCS
-        if (ASYNC_nxt) {
+        if (app.pendingAsyncs) {
             tm = 0;
         }
 #endif
@@ -313,8 +308,7 @@ int main (int argc, char *argv[])
 #endif  // SDL_SIMUL
 
 #ifdef CEU_ASYNCS
-        if (ASYNC_nxt) {
-            ASYNC_nxt = 0;
+        if (app.pendingAsyncs) {
             ceu_sys_go(&app, CEU_IN__ASYNC, (tceu_evtp)NULL);
 #ifdef CEU_RET
             if (! app.isAlive)
