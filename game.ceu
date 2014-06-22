@@ -84,11 +84,10 @@ do
             // HUMAN
             else/if human? then
                 _assert(human?);
-                var GameHuman human with
+                do GameHuman with
                     this.map = map;
                     this.me  = p;
                 end;
-                await human.ok;
 
             // AI
             else/if ai? then

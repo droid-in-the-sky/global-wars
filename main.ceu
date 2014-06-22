@@ -30,8 +30,7 @@ with
 
     // new game
     if n == 0 then
-        var MenuNew menu;
-        await menu.ok;
+        do MenuNew;
         n = [[ #GAMES ]];
     end
 

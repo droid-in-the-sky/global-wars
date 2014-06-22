@@ -188,47 +188,43 @@ with
             var Map map with
                 this.ren := _REN;
             end;
-            var GameNav nav with
+            do GameNav with
                 this.map   = map;
                 this.me    = 1;
                 this.state = 1;
             end;
-            await nav.ok;
         end
         do
             [[ dofile 'g1.lua' ]];
             var Map map with
                 this.ren := _REN;
             end;
-            var GameNav nav with
+            do GameNav with
                 this.map   = map;
                 this.me    = 1;
             end;
-            await nav.ok;
         end
         do
             [[ dofile 'g2.lua' ]];
             var Map map with
                 this.ren := _REN;
             end;
-            var GameNav nav with
+            do GameNav with
                 this.map   = map;
                 this.me    = 1;
                 this.state = 1;
             end;
-            await nav.ok;
         end
         do
             [[ dofile 'g3.lua' ]];
             var Map map with
                 this.ren := _REN;
             end;
-            var GameNav nav with
+            do GameNav with
                 this.map   = map;
                 this.me    = 1;
                 this.state = 1;
             end;
-            await nav.ok;
         end
     end
 with

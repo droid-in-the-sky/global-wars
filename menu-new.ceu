@@ -180,9 +180,7 @@ with
         _boxRGBA(_REN, 0,0, _REN_W,_REN_H, 0,0,0, 0xFF);
     end
 with
-    var MenuNew menu;
-    await menu.ok;
-
+    do MenuNew;
 with
     every SDL_REDRAW do
         _SDL_RenderPresent(_REN);

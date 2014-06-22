@@ -221,15 +221,14 @@ do
                         this.idx = (state+1)/2; // tmp move
                     end;
 
-                    var GameAttackOne one with
-                        this.map   = map;
-                        this.me    = me;
-                        this.state = state;
-                        this.fr    = fr;
-                    end;
-
                     var bool any?;
-                    (any?, fr) = await one.ok; // keep "fr" as selected
+                    (any?, fr) =        // keep "fr" as selected
+                        do GameAttackOne with
+                            this.map   = map;
+                            this.me    = me;
+                            this.state = state;
+                            this.fr    = fr;
+                        end;
                     if any? then
                         emit e;     // show "X" if any army was moved
                     end
@@ -267,12 +266,10 @@ with
                 this.ren := _REN;
             end;
 
-            var GameAttack att with
+            do GameAttack with
                 this.map = map;
                 this.me  = 1;
             end;
-
-            await att.ok;
         end
     end
 with

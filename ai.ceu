@@ -45,12 +45,10 @@ with
 
         var Map map;
 
-        var GameNav nav with
+        do GameNav with
             this.map = map;
             this.me  = 1;
         end;
-
-        await nav.ok;
     end
 
 // G3
@@ -64,12 +62,10 @@ with
 
         var Map map;
 
-        var GameNav nav with
+        do GameNav with
             this.map = map;
             this.me  = 1;
         end;
-
-        await nav.ok;
     end
 with
     every SDL_REDRAW do

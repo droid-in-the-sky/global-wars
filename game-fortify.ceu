@@ -295,19 +295,15 @@ with
     end
 with
     loop do
-        do
-            [[ dofile 'g_fortify.lua' ]];
-            var Map map with
-                this.ren := _REN;
-            end;
+        [[ dofile 'g_fortify.lua' ]];
+        var Map map with
+            this.ren := _REN;
+        end;
 
-            var GameFortify fort with
-                this.map = map;
-                this.me  = 1;
-            end;
-
-            await fort.ok;
-        end
+        do GameFortify with
+            this.map = map;
+            this.me  = 1;
+        end;
     end
 with
     every SDL_REDRAW do
