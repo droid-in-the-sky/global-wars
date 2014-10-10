@@ -94,7 +94,7 @@ do
     do
         // show current state
         var GameState st with
-            this.ren := _REN;
+            this.ren = _REN;
             this.map = map;
             this.idx = state;    // start from last
         end;
@@ -111,9 +111,9 @@ do
                 _SDL_DestroyTexture(tex);
             end
         var UITexture ui_fs with
-            this.ren := _REN;
-            this.tex := tex;
-            this.bg_clr := _BGS[me];
+            this.ren = _REN;
+            this.tex = tex;
+            this.bg_clr = _BGS[me];
         end;
 
         var _SDL_Rect r;
@@ -129,12 +129,12 @@ do
 
     // GRID "menu"
     var UIGrid menu with
-        this.ren := _REN;
+        this.ren = _REN;
         this.lay_lins = 1;
         this.lay_cols = 2;
-        this.lay := _GA_g2;
+        this.lay = _GA_g2;
         this.uis_n = 2;
-        this.clr_bg := &_colors.gray_75;
+        this.clr_bg = &_colors.gray_75;
         native do
             int GA_g2[] = {
                  0,  1  // ok
@@ -144,8 +144,8 @@ do
 
     // ui_ok
     var UITexture ui_ok with
-        this.ren := _REN;
-        this.tex := _TEX_OK;
+        this.ren = _REN;
+        this.tex = _TEX_OK;
         //this.rect_mul = 2;
     end;
         spawn UIGridItem in menu.uis with
@@ -183,8 +183,8 @@ do
                 // button "NO": restart
                 await e;
                 var UITexture ui with
-                    this.ren := _REN;
-                    this.tex := _TEX_NO;
+                    this.ren = _REN;
+                    this.tex = _TEX_NO;
                     //this.rect_mul = 2;
                 end;
                 spawn UIGridItem in menu.uis with
@@ -210,7 +210,7 @@ do
 
                     // show next state
                     var GameState st with
-                        this.ren := _REN;
+                        this.ren = _REN;
                         this.map = map;
                         this.idx = state+1;     // tmp state
                     end;
@@ -263,7 +263,7 @@ with
             [[ dofile 'g_attack.lua' ]];
 
             var Map map with
-                this.ren := _REN;
+                this.ren = _REN;
             end;
 
             do GameAttack with

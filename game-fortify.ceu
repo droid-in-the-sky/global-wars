@@ -41,10 +41,10 @@ do
     do
         // header: "FORTIFY: N"
         var UIGrid header with
-            this.ren := _REN;
+            this.ren = _REN;
             this.lay_lins = 2;
             this.lay_cols = 2;
-            this.lay := _GF_g1;
+            this.lay = _GF_g1;
             this.uis_n = 2;
             native do
                 int GF_g1[] = {
@@ -56,7 +56,7 @@ do
 
         // show current state
         var GameState st with
-            this.ren := _REN;
+            this.ren = _REN;
             this.map = map;
             this.idx = state;    // start from last
         end;
@@ -72,9 +72,9 @@ do
                 _SDL_DestroyTexture(tex1);
             end
         var UITexture ui1 with
-            this.ren := _REN;
-            this.tex := tex1;
-            this.bg_clr := _BGS[me];
+            this.ren = _REN;
+            this.tex = tex1;
+            this.bg_clr = _BGS[me];
         end;
 
         spawn UIGridItem in header.uis with
@@ -93,9 +93,9 @@ do
                 _SDL_DestroyTexture(tex2);
             end
         var UITexture ui2 with
-            this.ren := _REN;
-            this.tex := tex2;
-            this.bg_clr := _BGS[me];
+            this.ren = _REN;
+            this.tex = tex2;
+            this.bg_clr = _BGS[me];
         end;
 
         spawn UIGridItem in header.uis with
@@ -115,12 +115,12 @@ do
 
     // GRID "menu"
     var UIGrid menu with
-        this.ren := _REN;
+        this.ren = _REN;
         this.lay_lins = 2;
         this.lay_cols = 2;
-        this.lay := _GF_g2;
+        this.lay = _GF_g2;
         this.uis_n = 3;
-        this.clr_bg := &_colors.gray_75;
+        this.clr_bg = &_colors.gray_75;
         native do
             int GF_g2[] = {
                 0,  0,  // fs
@@ -165,7 +165,7 @@ do
 
                 // show next state
                 var GameState st with
-                    this.ren := _REN;
+                    this.ren = _REN;
                     this.map = map;
                     this.idx = state+1;     // tmp state
                 end;
@@ -191,8 +191,8 @@ do
                     end
 
                 var UITexture ui_fs with
-                    this.ren := _REN;
-                    this.tex := tex;
+                    this.ren = _REN;
+                    this.tex = tex;
                     this.bg_clr = &bg;
                 end;
 
@@ -232,8 +232,8 @@ do
             await e;
 
             var UITexture ui with
-                this.ren := _REN;
-                this.tex := _TEX_NO;
+                this.ren = _REN;
+                this.tex = _TEX_NO;
                 //this.rect_mul = 2;
             end;
 
@@ -253,8 +253,8 @@ do
             end
 
             var UITexture ui with
-                this.ren := _REN;
-                this.tex := _TEX_OK;
+                this.ren = _REN;
+                this.tex = _TEX_OK;
                 //this.rect_mul = 2;
             end;
 
@@ -297,7 +297,7 @@ with
     loop do
         [[ dofile 'g_fortify.lua' ]];
         var Map map with
-            this.ren := _REN;
+            this.ren = _REN;
         end;
 
         do GameFortify with

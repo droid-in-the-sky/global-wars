@@ -28,9 +28,9 @@ do
     var bool first? = true;
 
     var UITexture ui with
-        this.ren    := _REN;
-        this.tex    := _TEX_HUMAN;
-        this.bg_clr := _BGS[n];
+        this.ren    = _REN;
+        this.tex    = _TEX_HUMAN;
+        this.bg_clr = _BGS[n];
         this.pad_x  = _REN_W / 5;
         this.pad_y  = _REN_H / 3;
         this.rect_mul = 2;
@@ -43,24 +43,24 @@ do
     loop do
         // human
         if (not first?) or (this.n == 1) then
-            this.type := "human"; // TODO: constant should not require :=
-            ui.tex := _TEX_HUMAN;
+            this.type = "human";
+            ui.tex = _TEX_HUMAN;
             await ui.ok_clicked;
         end
 
         // ai
-        this.type := "ai"; // TODO: constant should not require :=
-        ui.tex := _TEX_AI;
+        this.type = "ai";
+        ui.tex = _TEX_AI;
         await ui.ok_clicked;
 
         // net
-        this.type := "net"; // TODO: constant should not require :=
-        ui.tex := _TEX_NET;
+        this.type = "net";
+        ui.tex = _TEX_NET;
         await ui.ok_clicked;
 
         // none
         this.type = null;
-        ui.tex := _TEX_NONE;
+        ui.tex = _TEX_NONE;
         await ui.ok_clicked;
 
         first? = false;
@@ -73,12 +73,12 @@ do
     _assert(_REN != null);
 
     var UIGrid grid with
-        this.ren := _REN;
+        this.ren = _REN;
         this.lay_lins = 6;
         this.lay_cols = 7;
-        this.lay := _MenuNew_grid;
+        this.lay = _MenuNew_grid;
         this.uis_n = 2;
-        this.clr_bg := &_colors.brown;
+        this.clr_bg = &_colors.brown;
         native do
             int MenuNew_grid[] = {
                 0, 0, 0, 0, 0, 0, -1,
@@ -92,10 +92,10 @@ do
     end;
 
     var UIGrid grid_ps with
-        this.ren       := _REN;
+        this.ren       = _REN;
         this.lay_lins  = 2;
         this.lay_cols  = 3;
-        this.lay       := _MenuNew_grid_ps;
+        this.lay       = _MenuNew_grid_ps;
         this.uis_n     = 6;
         this.spc_x     = 20;
         this.spc_y     = 20;
@@ -108,9 +108,9 @@ do
     end;
 
     var UITexture ui_ok with
-        this.ren := _REN;
-        this.tex := _TEX_OK;
-        //this.bg_clr := &_colors.white;
+        this.ren = _REN;
+        this.tex = _TEX_OK;
+        //this.bg_clr = &_colors.white;
         this.rect_mul = 1.5;
     end;
 

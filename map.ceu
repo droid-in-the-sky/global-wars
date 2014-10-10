@@ -30,9 +30,9 @@ end
 class Map with
     var _SDL_Renderer[] ren = null;
 
-    var int  n;   // number of countries
-    var s16* cx;  // all country centers
-    var s16* cy;  // all country centers
+    var int   n;   // number of countries
+    var s16[] cx;  // all country centers
+    var s16[] cy;  // all country centers
 
     event int       go_zoom;
     event (int,int) go_xy;
@@ -205,7 +205,7 @@ do
             // PAN
             var _SDL_TouchFingerEvent e2;
             par/or do
-                var _SDL_TouchFingerEvent* e2_ :=
+                var _SDL_TouchFingerEvent* e2_ =
                     await SDL_FINGERDOWN  // go to zoom when pressing "f2"
                         until e2_:fingerId != e1.fingerId;
                 e2 = *e2_;
@@ -213,7 +213,7 @@ do
                 var int x = map.x;
                 var int y = map.y;
                 loop do                      // stay in pan while not "f2"
-                    var _SDL_TouchFingerEvent* e2_ :=
+                    var _SDL_TouchFingerEvent* e2_ =
                         await SDL_FINGERMOTION
                             until e2_:fingerId == e1.fingerId;
                     emit map.go_xy => (x + (e2_:x-e1.x)*_REN_W/2,
@@ -257,7 +257,7 @@ do
                 end
 
                 // next zoom start finger
-                var _SDL_TouchFingerEvent* e3_ :=
+                var _SDL_TouchFingerEvent* e3_ =
                     await SDL_FINGERDOWN
                       until e3_:fingerId != e1.fingerId;
                 e2 = *e3_;
@@ -290,7 +290,7 @@ with
             end
         ]]
         var Map map with
-            this.ren := _REN;
+            this.ren = _REN;
         end;
         var MapFinger fgr with
             this.map = map;
@@ -300,7 +300,7 @@ with
 
     [[ dofile "map4.lua" ]]
     var Map map with
-        this.ren := _REN;
+        this.ren = _REN;
     end;
     await 2s;
 

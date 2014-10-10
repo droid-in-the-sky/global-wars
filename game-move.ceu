@@ -110,7 +110,7 @@ with
     [[ dofile 'g1.lua' ]]
     var int len = [[ #MOVES ]];
     var Map map with
-        this.ren := _REN;
+        this.ren = _REN;
     end;
 
     loop do

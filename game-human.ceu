@@ -42,9 +42,9 @@ do
                 _SDL_DestroyTexture(tex);
             end
         var UITexture nxt with
-            this.ren := _REN;
-            this.tex := tex;
-            this.bg_clr := _BGS[me];
+            this.ren = _REN;
+            this.tex = tex;
+            this.bg_clr = _BGS[me];
             this.align_x = _UI_ALIGN_CENTER;
             this.align_y = _UI_ALIGN_MIDDLE;
         end;
@@ -111,7 +111,7 @@ with
     do
         [[ dofile 'g1.lua' ]];
         var Map map with
-            this.ren := _REN;
+            this.ren = _REN;
         end;
         do GameHuman with
             this.map = map;
@@ -126,7 +126,7 @@ with
     do
         [[ dofile 'g4.lua' ]];
         var Map map with
-            this.ren := _REN;
+            this.ren = _REN;
         end;
         do GameHuman with
             this.map = map;

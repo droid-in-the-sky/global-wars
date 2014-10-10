@@ -20,7 +20,7 @@ do
     [[ dofile(@this.file) ]];
 
     var Map map with
-        this.ren := _REN;
+        this.ren = _REN;
     end;
     var MapFinger fgr with
         this.map = map;
@@ -36,7 +36,7 @@ do
         // show current state
         do
             var GameState s with
-                this.ren := _REN;
+                this.ren = _REN;
                 this.map = map;
                 this.idx = ns;
             end;
@@ -51,9 +51,9 @@ do
                     _SDL_DestroyTexture(tex);
                 end
             var UITexture nxt with
-                this.ren := _REN;
-                this.tex := tex;
-                this.bg_clr := &_colors.white;
+                this.ren = _REN;
+                this.tex = tex;
+                this.bg_clr = &_colors.white;
                 this.align_x = _UI_ALIGN_CENTER;
                 this.align_y = _UI_ALIGN_MIDDLE;
             end;
@@ -149,7 +149,7 @@ with
 #endif
 
     var Game game with
-        this.file := LUA_GAME;
+        this.file = LUA_GAME;
     end;
     await FOREVER;
 with

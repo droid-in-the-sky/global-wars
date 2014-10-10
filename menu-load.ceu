@@ -39,7 +39,7 @@ do
 
     var int len = [[ #STATES ]];
 
-    var _SDL_Surface* sfc;
+    var _SDL_Surface[] sfc;
         finalize
             sfc = _SDL_CreateRGBSurface(0,_REN_W*2/6,_REN_H*2/6,32,0,0,0,0);
         with
@@ -47,7 +47,7 @@ do
         end
         _assert(sfc != null);
 
-    var _SDL_Renderer* ren;
+    var _SDL_Renderer[] ren;
         finalize
             ren = _SDL_CreateSoftwareRenderer(sfc);
         with
@@ -77,21 +77,21 @@ do
 */
 
     var Map map with
-        this.ren := ren;
+        this.ren = ren;
     end;
 /*
     var GameState s with
-        this.ren := ren;
+        this.ren = ren;
         this.map = map;
         this.idx = len;
     end;
 */
 
     var UIGrid g with
-        this.ren := _REN;
+        this.ren = _REN;
         this.lay_lins = 3;
         this.lay_cols = 4;
-        this.lay := _ML_g;
+        this.lay = _ML_g;
         this.uis_n = 2;
         native do
             int ML_g[16] = {
@@ -108,7 +108,7 @@ do
     end
     _SDL_RenderPresent(ren);
 
-    var _SDL_Texture* tex;
+    var _SDL_Texture[] tex;
         finalize
             tex = _SDL_CreateTextureFromSurface(_REN, sfc);
         with
@@ -117,8 +117,8 @@ do
         _assert(tex != null);
 
     var UITexture ui_map with
-        this.ren := _REN;
-        this.tex := tex;
+        this.ren = _REN;
+        this.tex = tex;
     end;
         spawn UIGridItem in g.uis with
             this.idx = -1;
@@ -126,9 +126,9 @@ do
         end;
 
     var UITexture ui_rm with
-        this.ren := _REN;
-        this.tex := _TEX_RM;
-        this.bg_clr := &_colors.gray_50;
+        this.ren = _REN;
+        this.tex = _TEX_RM;
+        this.bg_clr = &_colors.gray_50;
     end;
         spawn UIGridItem in g.uis with
             this.idx = 0;
@@ -136,9 +136,9 @@ do
         end;
 
     var UITexture ui_ok with
-        this.ren := _REN;
-        this.tex := _TEX_OK;
-        this.bg_clr := &_colors.gray_50;
+        this.ren = _REN;
+        this.tex = _TEX_OK;
+        this.bg_clr = &_colors.gray_50;
     end;
         spawn UIGridItem in g.uis with
             this.idx = 1;
@@ -174,7 +174,7 @@ do
         if n_ % 2 == 1 then
             n_ = n_ + 1;        // fill to even number
         end
-        var int* lay;
+        var int[] lay;
             finalize
                 lay = _malloc(n_ * sizeof(int));
             with
@@ -185,22 +185,21 @@ do
         end
 
         var UIGrid grid1 with
-            this.ren := _REN;
+            this.ren = _REN;
             this.lay_lins = n_/2;
             this.lay_cols = 2;
-            this.lay := lay; // { 0, 1, ..., n-1 }
+            this.lay = lay; // { 0, 1, ..., n-1 }
             this.uis_n = n_;
-            this.clr_ui_bg := &_colors.black;
+            this.clr_ui_bg = &_colors.black;
         end;
 
         // GAMES: g1, g2, ...
 
         pool MenuLoadOne[] ones;
         loop i in n do      // number of #GAMES is unbounded
-            var MenuLoadOne* one = new MenuLoadOne in ones with
+            var MenuLoadOne* one = spawn MenuLoadOne in ones with
                 var char[50] file = [[ GAMES[@i+1] ]];
                 this.file = file;
-                            // not held
                 this.n    = i + 1;
                 this.lst  = outer;
             end;
@@ -221,29 +220,28 @@ do
         // SCROLL [ g1 | g2 | ... ]
 
         var UIScroll scroll with
-            this.ren := _REN;
+            this.ren = _REN;
             this.ui  = grid1;
-            this.clr_scroll := &_colors.white;
-                            // global
+            this.clr_scroll = &_colors.white;
         end;
 
         // NEW
 
         var UITexture ui_new with
-            this.ren := _REN;
-            this.tex := _TEX_NEW;
+            this.ren = _REN;
+            this.tex = _TEX_NEW;
             this.rect_mul = 1.5;
         end;
 
         // GRID  [ scroll | new ]
 
         var UIGrid grid2 with
-            this.ren := _REN;
+            this.ren = _REN;
             this.redim? = false;
             this.lay_lins = 6;
             this.lay_cols = 7;
             this.uis_n = 2;
-            this.lay := _MENUGAMES_lay2;
+            this.lay = _MENUGAMES_lay2;
             native do
                 int MENUGAMES_lay2[] = {
                     0, 0, 0, 0, 0, 0, -1,
@@ -331,7 +329,7 @@ with
     do
         var MenuLoadListenerImpl lst;
         var MenuLoadOne one with
-            this.file := "g1.lua";
+            this.file = "g1.lua";
             this.n    = 1;
             this.lst  = lst;
         end;

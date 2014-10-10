@@ -74,13 +74,13 @@ with
     var int len = [[ #STATES ]];
 
     var Map map with
-        this.ren := _REN;
+        this.ren = _REN;
     end;
 
     loop do
         loop i in len do
             var GameState s with
-                this.ren := _REN;
+                this.ren = _REN;
                 this.map = map;
                 this.idx = i+1;
             end;
